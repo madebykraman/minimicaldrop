@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
 import crypto from 'node:crypto'
 import { googleAuthUrl } from '@/lib/google-drive'
+import { isAdmin } from '@/lib/admin-auth'
 
-export async function GET(request: Request) {
+export async function GET() {
+  if (!(await isAdmin())) return NextResponse.redirect(new URL('/admin'))
   const secret = process.env.SESSION_SECRET
   if (!secret) return NextResponse.json({ error: 'SESSION_SECRET is not configured' }, { status: 500 })
   const state = crypto.randomBytes(32).toString('hex')
