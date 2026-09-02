@@ -2,7 +2,7 @@ import 'server-only'
 import crypto from 'node:crypto'
 import { cookies } from 'next/headers'
 
-const COOKIE = 'minimical_drop_admin'
+const COOKIE = 'minimical_drop_admin_v2'
 const TTL_SECONDS = 60 * 60 * 12
 
 function secret() {
@@ -17,11 +17,11 @@ function sign(value: string) {
 
 export async function isAdmin() {
   const raw = (await cookies()).get(COOKIE)?.value || ''
-  const [email, expires, signature] = raw.split('.')
-  if (!email || !expires || !signature || Number(expires) < Date.now()) return false
-  const expected = sign(`${email}.${expires}`)
+  const [expires, signature] = raw.split('.')
+  if (!expires || !signature || !/^\d+$/.test(expires) || Number(expires) < Date.now()) return false
+  const expected = sign(expires)
   if (signature.length !== expected.length) return false
-  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected)) && email === (process.env.ADMIN_EMAIL || '')
+  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
 }
 
 export function validAdminPassword(password: string) {
@@ -38,13 +38,12 @@ export function validAdminPassword(password: string) {
 }
 
 export async function setAdminCookie() {
-  const email = process.env.ADMIN_EMAIL
-  if (!email) throw new Error('ADMIN_EMAIL is not configured')
+  if (!process.env.ADMIN_EMAIL) throw new Error('ADMIN_EMAIL is not configured')
   const expires = String(Date.now() + TTL_SECONDS * 1000)
-  const value = `${email}.${expires}`
-  ;(await cookies()).set(COOKIE, `${value}.${sign(value)}`, { httpOnly: true, secure: true, sameSite: 'lax', maxAge: TTL_SECONDS, path: '/' })
+  ;(await cookies()).set(COOKIE, `${expires}.${sign(expires)}`, { httpOnly: true, secure: true, sameSite: 'lax', maxAge: TTL_SECONDS, path: '/' })
 }
 
 export async function clearAdminCookie() {
   ;(await cookies()).delete(COOKIE)
+  ;(await cookies()).delete('minimical_drop_admin')
 }
