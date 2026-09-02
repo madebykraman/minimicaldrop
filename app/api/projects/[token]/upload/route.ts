@@ -13,24 +13,33 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
   const body = await request.json().catch(() => null) as { name?: string; mimeType?: string; size?: number; parentId?: string } | null
   const name = body?.name?.trim()
   const size = Number(body?.size)
-  if (!name || name.length > MAX_NAME || !Number.isSafeInteger(size) || size < 0) {
-    return NextResponse.json({ error: 'Invalid upload metadata.' }, { status: 400 })
+  if (!name || name.length > MAX_NAME || !Number.isSafeInteger(size) || size < 0) return NextResponse.json({ error: 'Invalid upload metadata.' }, { status: 400 })
+
+  const parentId = body?.parentId || project.drive_folder_id
+  let folderId: string | null = null
+  if (parentId !== project.drive_folder_id) {
+    const folders = await supabase<Array<{ id: string }>>(`folders?project_id=eq.${project.id}&drive_folder_id=eq.${encodeURIComponent(parentId)}&select=id&limit=1`)
+    if (!folders[0]) return NextResponse.json({ error: 'Folder is not part of this project.' }, { status: 403 })
+    folderId = folders[0].id
   }
-  if (project.storage_limit_bytes && size > project.storage_limit_bytes) {
-    return NextResponse.json({ error: 'This file exceeds the project storage limit.' }, { status: 413 })
+
+  if (project.storage_limit_bytes) {
+    const rows = await supabase<Array<{ size_bytes: number }>>(`uploads?project_id=eq.${project.id}&status=eq.complete&select=size_bytes`)
+    const used = rows.reduce((sum, row) => sum + Number(row.size_bytes || 0), 0)
+    if (used + size > Number(project.storage_limit_bytes)) return NextResponse.json({ error: 'This upload would exceed the project storage limit.' }, { status: 413 })
   }
 
   const accounts = await supabase<Array<{ refresh_token: string }>>(`drive_accounts?id=eq.${project.drive_account_id}&select=refresh_token&limit=1`)
   const account = accounts[0]
   if (!account) return NextResponse.json({ error: 'Storage account unavailable.' }, { status: 500 })
-  const parentId = body?.parentId || project.drive_folder_id
   const { access_token } = await accessTokenFromRefreshToken(account.refresh_token)
-  const sessionUrl = await initiateResumableUpload(access_token, name, body?.mimeType || 'application/octet-stream', size, parentId)
+  const mimeType = body?.mimeType?.trim() || 'application/octet-stream'
+  const sessionUrl = await initiateResumableUpload(access_token, name, mimeType, size, parentId)
 
   const rows = await supabase<Array<{ id: string }>>('uploads', {
     method: 'POST',
     headers: { Prefer: 'return=representation' },
-    body: JSON.stringify({ project_id: project.id, name, mime_type: body?.mimeType || 'application/octet-stream', size_bytes: size, status: 'uploading' }),
+    body: JSON.stringify({ project_id: project.id, folder_id: folderId, name, mime_type: mimeType, size_bytes: size, status: 'uploading' }),
   })
   return NextResponse.json({ uploadId: rows[0]?.id, sessionUrl })
 }
