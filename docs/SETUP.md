@@ -28,9 +28,15 @@ Set these production environment variables:
 - `SUPABASE_URL`
 - `SUPABASE_SECRET_KEY`
 - `ADMIN_EMAIL`
-- `ADMIN_PASSWORD`
+- `ADMIN_PASSWORD_HASH` (SHA-256 hex of the admin password; preferred)
 - `SESSION_SECRET`
 - `GOOGLE_DRIVE_ROOT_FOLDER_ID` (optional if the connected Drive account stores its own root folder ID)
+
+For a quick MVP, `ADMIN_PASSWORD` can be used instead of `ADMIN_PASSWORD_HASH`, but it remains server-only and should not be committed.
+
+Generate a SHA-256 password hash without sharing the password with ChatGPT:
+
+`node -e "const c=require('crypto'); console.log(c.createHash('sha256').update(process.argv[1]).digest('hex'))" "YOUR_PASSWORD"`
 
 Use Vercel Environment Variables for production secrets. Redeploy after changing variables.
 
@@ -40,7 +46,7 @@ Add `drop.minimical.online` to the Vercel project and create the DNS record Verc
 
 ## 5. First Drive connection
 
-Open `/admin`, sign in with `ADMIN_EMAIL` and `ADMIN_PASSWORD`, then use **Connect Google Drive**. The resulting refresh token is stored in the `drive_accounts` table. Do not paste Google credentials into source files or chat.
+Open `/admin`, sign in with `ADMIN_EMAIL` and the configured admin password, then use **Connect Google Drive**. The resulting refresh token is stored in the `drive_accounts` table. Do not paste Google credentials into source files or chat.
 
 ## 6. Create a client project
 
