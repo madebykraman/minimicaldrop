@@ -43,8 +43,10 @@ export default function AdminPage() {
 
   async function login(event: FormEvent) {
     event.preventDefault(); setBusy(true); setError('')
-    try { await request('/api/admin/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email,password}) }); setPassword(''); await load() }
-    catch (e) { setError(e instanceof Error ? e.message : 'Login failed') }
+    try {
+      await request('/api/admin/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email,password}) })
+      window.location.href = '/admin'
+    } catch (e) { setError(e instanceof Error ? e.message : 'Login failed') }
     finally { setBusy(false) }
   }
 
