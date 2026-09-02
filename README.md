@@ -8,9 +8,11 @@ Private client upload portal for Minimical.
 
 ## Current milestone
 
-The repository currently contains the responsive client workspace and interaction foundation. The next production layer is server-side authentication, project persistence, Google OAuth, Drive folder mapping and resumable uploads.
+The production backend foundation is implemented: server-side admin authentication, Supabase persistence, Google OAuth/Drive connection, tokenized client project routes, project creation, folder management, storage-limit checks, direct browser-to-Google resumable uploads, completion verification and audit events.
 
-## Planned environment
+The visual client workspace remains intentionally a foundation and will be redesigned separately.
+
+## Environment
 
 - Next.js App Router
 - Vercel
@@ -19,3 +21,5 @@ The repository currently contains the responsive client workspace and interactio
 - Server-only secrets
 
 Never commit Google OAuth client secrets, refresh tokens, database credentials or service credentials.
+
+See `docs/SETUP.md` for production setup.
