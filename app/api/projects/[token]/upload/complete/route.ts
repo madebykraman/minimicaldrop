@@ -21,12 +21,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
     body: JSON.stringify({ drive_file_id: body.driveFileId, status: 'complete', completed_at: new Date().toISOString() }),
   })
 
-  await supabase(`projects?id=eq.${project.id}`, {
-    method: 'PATCH',
-    headers: { Prefer: 'return=minimal' },
-    body: JSON.stringify({ storage_used_bytes: Number(project.storage_used_bytes || 0) + Number(upload.size_bytes) }),
-  })
-
   await supabase('audit_events', {
     method: 'POST',
     headers: { Prefer: 'return=minimal' },
