@@ -5,12 +5,14 @@ const key = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE
 
 export function requireSupabase() {
   if (!url || !key) throw new Error('Supabase is not configured')
-  return { url: url.replace(/\/$/, ''), key }
+  const normalizedUrl = url.replace(/\/$/, '').replace(/\/rest\/v1\/?$/, '')
+  return { url: normalizedUrl, key }
 }
 
 export async function supabase<T>(path: string, init: RequestInit = {}): Promise<T> {
   const { url, key } = requireSupabase()
-  const response = await fetch(`${url}/rest/v1/${path}`, {
+  const cleanPath = path.replace(/^\/?rest\/v1\/?/, '').replace(/^\//, '')
+  const response = await fetch(`${url}/rest/v1/${cleanPath}`, {
     ...init,
     headers: {
       apikey: key,
