@@ -31,6 +31,12 @@ The operational layer is now implemented:
 - Branded operations control room
 - Branded responsive client workspace
 
+## Current surface
+
+The existing Drop layout and interaction model remain unchanged. The current brand pass is limited to typography, restrained purple gradients, correctly sized bundled brand assets, compact app-icon placement, Privacy and Terms footer links, and client Contact Support with a preformatted email handoff.
+
+There is no client onboarding tour or welcome flow.
+
 ## Storage model
 
 Supabase is the source of truth for project state and metadata. Google Drive stores the binary content. The storage boundary is deliberately kept behind server-side Drive helpers so another storage adapter can be introduced later without changing the client contract.
