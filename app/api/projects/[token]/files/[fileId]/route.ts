@@ -72,7 +72,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   if (!upload) return NextResponse.json({ error: 'File is not managed by this portal.' }, { status: 404 })
 
   await deleteDriveFile(accessToken, fileId)
-  await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}&project_id=eq.${project.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'failed' }) })
+  await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}&project_id=eq.${project.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'deleted' }) })
   await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'file.deleted', file_name: upload.name, metadata: { driveFileId: fileId } }) })
   return NextResponse.json({ ok: true })
 }
