@@ -1,10 +1,11 @@
 import Link from 'next/link'
+import DropLogo from '@/components/drop-logo'
 
 export const metadata = { title: 'Privacy — MINIMICAL DROP', robots: { index: true, follow: true } }
 
 export default function Privacy() {
   return <main className="legal-main">
-    <Link href="/" className="legal-back">← MINIMICAL DROP</Link>
+    <Link href="/" className="legal-back" aria-label="Back to MINIMICAL DROP"><DropLogo className="legal-brand" width={112} sizes="(max-width: 700px) 96px, 112px" priority /></Link>
     <header className="legal-head"><div className="eyebrow">MINIMICAL DROP / PRIVACY</div><h1>Privacy,<br />plainly.</h1><p>Last updated September 4, 2026. This notice describes how Minimical operates DROP as part of its client project workflow.</p></header>
     <div className="legal-card">
       <section className="legal-section"><h2>1. What DROP is</h2><p>MINIMICAL DROP is a private project file workspace operated by The Minimical & Co. It is provided as part of Minimical client engagements for collecting, organising and delivering project files. There is no public client registration.</p></section>
