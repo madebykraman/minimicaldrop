@@ -8,46 +8,61 @@ Private client file delivery infrastructure for Minimical.
 
 ## Architecture
 
-Admin → Project → Drive folder → private client token → browser upload → Google resumable upload → server verification → Supabase metadata.
+Admin → Project → Client workspace → Collect / Work / Deliver → storage.
 
 Google Drive is the current storage adapter, not the client-facing product. The client only sees MINIMICAL DROP.
 
 ## v0.2 milestone
 
-The operational layer is now implemented:
+The operational layer is implemented:
 
 - Atomic storage reservations under a project row lock
 - 1 MB browser upload chunks with resumable Drive sessions
-- Interrupted upload recovery when the same file is selected again
+- Interrupted upload recovery
 - Daily abandoned-upload cleanup
 - Project enable/disable, expiry, storage and client-link lifecycle
-- Project archive without destroying Drive data
 - Nested folder creation, rename and deletion
 - Secure file download, metadata and inline preview for common media
 - File and folder ownership validation
 - Audit events for project, folder, upload, download and deletion activity
 - Client and admin rate guards plus production security headers
-- Noindex/no-store treatment for private surfaces
 - Branded operations control room
 - Branded responsive client workspace
 
 ## v0.4 milestone
 
-Delivery intelligence is implemented on top of the v0.2 operational layer:
+Delivery intelligence is implemented on top of the operational layer:
 
-- Email notifications through Resend
 - Rich delivery states: in progress, ready for review, changes requested, approved, delivered and archived
 - Client approval and change requests
-- Project-level comments for delivery context
-- Client project messaging from the studio
+- Project-level comments and studio messages
 - Client and admin activity timelines
-- Chronological delivery history through the existing audit trail
+- Delivery history through the existing audit trail
 
-v0.3 real-world workflow is intentionally skipped as a separate development milestone. Current client and teammate testing serves as the real-world validation loop for v0.4 and later work.
+Transactional email support remains optional infrastructure and is not required for the core product.
+
+## v0.5 milestone
+
+Studio efficiency is now implemented without changing the client-facing product model:
+
+- Studio overview with project health and operational metrics
+- Aggregate storage usage and reservation visibility
+- Search across projects and clients
+- Project and client history surfaced from the audit trail
+- One-click duplication into a fresh client workspace with a new secure token and Drive folder
+- Richer project health visibility including file counts, usage and expiry proximity
+
+Templates, automated reminders and separate archive-management machinery are intentionally deferred until they provide enough operational value to justify their complexity.
+
+## Product boundary
+
+Drop belongs to Minimical. It supports Minimical clients as part of the service experience. There is no public registration, multi-tenant SaaS machinery or Slack-like collaboration layer.
+
+Google Drive stays invisible to clients.
 
 ## Current surface
 
-The existing Drop layout and interaction model remain unchanged. Branding is limited to typography, restrained purple gradients, correctly sized bundled brand assets, compact app-icon placement, Privacy and Terms footer links, and client Contact Support with a preformatted email handoff. v0.4 adds delivery intelligence without turning DROP into a general collaboration platform.
+The existing Drop layout and interaction model remain intact. Branding uses the approved typography, gradients and bundled assets. Private surfaces include client Contact Support with a preformatted email handoff, plus Privacy and Terms links.
 
 There is no client onboarding tour or welcome flow.
 
@@ -61,7 +76,7 @@ Supabase is the source of truth for project state and metadata. Google Drive sto
 - Vercel
 - PostgreSQL/Supabase
 - Google Drive API + OAuth
-- Resend for transactional delivery notifications
+- Optional Resend transactional email integration
 - Server-only secrets
 
 Never commit Google OAuth client secrets, refresh tokens, database credentials or service credentials.
