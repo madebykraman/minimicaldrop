@@ -1,10 +1,11 @@
 import Link from 'next/link'
+import DropLogo from '@/components/drop-logo'
 
 export const metadata = { title: 'Terms — MINIMICAL DROP', robots: { index: true, follow: true } }
 
 export default function Terms() {
   return <main className="legal-main">
-    <Link href="/" className="legal-back">← MINIMICAL DROP</Link>
+    <Link href="/" className="legal-back" aria-label="Back to MINIMICAL DROP"><span className="legal-brand"><DropLogo width={112} sizes="(max-width: 700px) 96px, 112px" priority /></span></Link>
     <header className="legal-head"><div className="eyebrow">MINIMICAL DROP / TERMS</div><h1>Simple terms.<br />Clear boundaries.</h1><p>Last updated September 4, 2026. These terms govern use of DROP when it is provided as part of a Minimical project engagement.</p></header>
     <div className="legal-card">
       <section className="legal-section"><h2>1. Project use</h2><p>DROP is provided by The Minimical & Co. for project-related file exchange and delivery. Access is intended for the client and other people authorised by the client or Minimical for that project.</p></section>
