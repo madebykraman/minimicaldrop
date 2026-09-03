@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import './drop.css'
 
 export const metadata: Metadata = {
   title: 'MINIMICAL DROP',
