@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { accessTokenFromRefreshToken, getDriveFile } from '@/lib/google-drive'
+import { accessTokenFromRefreshToken, getDriveFile, queryResumableUpload } from '@/lib/google-drive'
 import { getProjectByToken } from '@/lib/project-access'
 import { supabase } from '@/lib/supabase'
 
@@ -9,9 +9,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
   if (!project) return NextResponse.json({ error: 'Upload space is unavailable or expired.' }, { status: 404 })
 
   const body = await request.json().catch(() => null) as { uploadId?: string; driveFileId?: string } | null
-  if (!body?.uploadId || !body.driveFileId) return NextResponse.json({ error: 'Upload completion data is required.' }, { status: 400 })
+  if (!body?.uploadId) return NextResponse.json({ error: 'Upload completion data is required.' }, { status: 400 })
 
-  const uploads = await supabase<Array<{ id: string; project_id: string; folder_id: string | null; size_bytes: number; status: string }>>(`uploads?id=eq.${encodeURIComponent(body.uploadId)}&project_id=eq.${project.id}&select=id,project_id,folder_id,size_bytes,status&limit=1`)
+  const uploads = await supabase<Array<{ id: string; project_id: string; folder_id: string | null; drive_file_id: string | null; size_bytes: number; status: string }>>(`uploads?id=eq.${encodeURIComponent(body.uploadId)}&project_id=eq.${project.id}&select=id,project_id,folder_id,drive_file_id,size_bytes,status&limit=1`)
   const upload = uploads[0]
   if (!upload) return NextResponse.json({ error: 'Upload session not found.' }, { status: 404 })
   if (upload.status === 'complete') return NextResponse.json({ ok: true })
@@ -20,21 +20,33 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
   const account = accounts[0]
   if (!account) return NextResponse.json({ error: 'Storage account unavailable.' }, { status: 500 })
   const access = await accessTokenFromRefreshToken(account.refresh_token)
-  const file = await getDriveFile(access.access_token, body.driveFileId).catch(() => null)
+
+  let driveFileId = body.driveFileId || ''
+  if (!driveFileId) {
+    if (!upload.drive_file_id) return NextResponse.json({ error: 'Upload session is missing.' }, { status: 409 })
+    const status = await queryResumableUpload(access.access_token, upload.drive_file_id, upload.size_bytes)
+    if (status.status >= 200 && status.status < 300 && status.data?.id) {
+      driveFileId = status.data.id
+    } else {
+      return NextResponse.json({ error: 'Google Drive has not finished receiving this upload.' }, { status: 409 })
+    }
+  }
+
+  const file = await getDriveFile(access.access_token, driveFileId).catch(() => null)
   const expectedParent = upload.folder_id
     ? (await supabase<Array<{ drive_folder_id: string }>>(`folders?id=eq.${upload.folder_id}&project_id=eq.${project.id}&select=drive_folder_id&limit=1`))[0]?.drive_folder_id
     : project.drive_folder_id
 
   if (!file || file.trashed || !expectedParent || !file.parents?.includes(expectedParent) || Number(file.size || 0) !== Number(upload.size_bytes)) {
-    await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ drive_file_id: body.driveFileId, status: 'failed' }) })
+    await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'failed' }) })
     return NextResponse.json({ error: 'Google Drive did not confirm the uploaded file.' }, { status: 409 })
   }
 
   await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}`, {
     method: 'PATCH',
     headers: { Prefer: 'return=minimal' },
-    body: JSON.stringify({ drive_file_id: body.driveFileId, status: 'complete', completed_at: new Date().toISOString() }),
+    body: JSON.stringify({ drive_file_id: driveFileId, status: 'complete', completed_at: new Date().toISOString() }),
   })
-  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'upload.completed', metadata: { uploadId: upload.id, driveFileId: body.driveFileId, size: upload.size_bytes } }) })
-  return NextResponse.json({ ok: true })
+  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'upload.completed', metadata: { uploadId: upload.id, driveFileId, size: upload.size_bytes } }) })
+  return NextResponse.json({ ok: true, driveFileId })
 }
