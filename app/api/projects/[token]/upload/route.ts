@@ -39,7 +39,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
   const rows = await supabase<Array<{ id: string }>>('uploads', {
     method: 'POST',
     headers: { Prefer: 'return=representation' },
-    body: JSON.stringify({ project_id: project.id, folder_id: folderId, name, mime_type: mimeType, size_bytes: size, status: 'uploading' }),
+    body: JSON.stringify({ project_id: project.id, folder_id: folderId, drive_file_id: sessionUrl, name, mime_type: mimeType, size_bytes: size, status: 'uploading' }),
   })
   return NextResponse.json({ uploadId: rows[0]?.id, sessionUrl })
 }
