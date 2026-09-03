@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import crypto from 'node:crypto'
 import { isAdmin } from '@/lib/admin-auth'
-import { accessTokenFromRefreshToken, createDriveFolder } from '@/lib/google-drive'
+import { accessTokenFromRefreshToken, createDriveFolder, getGoogleAccountEmail } from '@/lib/google-drive'
 import { hashToken } from '@/lib/google-drive'
 import { supabase } from '@/lib/supabase'
 
@@ -13,8 +13,26 @@ function bytes(value: unknown) {
 export async function GET() {
   if (!(await isAdmin())) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
   const projects = await supabase<Array<{ id: string; name: string; client_name: string; client_email: string | null; drive_account_id: string; drive_folder_id: string; storage_limit_bytes: number | null; expires_at: string; disabled_at: string | null; created_at: string }>>('projects?select=id,name,client_name,client_email,drive_account_id,drive_folder_id,storage_limit_bytes,expires_at,disabled_at,created_at&order=created_at.desc')
-  const accounts = await supabase<Array<{ id: string; label: string; google_email: string; root_folder_id: string | null }>>('drive_accounts?select=id,label,google_email,root_folder_id&order=created_at.desc')
-  return NextResponse.json({ projects, accounts })
+  const accounts = await supabase<Array<{ id: string; label: string; google_email: string; refresh_token: string; root_folder_id: string | null }>>('drive_accounts?select=id,label,google_email,refresh_token,root_folder_id&order=created_at.desc')
+
+  const repairedAccounts = await Promise.all(accounts.map(async (account) => {
+    if (account.google_email && account.google_email !== 'unknown') return account
+    try {
+      const access = await accessTokenFromRefreshToken(account.refresh_token)
+      const email = await getGoogleAccountEmail(access.access_token)
+      await supabase(`drive_accounts?id=eq.${encodeURIComponent(account.id)}`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({ label: email, google_email: email }),
+      })
+      return { ...account, label: email, google_email: email }
+    } catch {
+      return account
+    }
+  }))
+
+  const safeAccounts = repairedAccounts.map(({ refresh_token: _refreshToken, ...account }) => account)
+  return NextResponse.json({ projects, accounts: safeAccounts })
 }
 
 export async function POST(request: Request) {
