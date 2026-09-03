@@ -12,7 +12,6 @@ const dmMono = DM_Mono({ subsets: ['latin'], weight: ['400','500'], variable: '-
 export const metadata: Metadata = {
   title: 'MINIMICAL DROP',
   description: 'Private client file delivery and project workspace by Minimical.',
-  icons: { icon: '/favicon.ico' },
   robots: { index: false, follow: false, nocache: true },
 }
 
