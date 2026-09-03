@@ -55,10 +55,24 @@ export async function createDriveFolder(accessToken: string, name: string, paren
   return driveRequest<{ id: string; name: string }>(accessToken, '/files', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder', ...(parentId ? { parents: [parentId] } : {}) }) })
 }
 
+type DriveChild = { id: string; name: string; mimeType: string; size?: string; modifiedTime?: string; capabilities?: { canDownload?: boolean } }
+
 export async function listDriveChildren(accessToken: string, parentId: string) {
-  const q = `'${parentId}' in parents and trashed = false`
-  const params = new URLSearchParams({ q, fields: 'files(id,name,mimeType,size,modifiedTime,capabilities(canDownload))', orderBy: 'folder,name' })
-  return driveRequest<{ files: Array<{ id: string; name: string; mimeType: string; size?: string; modifiedTime?: string; capabilities?: { canDownload?: boolean } }> }>(accessToken, `/files?${params}`)
+  const files: DriveChild[] = []
+  let pageToken = ''
+  do {
+    const params = new URLSearchParams({
+      q: `'${parentId}' in parents and trashed = false`,
+      fields: 'nextPageToken,files(id,name,mimeType,size,modifiedTime,capabilities(canDownload))',
+      orderBy: 'folder,name',
+      pageSize: '1000',
+    })
+    if (pageToken) params.set('pageToken', pageToken)
+    const result = await driveRequest<{ nextPageToken?: string; files: DriveChild[] }>(accessToken, `/files?${params}`)
+    files.push(...(result.files || []))
+    pageToken = result.nextPageToken || ''
+  } while (pageToken)
+  return { files }
 }
 
 export async function getDriveFile(accessToken: string, fileId: string) {
@@ -93,23 +107,10 @@ export async function initiateResumableUpload(accessToken: string, name: string,
 }
 
 export async function queryResumableUpload(accessToken: string, sessionUrl: string, size: number) {
-  const response = await fetch(sessionUrl, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Length': '0',
-      'Content-Range': `bytes */${size}`,
-    },
-  })
-
+  const response = await fetch(sessionUrl, { method: 'PUT', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Length': '0', 'Content-Range': `bytes */${size}` } })
   let data: { id: string } | null = null
   try { data = await response.json() as { id: string } } catch {}
-
-  return {
-    status: response.status,
-    range: response.headers.get('Range'),
-    data,
-  }
+  return { status: response.status, range: response.headers.get('Range'), data }
 }
 
 export function hashToken(value: string) {
