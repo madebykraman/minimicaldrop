@@ -32,9 +32,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
   const sessionUrl = await initiateResumableUpload(access_token, name, mimeType, size, parentId)
 
   try {
-    const rows = await supabase<Array<{ id: string }>>('rpc/reserve_upload', {
+    const uploadId = await supabase<string>('rpc/reserve_upload', {
       method: 'POST',
-      headers: { Prefer: 'return=representation' },
       body: JSON.stringify({
         p_project_id: project.id,
         p_folder_id: folderId,
@@ -45,7 +44,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
       }),
     })
 
-    const uploadId = rows[0]?.id
     if (!uploadId) return NextResponse.json({ error: 'Upload session could not be created.' }, { status: 500 })
     return NextResponse.json({ uploadId, sessionUrl })
   } catch (error) {
