@@ -8,6 +8,7 @@ import './home.css'
 import './drop.css'
 import './delivery.css'
 import './admin/admin.css'
+import './admin/admin-delivery.css'
 
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-display', display: 'swap' })
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-body', display: 'swap' })
