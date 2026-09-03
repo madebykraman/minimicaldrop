@@ -76,6 +76,8 @@ language plpgsql
 as $$
 declare
   v_limit bigint;
+  v_expires_at timestamptz;
+  v_disabled_at timestamptz;
   v_used bigint;
   v_upload_id uuid;
 begin
@@ -83,14 +85,18 @@ begin
     raise exception 'Upload size cannot be negative';
   end if;
 
-  select storage_limit_bytes
-    into v_limit
+  select storage_limit_bytes, expires_at, disabled_at
+    into v_limit, v_expires_at, v_disabled_at
     from public.projects
    where id = p_project_id
    for update;
 
   if not found then
     raise exception 'Project not found';
+  end if;
+
+  if v_disabled_at is not null or v_expires_at <= now() then
+    raise exception 'Project is unavailable or expired';
   end if;
 
   select coalesce(sum(size_bytes), 0)
