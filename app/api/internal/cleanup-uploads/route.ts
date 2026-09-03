@@ -1,21 +1,40 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-export async function POST(request: Request) {
-  const secret = process.env.CRON_SECRET
-  if (!secret) return NextResponse.json({ error: 'Cleanup is not configured.' }, { status: 503 })
+const STALE_MS = 24 * 60 * 60 * 1000
 
-  const authorization = request.headers.get('authorization') || ''
-  if (authorization !== `Bearer ${secret}`) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
-
-  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-  const stale = await supabase<Array<{ id: string }>>(`uploads?status=in.(initiated,uploading)&created_at=lt.${encodeURIComponent(cutoff)}&select=id`)
-  if (!stale.length) return NextResponse.json({ cleaned: 0 })
+async function cleanup() {
+  const cutoff = new Date(Date.now() - STALE_MS).toISOString()
+  const stale = await supabase<Array<{ id: string; project_id: string; name: string }>>(`uploads?status=in.(initiated,uploading)&last_activity_at=lt.${encodeURIComponent(cutoff)}&select=id,project_id,name`)
+  if (!stale.length) return { cleaned: 0 }
 
   await supabase(`uploads?id=in.(${stale.map(row => encodeURIComponent(row.id)).join(',')})&status=in.(initiated,uploading)`, {
     method: 'PATCH',
     headers: { Prefer: 'return=minimal' },
-    body: JSON.stringify({ status: 'failed' }),
+    body: JSON.stringify({ status: 'failed', session_url: null, last_activity_at: new Date().toISOString() }),
   })
-  return NextResponse.json({ cleaned: stale.length })
+
+  await Promise.all(stale.map(row => supabase('audit_events', {
+    method: 'POST',
+    headers: { Prefer: 'return=minimal' },
+    body: JSON.stringify({ project_id: row.project_id, event_type: 'upload.abandoned', file_name: row.name, metadata: { uploadId: row.id, ageHours: 24 } }),
+  }).catch(() => undefined)))
+
+  return { cleaned: stale.length }
+}
+
+function authorized(request: Request) {
+  const secret = process.env.CRON_SECRET
+  if (!secret) return false
+  return request.headers.get('authorization') === `Bearer ${secret}`
+}
+
+export async function GET(request: Request) {
+  if (!authorized(request)) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
+  return NextResponse.json(await cleanup())
+}
+
+export async function POST(request: Request) {
+  if (!authorized(request)) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
+  return NextResponse.json(await cleanup())
 }
