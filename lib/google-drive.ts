@@ -57,13 +57,31 @@ export async function createDriveFolder(accessToken: string, name: string, paren
 
 export async function listDriveChildren(accessToken: string, parentId: string) {
   const q = `'${parentId}' in parents and trashed = false`
-  const params = new URLSearchParams({ q, fields: 'files(id,name,mimeType,size,modifiedTime)', orderBy: 'folder,name' })
-  return driveRequest<{ files: Array<{ id: string; name: string; mimeType: string; size?: string; modifiedTime?: string }> }>(accessToken, `/files?${params}`)
+  const params = new URLSearchParams({ q, fields: 'files(id,name,mimeType,size,modifiedTime,capabilities(canDownload))', orderBy: 'folder,name' })
+  return driveRequest<{ files: Array<{ id: string; name: string; mimeType: string; size?: string; modifiedTime?: string; capabilities?: { canDownload?: boolean } }> }>(accessToken, `/files?${params}`)
 }
 
 export async function getDriveFile(accessToken: string, fileId: string) {
-  const params = new URLSearchParams({ fields: 'id,name,size,mimeType,parents,trashed' })
-  return driveRequest<{ id: string; name: string; size?: string; mimeType: string; parents?: string[]; trashed?: boolean }>(accessToken, `/files/${encodeURIComponent(fileId)}?${params}`)
+  const params = new URLSearchParams({ fields: 'id,name,size,mimeType,parents,trashed,capabilities(canDownload)' })
+  return driveRequest<{ id: string; name: string; size?: string; mimeType: string; parents?: string[]; trashed?: boolean; capabilities?: { canDownload?: boolean } }>(accessToken, `/files/${encodeURIComponent(fileId)}?${params}`)
+}
+
+export async function downloadDriveFile(accessToken: string, fileId: string, range?: string) {
+  const params = new URLSearchParams({ alt: 'media' })
+  const headers: HeadersInit = { Authorization: `Bearer ${accessToken}` }
+  if (range) headers.Range = range
+  const response = await fetch(`${DRIVE_API}/files/${encodeURIComponent(fileId)}?${params}`, { headers })
+  if (!response.ok) throw new Error(`Drive download ${response.status}: ${await response.text()}`)
+  return response
+}
+
+export async function deleteDriveFile(accessToken: string, fileId: string) {
+  const response = await fetch(`${DRIVE_API}/files/${encodeURIComponent(fileId)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${accessToken}` } })
+  if (!response.ok) throw new Error(`Drive delete ${response.status}: ${await response.text()}`)
+}
+
+export async function renameDriveFile(accessToken: string, fileId: string, name: string) {
+  return driveRequest<{ id: string; name: string }>(accessToken, `/files/${encodeURIComponent(fileId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) })
 }
 
 export async function initiateResumableUpload(accessToken: string, name: string, mimeType: string, size: number, parentId: string) {
