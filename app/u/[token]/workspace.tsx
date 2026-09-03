@@ -199,10 +199,11 @@ export default function Workspace({ token }: { token: string }) {
   }
 
   async function uploadFile(file: File) {
-    const uploadId = crypto.randomUUID()
+    const clientUploadId = crypto.randomUUID()
     const parentId = currentFolderId
-    setUploads(prev => [...prev, { id: uploadId, name: file.name, progress: 0, status: 'uploading' }])
-    const setProgress = (progress: number) => setUploads(prev => prev.map(u => u.id === uploadId ? { ...u, progress } : u))
+    let serverUploadId: string | null = null
+    setUploads(prev => [...prev, { id: clientUploadId, name: file.name, progress: 0, status: 'uploading' }])
+    const setProgress = (progress: number) => setUploads(prev => prev.map(u => u.id === clientUploadId ? { ...u, progress } : u))
 
     try {
       const init = await jsonFetch(`/api/projects/${token}/upload`, {
@@ -210,6 +211,7 @@ export default function Workspace({ token }: { token: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: file.name, mimeType: file.type, size: file.size, parentId: parentId || undefined }),
       })
+      serverUploadId = init.uploadId
       const statusUrl = `/api/projects/${token}/upload/status`
       await uploadToGoogle(file, init.sessionUrl, statusUrl, init.uploadId, setProgress)
       await jsonFetch(`/api/projects/${token}/upload/complete`, {
@@ -217,15 +219,18 @@ export default function Workspace({ token }: { token: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ uploadId: init.uploadId }),
       })
-      setUploads(prev => prev.map(u => u.id === uploadId ? { ...u, progress: 1, status: 'complete' } : u))
+      setUploads(prev => prev.map(u => u.id === clientUploadId ? { ...u, progress: 1, status: 'complete' } : u))
       await load(parentId || undefined)
     } catch (e) {
-      setUploads(prev => prev.map(u => u.id === uploadId ? { ...u, status: 'error', error: e instanceof Error ? e.message : 'Upload failed' } : u))
-      await jsonFetch(`/api/projects/${token}/upload/fail`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uploadId: (e as { uploadId?: string })?.uploadId }),
-      }).catch(() => undefined)
+      setUploads(prev => prev.map(u => u.id === clientUploadId ? { ...u, status: 'error', error: e instanceof Error ? e.message : 'Upload failed' } : u))
+      if (serverUploadId) {
+        await jsonFetch(`/api/projects/${token}/upload/fail`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uploadId: serverUploadId }),
+        }).catch(() => undefined)
+      }
+      await load(parentId || undefined).catch(() => undefined)
     }
   }
 
@@ -251,9 +256,7 @@ export default function Workspace({ token }: { token: string }) {
       })
       setDialog(null)
       await load(currentFolderId || undefined)
-      if (dialog.kind === 'folder') {
-        setTrail(prev => prev.map(item => item.id === dialog.id ? { ...item, name } : item))
-      }
+      if (dialog.kind === 'folder') setTrail(prev => prev.map(item => item.id === dialog.id ? { ...item, name } : item))
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unable to rename item')
     } finally {
@@ -322,91 +325,31 @@ export default function Workspace({ token }: { token: string }) {
           <h1>{project.name}</h1>
           <p className="drop-intro-meta">Prepared for {project.clientName} <span/> Access expires {expires}</p>
         </div>
-        <div className="drop-intro-note">
-          <span>PRIVATE BY DESIGN</span>
-          <p>Files move directly between this space and the studio storage. Your access link is temporary.</p>
-        </div>
+        <div className="drop-intro-note"><span>PRIVATE BY DESIGN</span><p>Files move directly between this space and the studio storage. Your access link is temporary.</p></div>
       </section>
 
       <section className="drop-card">
         <div className="drop-toolbar">
-          <div className="drop-breadcrumbs">
-            {trail.map((item, index) => <span key={item.id}>
-              {index > 0 && <ChevronRight size={13}/>}<button onClick={() => void goToTrail(index)} className={index === trail.length - 1 ? 'active' : ''}>{item.name}</button>
-            </span>)}
-          </div>
-          <div className="drop-actions">
-            <button className="drop-button ghost" onClick={() => setShowFolder(true)}><FolderPlus size={15}/> New folder</button>
-            <button className="drop-button accent" onClick={() => input.current?.click()}><Upload size={15}/> Upload</button>
-          </div>
+          <div className="drop-breadcrumbs">{trail.map((item, index) => <span key={item.id}>{index > 0 && <ChevronRight size={13}/>}<button onClick={() => void goToTrail(index)} className={index === trail.length - 1 ? 'active' : ''}>{item.name}</button></span>)}</div>
+          <div className="drop-actions"><button className="drop-button ghost" onClick={() => setShowFolder(true)}><FolderPlus size={15}/> New folder</button><button className="drop-button accent" onClick={() => input.current?.click()}><Upload size={15}/> Upload</button></div>
         </div>
 
         <div className="drop-body">
           <input ref={input} hidden type="file" multiple onChange={e => addFiles(e.target.files)}/>
 
           <div className="dropzone-v2" onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); addFiles(e.dataTransfer.files) }} onClick={() => input.current?.click()}>
-            <div className="dropzone-glow"/>
-            <div className="drop-upload-mark"><ArrowUp size={21}/></div>
-            <div className="dropzone-copy"><strong>Drop files anywhere</strong><span>or click to browse from your computer</span></div>
-            <div className="dropzone-hint">DIRECT TO DRIVE</div>
+            <div className="dropzone-glow"/><div className="drop-upload-mark"><ArrowUp size={21}/></div><div className="dropzone-copy"><strong>Drop files anywhere</strong><span>or click to browse from your computer</span></div><div className="dropzone-hint">DIRECT TO DRIVE</div>
           </div>
 
-          {uploads.length > 0 && <section className="drop-section drop-upload-section">
-            <div className="drop-section-head"><span>Current transfers</span><span>{uploads.filter(u => u.status === 'uploading').length ? 'Uploading' : 'Complete'}</span></div>
-            {uploads.map(upload => <div className="drop-row transfer" key={upload.id}>
-              <div className="drop-file-icon"><Upload size={16}/></div>
-              <div className="drop-row-main"><strong>{upload.name}</strong><span>{upload.status === 'complete' ? 'Uploaded successfully' : upload.status === 'error' ? upload.error : `${Math.round(upload.progress * 100)}% uploaded`}</span></div>
-              {upload.status === 'uploading' && <div className="drop-transfer-progress"><i style={{ width: `${upload.progress * 100}%` }}/></div>}
-              {upload.status === 'complete' && <Check size={17} className="drop-success"/>}
-              {upload.status === 'error' && <AlertCircle size={17} className="drop-error"/>}
-            </div>)}
-          </section>}
+          {uploads.length > 0 && <section className="drop-section drop-upload-section"><div className="drop-section-head"><span>Current transfers</span><span>{uploads.filter(u => u.status === 'uploading').length ? 'Uploading' : 'Complete'}</span></div>{uploads.map(upload => <div className="drop-row transfer" key={upload.id}><div className="drop-file-icon"><Upload size={16}/></div><div className="drop-row-main"><strong>{upload.name}</strong><span>{upload.status === 'complete' ? 'Uploaded successfully' : upload.status === 'error' ? upload.error : `${Math.round(upload.progress * 100)}% uploaded`}</span></div>{upload.status === 'uploading' && <div className="drop-transfer-progress"><i style={{ width: `${upload.progress * 100}%` }}/></div>}{upload.status === 'complete' && <Check size={17} className="drop-success"/>}{upload.status === 'error' && <AlertCircle size={17} className="drop-error"/>}</div>)}</section>}
 
           {!isRoot && <button className="drop-parent" onClick={() => void goToTrail(Math.max(0, trail.length - 2))}><ArrowLeft size={15}/> Back to {trail.length > 1 ? trail[trail.length - 2]?.name : project.name}</button>}
 
-          {folders.length > 0 && <section className="drop-section">
-            <div className="drop-section-head"><span>Folders</span><span>{folders.length} {folders.length === 1 ? 'folder' : 'folders'}</span></div>
-            <div className="drop-list">
-              {folders.map(folder => <div className="drop-row" key={folder.id}>
-                <button className="drop-row-click" onClick={() => void openFolder(folder)}>
-                  <div className="drop-folder-icon"><Folder size={17}/></div>
-                  <div className="drop-row-main"><strong>{folder.name}</strong><span>Folder</span></div>
-                </button>
-                <div className="drop-row-actions">
-                  <button title="Rename folder" aria-label={`Rename ${folder.name}`} onClick={() => startRename('folder', folder)}><Pencil size={14}/></button>
-                  <button title="Delete folder" aria-label={`Delete ${folder.name}`} onClick={() => startDelete('folder', folder)}><Trash2 size={14}/></button>
-                  <button className="drop-open" title="Open folder" aria-label={`Open ${folder.name}`} onClick={() => void openFolder(folder)}><ChevronRight size={16}/></button>
-                </div>
-              </div>)}
-            </div>
-          </section>}
+          {folders.length > 0 && <section className="drop-section"><div className="drop-section-head"><span>Folders</span><span>{folders.length} {folders.length === 1 ? 'folder' : 'folders'}</span></div><div className="drop-list">{folders.map(folder => <div className="drop-row" key={folder.id}><button className="drop-row-click" onClick={() => void openFolder(folder)}><div className="drop-folder-icon"><Folder size={17}/></div><div className="drop-row-main"><strong>{folder.name}</strong><span>Folder</span></div></button><div className="drop-row-actions"><button title="Rename folder" aria-label={`Rename ${folder.name}`} onClick={() => startRename('folder', folder)}><Pencil size={14}/></button><button title="Delete folder" aria-label={`Delete ${folder.name}`} onClick={() => startDelete('folder', folder)}><Trash2 size={14}/></button><button className="drop-open" title="Open folder" aria-label={`Open ${folder.name}`} onClick={() => void openFolder(folder)}><ChevronRight size={16}/></button></div></div>)}</div></section>}
 
-          <section className="drop-section">
-            <div className="drop-section-head"><span>Files</span><span>{files.length} {files.length === 1 ? 'file' : 'files'}</span></div>
-            {files.length ? <div className="drop-list">
-              {files.map(file => <div className="drop-row" key={file.id}>
-                <div className="drop-file-icon"><File size={17}/></div>
-                <div className="drop-row-main"><strong>{file.name}</strong><span>{formatBytes(file.sizeBytes)} {file.modifiedTime ? `· ${formatDate(file.modifiedTime)}` : ''}</span></div>
-                <div className="drop-row-actions">
-                  <button title="Download file" aria-label={`Download ${file.name}`} onClick={() => downloadFile(file)}><Download size={15}/></button>
-                  <button title="Rename file" aria-label={`Rename ${file.name}`} onClick={() => startRename('file', file)}><Pencil size={14}/></button>
-                  <button title="Delete file" aria-label={`Delete ${file.name}`} onClick={() => startDelete('file', file)}><Trash2 size={14}/></button>
-                  <button className="drop-more" title="More actions" aria-label={`More actions for ${file.name}`}><MoreHorizontal size={15}/></button>
-                </div>
-              </div>)}
-            </div> : <div className="drop-empty-folder"><File size={19}/><span>No files in this folder yet.</span></div>}
-          </section>
+          <section className="drop-section"><div className="drop-section-head"><span>Files</span><span>{files.length} {files.length === 1 ? 'file' : 'files'}</span></div>{files.length ? <div className="drop-list">{files.map(file => <div className="drop-row" key={file.id}><div className="drop-file-icon"><File size={17}/></div><div className="drop-row-main"><strong>{file.name}</strong><span>{formatBytes(file.sizeBytes)} {file.modifiedTime ? `· ${formatDate(file.modifiedTime)}` : ''}</span></div><div className="drop-row-actions"><button title="Download file" aria-label={`Download ${file.name}`} onClick={() => downloadFile(file)}><Download size={15}/></button><button title="Rename file" aria-label={`Rename ${file.name}`} onClick={() => startRename('file', file)}><Pencil size={14}/></button><button title="Delete file" aria-label={`Delete ${file.name}`} onClick={() => startDelete('file', file)}><Trash2 size={14}/></button><button className="drop-more" title="More actions" aria-label={`More actions for ${file.name}`}><MoreHorizontal size={15}/></button></div></div>)}</div> : <div className="drop-empty-folder"><File size={19}/><span>No files in this folder yet.</span></div>}</section>
 
-          <section className="drop-storage">
-            <div className="drop-storage-top">
-              <div className="drop-storage-title"><HardDrive size={15}/><span>Storage</span></div>
-              <div className="drop-storage-value">{formatBytes(usedBytes)}{project.storageLimitBytes ? ` / ${formatBytes(project.storageLimitBytes)}` : ''}</div>
-            </div>
-            {project.storageLimitBytes ? <>
-              <div className="drop-storage-track"><i style={{ width: `${reservedUsage}%` }}/></div>
-              <div className="drop-storage-bottom"><span>{Math.round(usage)}% used{pendingBytes ? ` · ${Math.round(reservedUsage)}% reserved` : ''}</span><span>{pendingBytes ? `${formatBytes(pendingBytes)} uploading` : 'Ready for uploads'}</span></div>
-            </> : <div className="drop-storage-bottom"><span>No project storage limit</span><span>Ready for uploads</span></div>}
-          </section>
+          <section className="drop-storage"><div className="drop-storage-top"><div className="drop-storage-title"><HardDrive size={15}/><span>Storage</span></div><div className="drop-storage-value">{formatBytes(usedBytes)}{project.storageLimitBytes ? ` / ${formatBytes(project.storageLimitBytes)}` : ''}</div></div>{project.storageLimitBytes ? <><div className="drop-storage-track"><i style={{ width: `${reservedUsage}%` }}/></div><div className="drop-storage-bottom"><span>{Math.round(usage)}% used{pendingBytes ? ` · ${Math.round(reservedUsage)}% reserved` : ''}</span><span>{pendingBytes ? `${formatBytes(pendingBytes)} uploading` : 'Ready for uploads'}</span></div></> : <div className="drop-storage-bottom"><span>No project storage limit</span><span>Ready for uploads</span></div>}</section>
 
           {error && <div className="drop-inline-error"><AlertCircle size={15}/>{error}<button onClick={() => void load(currentFolderId || undefined)}><RefreshCw size={14}/></button></div>}
         </div>
@@ -415,25 +358,8 @@ export default function Workspace({ token }: { token: string }) {
       <footer className="drop-footer"><span>MINIMICAL DROP</span><span>Private project delivery</span></footer>
     </main>
 
-    {showFolder && <div className="drop-overlay" onClick={() => !actionBusy && setShowFolder(false)}>
-      <div className="drop-dialog" onClick={e => e.stopPropagation()}>
-        <div className="drop-dialog-head"><div><span className="drop-dialog-kicker">PROJECT ORGANISATION</span><h3>New folder</h3></div><button onClick={() => setShowFolder(false)}><X size={17}/></button></div>
-        <input autoFocus value={folderName} onChange={e => setFolderName(e.target.value)} onKeyDown={e => e.key === 'Enter' && void createFolder()} placeholder="Folder name" maxLength={120}/>
-        <button className="drop-dialog-submit" disabled={actionBusy || !folderName.trim()} onClick={() => void createFolder()}>{actionBusy ? <Loader2 className="drop-spin" size={15}/> : <FolderPlus size={15}/>} Create folder</button>
-      </div>
-    </div>}
+    {showFolder && <div className="drop-overlay" onClick={() => !actionBusy && setShowFolder(false)}><div className="drop-dialog" onClick={e => e.stopPropagation()}><div className="drop-dialog-head"><div><span className="drop-dialog-kicker">PROJECT ORGANISATION</span><h3>New folder</h3></div><button onClick={() => setShowFolder(false)}><X size={17}/></button></div><input autoFocus value={folderName} onChange={e => setFolderName(e.target.value)} onKeyDown={e => e.key === 'Enter' && void createFolder()} placeholder="Folder name" maxLength={120}/><button className="drop-dialog-submit" disabled={actionBusy || !folderName.trim()} onClick={() => void createFolder()}>{actionBusy ? <Loader2 className="drop-spin" size={15}/> : <FolderPlus size={15}/>} Create folder</button></div></div>}
 
-    {dialog && <div className="drop-overlay" onClick={() => !actionBusy && setDialog(null)}>
-      <div className="drop-dialog" onClick={e => e.stopPropagation()}>
-        <div className="drop-dialog-head"><div><span className="drop-dialog-kicker">{dialog.type === 'rename' ? 'EDIT NAME' : 'CONFIRM ACTION'}</span><h3>{dialog.type === 'rename' ? 'Rename item' : `Delete ${dialog.kind}`}</h3></div><button onClick={() => setDialog(null)}><X size={17}/></button></div>
-        {dialog.type === 'rename' ? <>
-          <input autoFocus value={dialogValue} onChange={e => setDialogValue(e.target.value)} onKeyDown={e => e.key === 'Enter' && void renameItem()} maxLength={dialog.kind === 'file' ? 255 : 120}/>
-          <button className="drop-dialog-submit" disabled={actionBusy || !dialogValue.trim()} onClick={() => void renameItem()}>{actionBusy ? <Loader2 className="drop-spin" size={15}/> : <Pencil size={15}/>} Save name</button>
-        </> : <>
-          <div className="drop-delete-copy"><Trash2 size={18}/><p>Delete <strong>{dialog.name}</strong>? {dialog.kind === 'folder' ? 'Everything inside this folder will also be permanently deleted.' : 'This file will be permanently removed.'}</p></div>
-          <div className="drop-dialog-actions"><button className="drop-cancel" disabled={actionBusy} onClick={() => setDialog(null)}>Cancel</button><button className="drop-delete-submit" disabled={actionBusy} onClick={() => void deleteItem()}>{actionBusy ? <Loader2 className="drop-spin" size={15}/> : <Trash2 size={15}/>} Delete permanently</button></div>
-        </>}
-      </div>
-    </div>}
+    {dialog && <div className="drop-overlay" onClick={() => !actionBusy && setDialog(null)}><div className="drop-dialog" onClick={e => e.stopPropagation()}><div className="drop-dialog-head"><div><span className="drop-dialog-kicker">{dialog.type === 'rename' ? 'EDIT NAME' : 'CONFIRM ACTION'}</span><h3>{dialog.type === 'rename' ? 'Rename item' : `Delete ${dialog.kind}`}</h3></div><button onClick={() => setDialog(null)}><X size={17}/></button></div>{dialog.type === 'rename' ? <><input autoFocus value={dialogValue} onChange={e => setDialogValue(e.target.value)} onKeyDown={e => e.key === 'Enter' && void renameItem()} maxLength={dialog.kind === 'file' ? 255 : 120}/><button className="drop-dialog-submit" disabled={actionBusy || !dialogValue.trim()} onClick={() => void renameItem()}>{actionBusy ? <Loader2 className="drop-spin" size={15}/> : <Pencil size={15}/>} Save name</button></> : <><div className="drop-delete-copy"><Trash2 size={18}/><p>Delete <strong>{dialog.name}</strong>? {dialog.kind === 'folder' ? 'Everything inside this folder will also be permanently deleted.' : 'This file will be permanently removed.'}</p></div><div className="drop-dialog-actions"><button className="drop-cancel" disabled={actionBusy} onClick={() => setDialog(null)}>Cancel</button><button className="drop-delete-submit" disabled={actionBusy} onClick={() => void deleteItem()}>{actionBusy ? <Loader2 className="drop-spin" size={15}/> : <Trash2 size={15}/>} Delete permanently</button></div></>}</div></div>}
   </div>
 }
