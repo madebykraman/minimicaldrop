@@ -80,7 +80,6 @@ async function uploadToGoogle(file: File, sessionUrl: string, statusUrl: string,
         }
       }
 
-      if (result.status >= 400 && result.status < 500) throw new Error(`Google upload failed (${result.status})`)
       throw new Error(`Google upload failed (${result.status})`)
     } catch (error) {
       const status = await jsonFetch(`${statusUrl}?uploadId=${encodeURIComponent(uploadId)}`)
@@ -112,6 +111,7 @@ export default function Workspace({ token }: { token: string }) {
   const [currentFolderId, setCurrentFolderId] = useState('')
   const [rootId, setRootId] = useState('')
   const [usedBytes, setUsedBytes] = useState(0)
+  const [pendingBytes, setPendingBytes] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [folderName, setFolderName] = useState('')
@@ -122,7 +122,7 @@ export default function Workspace({ token }: { token: string }) {
     setLoading(true); setError('')
     try {
       const data = await jsonFetch(`/api/projects/${token}${parentId ? `?parentId=${encodeURIComponent(parentId)}` : ''}`)
-      setProject(data.project); setItems(data.items); setUsedBytes(data.usedBytes)
+      setProject(data.project); setItems(data.items); setUsedBytes(data.usedBytes); setPendingBytes(data.pendingBytes || 0)
       if (!rootId) setRootId(data.currentFolderId)
       setCurrentFolderId(data.currentFolderId)
     } catch (e) { setError(e instanceof Error ? e.message : 'Unable to load project') }
@@ -168,6 +168,7 @@ export default function Workspace({ token }: { token: string }) {
   const folders = items.filter(item => item.mimeType === FOLDER_MIME)
   const files = items.filter(item => item.mimeType !== FOLDER_MIME)
   const usage = project.storageLimitBytes ? Math.min(100, usedBytes / project.storageLimitBytes * 100) : 0
+  const reservedUsage = project.storageLimitBytes ? Math.min(100, (usedBytes + pendingBytes) / project.storageLimitBytes * 100) : 0
   const isRoot = currentFolderId === rootId
   const expires = new Date(project.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
 
@@ -185,7 +186,7 @@ export default function Workspace({ token }: { token: string }) {
           {uploads.length > 0 && <div className="folders"><div className="sectionTitle">Uploads</div>{uploads.map((u,i)=><div className="folder" key={`${u.name}-${i}`}><div className="folderIcon"><Upload size={16}/></div><div style={{flex:1}}><div className="folderName">{u.name}</div><div className="folderCount">{u.status === 'complete' ? 'Uploaded' : u.status === 'error' ? u.error : `${Math.round(u.progress*100)}%`}</div></div>{u.status === 'uploading' && <div style={{width:90,height:4,background:'#e9e9e3',borderRadius:9,overflow:'hidden'}}><i style={{display:'block',height:'100%',width:`${u.progress*100}%`,background:'#171713'}}/></div>}</div>)}</div>}
           <div className="folders"><div className="sectionTitle">{!isRoot && <button className="btn" style={{marginRight:8,padding:'6px 9px'}} onClick={()=>load(rootId)}><ArrowLeft size={13}/></button>} Folders</div>{folders.map(folder=><button className="folder" style={{width:'100%',textAlign:'left'}} key={folder.id} onClick={()=>load(folder.id)}><div className="folderIcon"><Folder size={17}/></div><div style={{flex:1}}><div className="folderName">{folder.name}</div><div className="folderCount">Folder</div></div><ChevronRight size={16} color="#aaa"/></button>)}</div>
           <div className="folders"><div className="sectionTitle">Files</div>{files.length ? files.map(file=><div className="folder" key={file.id}><div className="folderIcon"><File size={17}/></div><div style={{flex:1}}><div className="folderName">{file.name}</div><div className="folderCount">{formatBytes(file.sizeBytes)}</div></div></div>) : <div className="meta">No files in this folder yet.</div>}</div>
-          <div className="footer"><span>Storage · {formatBytes(usedBytes)}{project.storageLimitBytes ? ` of ${formatBytes(project.storageLimitBytes)}` : ''}</span><span>{project.storageLimitBytes ? `${Math.round(usage)}% used` : 'No limit set'}</span></div>{project.storageLimitBytes && <div className="progress"><i style={{width:`${usage}%`}}/></div>}
+          <div className="footer"><span>Storage · {formatBytes(usedBytes)}{pendingBytes ? ` used · ${formatBytes(pendingBytes)} uploading` : ''}{project.storageLimitBytes ? ` of ${formatBytes(project.storageLimitBytes)}` : ''}</span><span>{project.storageLimitBytes ? `${Math.round(usage)}% used${pendingBytes ? ` · ${Math.round(reservedUsage)}% reserved` : ''}` : 'No limit set'}</span></div>{project.storageLimitBytes && <div className="progress"><i style={{width:`${reservedUsage}%`}}/></div>}
           {error && <p className="meta" style={{marginTop:16}}>{error}</p>}
         </div>
       </section>
