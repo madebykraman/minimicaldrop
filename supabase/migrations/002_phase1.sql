@@ -4,6 +4,14 @@
 alter table public.uploads
   add column if not exists session_url text;
 
+-- Older builds temporarily stored the Google resumable session URL in drive_file_id.
+update public.uploads
+   set session_url = drive_file_id,
+       drive_file_id = null
+ where status in ('initiated', 'uploading')
+   and drive_file_id like 'https://www.googleapis.com/upload/%'
+   and session_url is null;
+
 create index if not exists uploads_project_status_created_idx
   on public.uploads(project_id, status, created_at);
 
@@ -47,24 +55,8 @@ begin
     raise exception 'This upload would exceed the project storage limit';
   end if;
 
-  insert into public.uploads (
-    project_id,
-    folder_id,
-    name,
-    mime_type,
-    size_bytes,
-    status,
-    session_url
-  )
-  values (
-    p_project_id,
-    p_folder_id,
-    p_name,
-    p_mime_type,
-    p_size_bytes,
-    'uploading',
-    p_session_url
-  )
+  insert into public.uploads (project_id, folder_id, name, mime_type, size_bytes, status, session_url)
+  values (p_project_id, p_folder_id, p_name, p_mime_type, p_size_bytes, 'uploading', p_session_url)
   returning id into v_upload_id;
 
   return v_upload_id;
