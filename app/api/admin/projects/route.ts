@@ -49,8 +49,8 @@ export async function POST(request: Request) {
   const accounts = await supabase<Array<{ id: string; refresh_token: string; root_folder_id: string | null }>>(`drive_accounts?select=id,refresh_token,root_folder_id${body?.driveAccountId ? `&id=eq.${encodeURIComponent(body.driveAccountId)}` : ''}&limit=1`)
   const account = accounts[0]
   if (!account) return NextResponse.json({ error: 'Connect a Google Drive account first.' }, { status: 400 })
-  const root = account.root_folder_id || process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID
-  if (!root) return NextResponse.json({ error: 'Set GOOGLE_DRIVE_ROOT_FOLDER_ID or add a root folder to the Drive account.' }, { status: 400 })
+  // A custom root is optional. Without one, projects are created in My Drive.
+  const root = account.root_folder_id || process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID || 'root'
 
   const token = crypto.randomBytes(32).toString('base64url')
   const access = await accessTokenFromRefreshToken(account.refresh_token)
