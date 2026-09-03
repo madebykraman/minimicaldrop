@@ -44,6 +44,13 @@ async function driveRequest<T>(accessToken: string, path: string, init: RequestI
   return response.json() as Promise<T>
 }
 
+export async function getGoogleAccountEmail(accessToken: string) {
+  const result = await driveRequest<{ user?: { emailAddress?: string } }>(accessToken, '/about?fields=user(emailAddress)')
+  const email = result.user?.emailAddress
+  if (!email) throw new Error('Google Drive did not return the connected account email')
+  return email
+}
+
 export async function createDriveFolder(accessToken: string, name: string, parentId?: string) {
   return driveRequest<{ id: string; name: string }>(accessToken, '/files', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder', ...(parentId ? { parents: [parentId] } : {}) }) })
 }
