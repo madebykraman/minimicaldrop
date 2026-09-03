@@ -37,10 +37,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
     return NextResponse.json({ error: 'Google Drive did not confirm the uploaded file.' }, { status: 409 })
   }
 
+  const now = new Date().toISOString()
   await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}`, {
     method: 'PATCH',
     headers: { Prefer: 'return=minimal' },
-    body: JSON.stringify({ drive_file_id: driveFileId, session_url: null, status: 'complete', completed_at: new Date().toISOString() }),
+    body: JSON.stringify({ drive_file_id: driveFileId, session_url: null, status: 'complete', completed_at: now, last_activity_at: now }),
   })
   await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'upload.completed', file_name: upload.name, metadata: { uploadId: upload.id, driveFileId, size: upload.size_bytes } }) })
   return NextResponse.json({ ok: true, driveFileId })
