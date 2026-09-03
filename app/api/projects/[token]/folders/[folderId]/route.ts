@@ -57,7 +57,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     if (upload.drive_file_id) {
       await deleteDriveFile(result.accessToken, upload.drive_file_id).catch(() => undefined)
     }
-    await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}&project_id=eq.${result.project.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'failed' }) })
+    await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}&project_id=eq.${result.project.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'deleted' }) })
   }
 
   await deleteDriveFile(result.accessToken, result.folder.drive_folder_id)
