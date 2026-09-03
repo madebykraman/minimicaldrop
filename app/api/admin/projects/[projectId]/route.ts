@@ -11,7 +11,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pro
   if (!(await isAdmin())) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
   const { projectId } = await params
   if (!projectId) return NextResponse.json({ error: 'Project ID is required.' }, { status: 400 })
-  const projects = await supabase<Array<{ id: string; name: string; client_name: string; client_email: string | null; drive_account_id: string; drive_folder_id: string; storage_limit_bytes: number | null; expires_at: string; disabled_at: string | null; created_at: string }>>(`projects?id=eq.${encodeURIComponent(projectId)}&select=id,name,client_name,client_email,drive_account_id,drive_folder_id,storage_limit_bytes,expires_at,disabled_at,created_at&limit=1`)
+  const projects = await supabase<Array<{ id: string; name: string; client_name: string; client_email: string | null; drive_account_id: string; drive_folder_id: string; storage_limit_bytes: number | null; expires_at: string; disabled_at: string | null; delivery_status: string; client_message: string | null; created_at: string }>>(`projects?id=eq.${encodeURIComponent(projectId)}&select=id,name,client_name,client_email,drive_account_id,drive_folder_id,storage_limit_bytes,expires_at,disabled_at,delivery_status,client_message,created_at&limit=1`)
   const project = projects[0]
   if (!project) return NextResponse.json({ error: 'Project not found.' }, { status: 404 })
   const [accounts, completeRows, pendingRows, activity] = await Promise.all([
@@ -30,10 +30,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pr
   if (!(await isAdmin())) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
   const { projectId } = await params
   if (!projectId) return NextResponse.json({ error: 'Project ID is required.' }, { status: 400 })
-  const existing = await supabase<Array<{ id: string; name: string; client_name: string; client_email: string | null; storage_limit_bytes: number | null; expires_at: string; disabled_at: string | null; drive_account_id: string; drive_folder_id: string }>>(`projects?id=eq.${encodeURIComponent(projectId)}&select=id,name,client_name,client_email,storage_limit_bytes,expires_at,disabled_at,drive_account_id,drive_folder_id&limit=1`)
+  const existing = await supabase<Array<{ id: string; name: string; client_name: string; client_email: string | null; storage_limit_bytes: number | null; expires_at: string; disabled_at: string | null; drive_account_id: string; drive_folder_id: string; delivery_status: string; client_message: string | null }>>(`projects?id=eq.${encodeURIComponent(projectId)}&select=id,name,client_name,client_email,storage_limit_bytes,expires_at,disabled_at,drive_account_id,drive_folder_id,delivery_status,client_message&limit=1`)
   const project = existing[0]
   if (!project) return NextResponse.json({ error: 'Project not found.' }, { status: 404 })
-  const body = await request.json().catch(() => null) as { name?: string; clientName?: string; clientEmail?: string | null; expiresAt?: string; storageLimitBytes?: number | null; disabled?: boolean; regenerateToken?: boolean } | null
+  const body = await request.json().catch(() => null) as { name?: string; clientName?: string; clientEmail?: string | null; expiresAt?: string; storageLimitBytes?: number | null; disabled?: boolean; regenerateToken?: boolean; deliveryStatus?: string; clientMessage?: string | null } | null
   const patch: Record<string, unknown> = {}
   const audit: Array<{ event_type: string; metadata?: Record<string, unknown> }> = []
 
@@ -41,6 +41,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pr
   if (body?.name !== undefined) { const name = cleanText(body.name, 160); if (!name) return NextResponse.json({ error: 'Invalid project name.' }, { status: 400 }); nextName = name; patch.name = name }
   if (body?.clientName !== undefined) { const clientName = cleanText(body.clientName, 160); if (!clientName) return NextResponse.json({ error: 'Invalid client name.' }, { status: 400 }); patch.client_name = clientName }
   if (body?.clientEmail !== undefined) { const email = body.clientEmail?.trim() || null; if (email && (email.length > 320 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) return NextResponse.json({ error: 'Invalid client email.' }, { status: 400 }); patch.client_email = email }
+  if (body?.clientMessage !== undefined) { const message = body.clientMessage?.trim() || null; if (message && (!cleanText(message, 1000))) return NextResponse.json({ error: 'Invalid client message.' }, { status: 400 }); patch.client_message = message; audit.push({ event_type: 'project.message_updated' }) }
+  if (body?.deliveryStatus !== undefined) { const allowed = ['in_progress','ready','delivered','archived']; if (!allowed.includes(body.deliveryStatus)) return NextResponse.json({ error: 'Invalid delivery status.' }, { status: 400 }); patch.delivery_status = body.deliveryStatus; audit.push({ event_type: 'project.status_updated', metadata: { status: body.deliveryStatus } }) }
 
   let nextExpiresAt = project.expires_at
   if (body?.expiresAt !== undefined) { const expires = new Date(body.expiresAt); if (Number.isNaN(expires.getTime()) || expires.getTime() <= Date.now()) return NextResponse.json({ error: 'A future expiry date is required.' }, { status: 400 }); nextExpiresAt = expires.toISOString(); patch.expires_at = nextExpiresAt }
@@ -63,7 +65,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pr
   }
 
   if (Object.keys(patch).length) await supabase(`projects?id=eq.${encodeURIComponent(projectId)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(patch) })
-  if (body?.expiresAt !== undefined || body?.storageLimitBytes !== undefined || body?.clientName !== undefined || body?.clientEmail !== undefined) audit.push({ event_type: 'project.updated', metadata: { fields: Object.keys(patch).filter(field => field !== 'access_token_hash' && field !== 'disabled_at') } })
+  if (body?.expiresAt !== undefined || body?.storageLimitBytes !== undefined || body?.clientName !== undefined || body?.clientEmail !== undefined) audit.push({ event_type: 'project.updated', metadata: { fields: Object.keys(patch).filter(field => !['access_token_hash','disabled_at','client_message','delivery_status'].includes(field)) } })
   for (const event of audit) await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: projectId, event_type: event.event_type, metadata: event.metadata || null }) })
   return NextResponse.json({ ok: true, token, url: token ? `${process.env.NEXT_PUBLIC_APP_URL || ''}/u/${token}` : null })
 }
@@ -73,7 +75,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   const { projectId } = await params
   const projects = await supabase<Array<{ id: string }>>(`projects?id=eq.${encodeURIComponent(projectId)}&select=id&limit=1`)
   if (!projects[0]) return NextResponse.json({ error: 'Project not found.' }, { status: 404 })
-  await supabase(`projects?id=eq.${encodeURIComponent(projectId)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ disabled_at: new Date().toISOString() }) })
+  await supabase(`projects?id=eq.${encodeURIComponent(projectId)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ disabled_at: new Date().toISOString(), delivery_status: 'archived' }) })
   await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: projectId, event_type: 'project.archived' }) })
   return NextResponse.json({ ok: true })
 }
