@@ -56,15 +56,15 @@ Templates, automated reminders and separate archive-management machinery are int
 
 ## 1.0 milestone
 
-1.0 is the mature internal infrastructure release. It focuses on operational reliability, recovery, security and launch readiness rather than adding another product layer.
+1.0 is the mature internal infrastructure release. The product surface is complete and the release pass is focused on reliability, recovery, security and launch readiness.
 
 - Graceful application and global error recovery surfaces
-- Production health, build and runtime verification
+- Production response security hardening and private no-store handling
+- Production health, build and runtime verification path
 - Auditable project and delivery lifecycle
-- Secure admin and tokenized client access
+- Secure server-side admin and hash-only client token access
 - Google Drive kept entirely behind the storage boundary
-
-See `V1.0.md` for the release gate.
+- Production scripts aligned with the supported Next.js build flow
 
 ## Product boundary
 
