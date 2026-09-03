@@ -40,17 +40,30 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pr
     patch.client_name = clientName
   }
   if (body?.clientEmail !== undefined) patch.client_email = body.clientEmail?.trim() || null
+
+  let nextExpiresAt = project.expires_at
   if (body?.expiresAt !== undefined) {
     const expires = new Date(body.expiresAt)
     if (Number.isNaN(expires.getTime()) || expires.getTime() <= Date.now()) return NextResponse.json({ error: 'A future expiry date is required.' }, { status: 400 })
-    patch.expires_at = expires.toISOString()
+    nextExpiresAt = expires.toISOString()
+    patch.expires_at = nextExpiresAt
   }
+
   if (body?.storageLimitBytes !== undefined) {
     const limit = body.storageLimitBytes == null ? null : bytes(body.storageLimitBytes)
     if (body.storageLimitBytes != null && !limit) return NextResponse.json({ error: 'Invalid storage limit.' }, { status: 400 })
+    if (limit) {
+      const rows = await supabase<Array<{ size_bytes: number }>>(`uploads?project_id=eq.${project.id}&status=eq.complete&select=size_bytes`)
+      const used = rows.reduce((sum, row) => sum + Number(row.size_bytes || 0), 0)
+      if (limit < used) return NextResponse.json({ error: 'Storage limit cannot be lower than current usage.' }, { status: 409 })
+    }
     patch.storage_limit_bytes = limit
   }
-  if (body?.disabled !== undefined) patch.disabled_at = body.disabled ? new Date().toISOString() : null
+
+  if (body?.disabled !== undefined) {
+    if (!body.disabled && new Date(nextExpiresAt).getTime() <= Date.now()) return NextResponse.json({ error: 'Extend the project expiry before enabling this project.' }, { status: 409 })
+    patch.disabled_at = body.disabled ? new Date().toISOString() : null
+  }
 
   let token: string | null = null
   if (body?.regenerateToken) {
