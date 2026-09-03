@@ -2,10 +2,12 @@ import { NextResponse } from 'next/server'
 import crypto from 'node:crypto'
 import { isAdmin } from '@/lib/admin-auth'
 import { accessTokenFromRefreshToken, hashToken, renameDriveFile } from '@/lib/google-drive'
+import { sendDropEmail } from '@/lib/email'
 import { supabase } from '@/lib/supabase'
 
 function bytes(value: unknown) { const n = Number(value); return Number.isSafeInteger(n) && n > 0 ? n : null }
 function cleanText(value: string, max: number) { const trimmed = value.trim(); return trimmed && trimmed.length <= max && !/[\u0000-\u001f\u007f]/.test(trimmed) ? trimmed : null }
+function statusLabel(status: string) { return ({ in_progress:'IN PROGRESS', ready:'READY FOR REVIEW', ready_for_review:'READY FOR REVIEW', changes_requested:'CHANGES REQUESTED', approved:'APPROVED', delivered:'DELIVERED', archived:'ARCHIVED' } as Record<string,string>)[status] || status }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ projectId: string }> }) {
   if (!(await isAdmin())) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
@@ -36,13 +38,32 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pr
   const body = await request.json().catch(() => null) as { name?: string; clientName?: string; clientEmail?: string | null; expiresAt?: string; storageLimitBytes?: number | null; disabled?: boolean; regenerateToken?: boolean; deliveryStatus?: string; clientMessage?: string | null } | null
   const patch: Record<string, unknown> = {}
   const audit: Array<{ event_type: string; metadata?: Record<string, unknown> }> = []
+  let notifyClient: { subject:string; title:string; body:string } | null = null
 
   let nextName = project.name
   if (body?.name !== undefined) { const name = cleanText(body.name, 160); if (!name) return NextResponse.json({ error: 'Invalid project name.' }, { status: 400 }); nextName = name; patch.name = name }
   if (body?.clientName !== undefined) { const clientName = cleanText(body.clientName, 160); if (!clientName) return NextResponse.json({ error: 'Invalid client name.' }, { status: 400 }); patch.client_name = clientName }
   if (body?.clientEmail !== undefined) { const email = body.clientEmail?.trim() || null; if (email && (email.length > 320 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) return NextResponse.json({ error: 'Invalid client email.' }, { status: 400 }); patch.client_email = email }
-  if (body?.clientMessage !== undefined) { const message = body.clientMessage?.trim() || null; if (message && (!cleanText(message, 1000))) return NextResponse.json({ error: 'Invalid client message.' }, { status: 400 }); patch.client_message = message; audit.push({ event_type: 'project.message_updated' }) }
-  if (body?.deliveryStatus !== undefined) { const allowed = ['in_progress','ready','delivered','archived']; if (!allowed.includes(body.deliveryStatus)) return NextResponse.json({ error: 'Invalid delivery status.' }, { status: 400 }); patch.delivery_status = body.deliveryStatus; audit.push({ event_type: 'project.status_updated', metadata: { status: body.deliveryStatus } }) }
+  if (body?.clientMessage !== undefined) { const message = body.clientMessage?.trim() || null; if (message && (!cleanText(message, 1000))) return NextResponse.json({ error: 'Invalid client message.' }, { status: 400 }); patch.client_message = message; audit.push({ event_type: 'project.message_updated', metadata: { messagePresent: !!message } }); if (message && project.client_email) notifyClient = { subject:`Project update: ${project.name}`, title:'A new project message', body:message } }
+  if (body?.deliveryStatus !== undefined) {
+    const allowed = ['in_progress','ready','ready_for_review','changes_requested','approved','delivered','archived']
+    if (!allowed.includes(body.deliveryStatus)) return NextResponse.json({ error: 'Invalid delivery status.' }, { status: 400 })
+    if (body.deliveryStatus !== project.delivery_status) {
+      patch.delivery_status = body.deliveryStatus
+      audit.push({ event_type: 'project.status_updated', metadata: { from: project.delivery_status, to: body.deliveryStatus } })
+      if (project.client_email && body.deliveryStatus !== 'archived') {
+        const copy: Record<string,{subject:string;title:string;body:string}> = {
+          ready_for_review:{subject:`Ready for review: ${project.name}`,title:'Your delivery is ready for review',body:`The latest delivery for ${project.name} is ready. Open your private project space to review the files and approve the delivery or request changes.`},
+          ready:{subject:`Ready for review: ${project.name}`,title:'Your delivery is ready for review',body:`The latest delivery for ${project.name} is ready. Open your private project space to review the files and approve the delivery or request changes.`},
+          approved:{subject:`Approved: ${project.name}`,title:'Delivery approved',body:`The delivery for ${project.name} has been marked approved.`},
+          delivered:{subject:`Delivered: ${project.name}`,title:'Your delivery is ready',body:`The delivery for ${project.name} has been marked delivered. Your files remain available in the project space while access is active.`},
+          changes_requested:{subject:`Update: ${project.name}`,title:'Your project is being updated',body:`Your request for changes to ${project.name} has been received. We will review it in the project workspace.`},
+          in_progress:{subject:`Project update: ${project.name}`,title:'Your project is in progress',body:`The delivery status for ${project.name} has been updated to ${statusLabel(body.deliveryStatus)}.`},
+        }
+        notifyClient = copy[body.deliveryStatus] || null
+      }
+    }
+  }
 
   let nextExpiresAt = project.expires_at
   if (body?.expiresAt !== undefined) { const expires = new Date(body.expiresAt); if (Number.isNaN(expires.getTime()) || expires.getTime() <= Date.now()) return NextResponse.json({ error: 'A future expiry date is required.' }, { status: 400 }); nextExpiresAt = expires.toISOString(); patch.expires_at = nextExpiresAt }
@@ -67,7 +88,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ pr
   if (Object.keys(patch).length) await supabase(`projects?id=eq.${encodeURIComponent(projectId)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(patch) })
   if (body?.expiresAt !== undefined || body?.storageLimitBytes !== undefined || body?.clientName !== undefined || body?.clientEmail !== undefined) audit.push({ event_type: 'project.updated', metadata: { fields: Object.keys(patch).filter(field => !['access_token_hash','disabled_at','client_message','delivery_status'].includes(field)) } })
   for (const event of audit) await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: projectId, event_type: event.event_type, metadata: event.metadata || null }) })
-  return NextResponse.json({ ok: true, token, url: token ? `${process.env.NEXT_PUBLIC_APP_URL || ''}/u/${token}` : null })
+
+  let emailSent = false
+  if (notifyClient && project.client_email) {
+    try { const result = await sendDropEmail(project.client_email, notifyClient.subject, notifyClient.title, notifyClient.body, token ? `${process.env.NEXT_PUBLIC_APP_URL || ''}/u/${token}` : `${process.env.NEXT_PUBLIC_APP_URL || ''}/u`); emailSent = !!result.sent } catch {}
+    await supabase('audit_events', { method:'POST', headers:{Prefer:'return=minimal'}, body:JSON.stringify({ project_id:projectId, event_type:emailSent ? 'notification.email_sent' : 'notification.email_failed', metadata:{ audience:'client', trigger: body?.deliveryStatus ? 'delivery_status' : 'project_message' } }) }).catch(()=>undefined)
+  }
+  return NextResponse.json({ ok: true, token, url: token ? `${process.env.NEXT_PUBLIC_APP_URL || ''}/u/${token}` : null, emailSent })
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ projectId: string }> }) {
