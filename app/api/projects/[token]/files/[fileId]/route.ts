@@ -26,11 +26,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
   const { token, fileId } = await params
   const result = await getProjectFile(token, fileId)
   if ('error' in result) return result.error
-  const { accessToken, file } = result
+  const { project, accessToken, file } = result
   if (file.capabilities?.canDownload === false) return NextResponse.json({ error: 'This file cannot be downloaded.' }, { status: 403 })
 
   const range = request.headers.get('range') || undefined
   const response = await downloadDriveFile(accessToken, file.id, range)
+  if (!response.ok) return new Response(response.body, { status: response.status, headers: response.headers })
+
   const headers = new Headers()
   headers.set('Content-Type', file.mimeType || 'application/octet-stream')
   headers.set('Content-Disposition', `attachment; filename="${file.name.replace(/["\\\r\n]/g, '_')}"`)
@@ -39,6 +41,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
   if (contentLength) headers.set('Content-Length', contentLength)
   const contentRange = response.headers.get('Content-Range')
   if (contentRange) headers.set('Content-Range', contentRange)
+
+  await supabase('audit_events', {
+    method: 'POST',
+    headers: { Prefer: 'return=minimal' },
+    body: JSON.stringify({ project_id: project.id, event_type: 'file.downloaded', file_name: file.name, metadata: { driveFileId: file.id, range: range || null } }),
+  }).catch(() => undefined)
+
   return new Response(response.body, { status: response.status, headers })
 }
 
@@ -50,7 +59,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ to
 
   const body = await request.json().catch(() => null) as { name?: string } | null
   const name = body?.name?.trim()
-  if (!name || name.length > 255) return NextResponse.json({ error: 'A valid file name is required.' }, { status: 400 })
+  if (!name || name.length > 255 || /[\u0000-\u001f\u007f]/.test(name)) return NextResponse.json({ error: 'A valid file name is required.' }, { status: 400 })
 
   const uploads = await supabase<Array<{ id: string }>>(`uploads?project_id=eq.${project.id}&drive_file_id=eq.${encodeURIComponent(fileId)}&status=eq.complete&select=id&limit=1`)
   if (!uploads[0]) return NextResponse.json({ error: 'File is not managed by this portal.' }, { status: 404 })
