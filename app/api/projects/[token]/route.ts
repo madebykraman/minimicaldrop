@@ -33,11 +33,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
   const projectFolderIds = [project.drive_folder_id, ...folderRows.map(row => row.drive_folder_id)]
   const folderResults = await Promise.all(projectFolderIds.map(folderId => listDriveChildren(access_token, folderId)))
   const liveFiles = new Map<string, { size: number; name: string }>()
-  for (const result of folderResults) {
-    for (const file of result.files) {
-      if (file.mimeType !== FOLDER_MIME) liveFiles.set(file.id, { size: Number(file.size || 0), name: file.name })
-    }
-  }
+  for (const result of folderResults) for (const file of result.files) if (file.mimeType !== FOLDER_MIME) liveFiles.set(file.id, { size: Number(file.size || 0), name: file.name })
 
   await Promise.all(uploadRows.map(async upload => {
     const live = liveFiles.get(upload.drive_file_id)
@@ -46,9 +42,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
       await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'file.deleted.externally', file_name: upload.name, metadata: { driveFileId: upload.drive_file_id } }) })
       return
     }
-    if (live.size !== Number(upload.size_bytes) || live.name !== upload.name) {
-      await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}&project_id=eq.${project.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ size_bytes: live.size, name: live.name }) })
-    }
+    if (live.size !== Number(upload.size_bytes) || live.name !== upload.name) await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}&project_id=eq.${project.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ size_bytes: live.size, name: live.name }) })
   }))
 
   const drive = await listDriveChildren(access_token, parentId)
@@ -58,7 +52,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
   const pendingBytes = pendingRows.reduce((sum, row) => sum + Number(row.size_bytes || 0), 0)
 
   return NextResponse.json({
-    project: { id: project.id, name: project.name, clientName: project.client_name, expiresAt: project.expires_at, storageLimitBytes: project.storage_limit_bytes },
+    project: {
+      id: project.id,
+      name: project.name,
+      clientName: project.client_name,
+      expiresAt: project.expires_at,
+      storageLimitBytes: project.storage_limit_bytes,
+      deliveryStatus: project.delivery_status || 'in_progress',
+      clientMessage: project.client_message || null,
+    },
     currentFolderId: parentId,
     items: drive.files.map(file => ({ id: file.id, name: file.name, mimeType: file.mimeType, sizeBytes: file.size ? Number(file.size) : 0, modifiedTime: file.modifiedTime || null })),
     usedBytes,
