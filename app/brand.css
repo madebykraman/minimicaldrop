@@ -4,13 +4,18 @@
   --mono:var(--font-mono),monospace;
   --gradient-brand:linear-gradient(110deg,#4c2b81 0%,#7650ad 52%,#b79be4 100%);
   --gradient-atmosphere:radial-gradient(circle at 12% 0,rgba(76,43,129,.25),transparent 30%),radial-gradient(circle at 88% 15%,rgba(118,80,173,.12),transparent 26%);
+  --drop-logo-home:128px;
+  --drop-logo-legal:112px;
+  --drop-logo-404:120px;
+  --drop-app-icon:22px;
 }
 
 html,body{font-family:var(--body)}
 h1,h2,h3,h4,h5,h6,.drop-home-nav-label,.drop-home-kicker,.drop-section-index,.drop-home-cta>span,.client-kicker,.client-dialog-kicker,.v5-kicker,.v5-storage span,.v5-queue-head span,.p5-dashboard>div>span,.p5-panel-title span,.p5-detail-head>div>span,.p5-summary span,.p5-list-head,.p5-drive-strip span{font-family:var(--display)!important}
 code,kbd,.mono,.client-footer,.drop-home-footer,.legal-footer,.p5-link strong,.p5-event time{font-family:var(--mono)!important}
 
-.drop-home-brand img{width:128px!important;height:auto!important;display:block}
+/* Brand asset sizing: logo 128/116/104px, app mark 22/20px. */
+.drop-home-brand img{width:var(--drop-logo-home)!important;height:auto!important;display:block}
 .drop-home{background:var(--gradient-atmosphere),#08070c}
 .drop-shell:before{background:var(--gradient-atmosphere)}
 .client-drop-icon,.drop-upload-icon{background:var(--gradient-brand)!important}
@@ -24,12 +29,31 @@ code,kbd,.mono,.client-footer,.drop-home-footer,.legal-footer,.p5-link strong,.p
 .v5-dropzone{background:radial-gradient(circle at 50% 0,rgba(76,43,129,.16),transparent 55%),rgba(255,255,255,.012)!important}
 .v5-dropzone.dragging{background:radial-gradient(circle at 50% 0,rgba(76,43,129,.25),transparent 58%),rgba(255,255,255,.02)!important}
 
-.drop-private-app-icon{position:fixed;left:22px;top:22px;width:22px;height:22px;z-index:12;pointer-events:none}
-.drop-private-app-icon img{width:22px!important;height:22px!important;object-fit:contain}
+.drop-private-app-icon{position:fixed;left:22px;top:22px;width:var(--drop-app-icon);height:var(--drop-app-icon);z-index:12;pointer-events:none}
+.drop-private-app-icon img{width:var(--drop-app-icon)!important;height:var(--drop-app-icon)!important;object-fit:contain}
 .v5-brand{visibility:hidden!important}
 
-.drop-admin-app-icon{position:fixed;left:34px;top:24px;width:22px;height:22px;z-index:20;display:flex;align-items:center;pointer-events:none}
-.drop-admin-app-icon img{width:22px!important;height:22px!important;object-fit:contain}
+.drop-admin-app-icon{position:fixed;left:34px;top:24px;width:var(--drop-app-icon);height:var(--drop-app-icon);z-index:20;display:flex;align-items:center;pointer-events:none}
+.drop-admin-app-icon img{width:var(--drop-app-icon)!important;height:var(--drop-app-icon)!important;object-fit:contain}
 .p5-admin .p5-brand{visibility:hidden!important}
 
-@media(max-width:800px){.drop-private-app-icon{left:16px;top:20px}.drop-admin-app-icon{left:18px;top:19px}}
+/* Legal and fallback routes use the full Drop logo rather than text-only branding. */
+.legal-brand{display:inline-flex;align-items:center;width:var(--drop-logo-legal);height:auto;margin-bottom:28px}
+.legal-brand img{width:var(--drop-logo-legal)!important;height:auto!important;display:block}
+.not-found-brand{display:inline-flex;align-items:center;width:var(--drop-logo-404);margin-bottom:22px}
+.not-found-brand img{width:var(--drop-logo-404)!important;height:auto!important;display:block}
+
+@media(max-width:900px){
+  :root{--drop-logo-home:116px}
+}
+
+@media(max-width:700px){
+  :root{--drop-logo-home:104px;--drop-logo-legal:96px;--drop-logo-404:100px;--drop-app-icon:20px}
+  .drop-private-app-icon{left:16px;top:20px}
+  .drop-admin-app-icon{left:18px;top:19px}
+  .drop-private-mark img{width:46px!important;height:46px!important}
+}
+
+@media(min-width:701px){
+  .drop-private-mark img{width:54px!important;height:54px!important}
+}
