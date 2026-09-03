@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { DM_Mono, Manrope, Space_Grotesk } from 'next/font/google'
 import './globals.css'
+import './brand.css'
 import './drop.css'
 import './admin/admin.css'
 
