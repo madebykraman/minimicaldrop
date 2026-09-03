@@ -17,7 +17,7 @@ Google Drive is the current storage adapter, not the client-facing product. The 
 The operational layer is implemented:
 
 - Atomic storage reservations under a project row lock
-- 1 MB browser upload chunks with resumable Drive sessions
+- 8 MB browser upload chunks with resumable Drive sessions
 - Interrupted upload recovery
 - Daily abandoned-upload cleanup
 - Project enable/disable, expiry, storage and client-link lifecycle
@@ -65,6 +65,7 @@ Templates, automated reminders and separate archive-management machinery are int
 - Secure server-side admin and hash-only client token access
 - Google Drive kept entirely behind the storage boundary
 - Production scripts aligned with the supported Next.js build flow
+- Smooth client workspace interaction motion and faster resumable upload transport
 
 ## Product boundary
 
