@@ -8,6 +8,10 @@ function validName(value: string) {
   return value.length > 0 && value.length <= 120 && !/[\u0000-\u001f\u007f]/.test(value)
 }
 
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+}
+
 async function getFolderContext(request: Request, token: string, folderId: string) {
   const limited = rateLimit(request, 'folder-action', 60, token)
   if (limited) return { error: limited }
@@ -15,7 +19,10 @@ async function getFolderContext(request: Request, token: string, folderId: strin
   if (!project) return { error: NextResponse.json({ error: 'Upload space is unavailable or expired.' }, { status: 404 }) }
   if (!folderId || folderId.length > 200 || !/^[A-Za-z0-9_-]+$/.test(folderId)) return { error: NextResponse.json({ error: 'Invalid folder.' }, { status: 400 }) }
 
-  const folders = await supabase<Array<{ id: string; name: string; drive_folder_id: string; parent_id: string | null }>>(`folders?id=eq.${encodeURIComponent(folderId)}&project_id=eq.${project.id}&select=id,name,drive_folder_id,parent_id&limit=1`)
+  const filter = isUuid(folderId)
+    ? `id=eq.${encodeURIComponent(folderId)}`
+    : `drive_folder_id=eq.${encodeURIComponent(folderId)}`
+  const folders = await supabase<Array<{ id: string; name: string; drive_folder_id: string; parent_id: string | null }>>(`folders?project_id=eq.${project.id}&${filter}&select=id,name,drive_folder_id,parent_id&limit=1`)
   if (!folders[0]) return { error: NextResponse.json({ error: 'Folder not found.' }, { status: 404 }) }
 
   const accounts = await supabase<Array<{ refresh_token: string }>>(`drive_accounts?id=eq.${project.drive_account_id}&select=refresh_token&limit=1`)
@@ -34,8 +41,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ to
   if (!validName(name)) return NextResponse.json({ error: 'A valid folder name is required.' }, { status: 400 })
 
   const folder = await renameDriveFile(result.accessToken, result.folder.drive_folder_id, name)
-  await supabase(`folders?id=eq.${encodeURIComponent(folderId)}&project_id=eq.${result.project.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ name: folder.name }) })
-  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: result.project.id, event_type: 'folder.renamed', metadata: { folderId, name: folder.name } }) })
+  await supabase(`folders?id=eq.${encodeURIComponent(result.folder.id)}&project_id=eq.${result.project.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ name: folder.name }) })
+  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: result.project.id, event_type: 'folder.renamed', metadata: { folderId: result.folder.id, driveFolderId: result.folder.drive_folder_id, name: folder.name } }) })
   return NextResponse.json({ id: folder.id, name: folder.name })
 }
 
@@ -45,7 +52,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ t
   if ('error' in result) return result.error
 
   const allFolders = await supabase<Array<{ id: string; drive_folder_id: string; parent_id: string | null }>>(`folders?project_id=eq.${result.project.id}&select=id,drive_folder_id,parent_id`)
-  const descendants = new Set<string>([folderId])
+  const descendants = new Set<string>([result.folder.id])
   let changed = true
   while (changed) {
     changed = false
@@ -68,6 +75,6 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ t
 
   await supabase(`uploads?project_id=eq.${result.project.id}&folder_id=in.(${descendantIds.map(encodeURIComponent).join(',')})&status=eq.complete`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'deleted' }) })
   await supabase(`folders?id=in.(${descendantIds.map(encodeURIComponent).join(',')})&project_id=eq.${result.project.id}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } })
-  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: result.project.id, event_type: 'folder.deleted', metadata: { folderId, name: result.folder.name, descendantCount: descendantIds.length, fileCount: uploads.length, deletedBytes } }) })
+  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: result.project.id, event_type: 'folder.deleted', metadata: { folderId: result.folder.id, driveFolderId: result.folder.drive_folder_id, name: result.folder.name, descendantCount: descendantIds.length, fileCount: uploads.length, deletedBytes } }) })
   return NextResponse.json({ ok: true, deletedBytes, deletedCount: uploads.length })
 }
