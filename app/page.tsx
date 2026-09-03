@@ -19,7 +19,7 @@ export default function Home() {
     <main className="drop-home">
       <header className="drop-home-nav">
         <Link href="/" className="drop-home-brand" aria-label="MINIMICAL DROP home">
-          <DropLogo width={128} priority />
+          <DropLogo width={128} sizes="(max-width: 700px) 104px, (max-width: 900px) 116px, 128px" priority />
         </Link>
         <div className="drop-home-nav-right">
           <span className="drop-home-nav-label">PRIVATE PROJECT INFRASTRUCTURE</span>
