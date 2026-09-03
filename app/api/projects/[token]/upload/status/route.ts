@@ -38,6 +38,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
     }
   }
 
+  await supabase('rpc/touch_upload_activity', {
+    method: 'POST',
+    body: JSON.stringify({ p_upload_id: upload.id, p_project_id: project.id }),
+  }).catch(() => undefined)
+
   if (result.status === 308) return NextResponse.json({ complete: false, uploadedBytes: offsetFromRange(result.range) })
   if (result.status === 404) return NextResponse.json({ error: 'Google upload session expired.' }, { status: 410 })
   return NextResponse.json({ error: `Unable to determine upload status (${result.status}).` }, { status: 502 })
