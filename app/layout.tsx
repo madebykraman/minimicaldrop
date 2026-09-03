@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { DM_Mono, Manrope, Space_Grotesk } from 'next/font/google'
 import GlobalChrome from '@/components/global-chrome'
 import './globals.css'
+import './legal.css'
 import './drop.css'
 import './admin/admin.css'
 
