@@ -1,6 +1,7 @@
 const fs = require('node:fs')
 const path = require('node:path')
 
+// Final navigation-state guard for the deterministic production build.
 const file = path.join(process.cwd(), 'app', 'u', '[token]', 'workspace-v5.tsx')
 let source = fs.readFileSync(file, 'utf8')
 
