@@ -74,6 +74,26 @@ export async function initiateResumableUpload(accessToken: string, name: string,
   return location
 }
 
+export async function queryResumableUpload(accessToken: string, sessionUrl: string, size: number) {
+  const response = await fetch(sessionUrl, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Length': '0',
+      'Content-Range': `bytes */${size}`,
+    },
+  })
+
+  let data: { id: string } | null = null
+  try { data = await response.json() as { id: string } } catch {}
+
+  return {
+    status: response.status,
+    range: response.headers.get('Range'),
+    data,
+  }
+}
+
 export function hashToken(value: string) {
   return crypto.createHash('sha256').update(value).digest('hex')
 }
