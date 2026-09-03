@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server'
 import { accessTokenFromRefreshToken, listDriveChildren } from '@/lib/google-drive'
 import { getProjectByToken } from '@/lib/project-access'
+import { rateLimit } from '@/lib/rate-limit'
 import { supabase } from '@/lib/supabase'
 
 const FOLDER_MIME = 'application/vnd.google-apps.folder'
 
 export async function GET(request: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
+  const limited = rateLimit(request, 'workspace', 90, token)
+  if (limited) return limited
   const project = await getProjectByToken(token)
   if (!project) return NextResponse.json({ error: 'Upload space is unavailable or expired.' }, { status: 404 })
 
@@ -22,8 +25,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
   if (!account) return NextResponse.json({ error: 'Storage account unavailable.' }, { status: 500 })
   const { access_token } = await accessTokenFromRefreshToken(account.refresh_token)
 
-  // Reconcile completed upload records against the current Drive contents.
-  // This catches files deleted or moved directly in Google Drive.
   const [folderRows, uploadRows] = await Promise.all([
     supabase<Array<{ drive_folder_id: string }>>(`folders?project_id=eq.${project.id}&select=drive_folder_id`),
     supabase<Array<{ id: string; drive_file_id: string; size_bytes: number; name: string }>>(`uploads?project_id=eq.${project.id}&status=eq.complete&select=id,drive_file_id,size_bytes,name`),
@@ -34,33 +35,19 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
   const liveFiles = new Map<string, { size: number; name: string }>()
   for (const result of folderResults) {
     for (const file of result.files) {
-      if (file.mimeType !== FOLDER_MIME) {
-        liveFiles.set(file.id, { size: Number(file.size || 0), name: file.name })
-      }
+      if (file.mimeType !== FOLDER_MIME) liveFiles.set(file.id, { size: Number(file.size || 0), name: file.name })
     }
   }
 
   await Promise.all(uploadRows.map(async upload => {
     const live = liveFiles.get(upload.drive_file_id)
     if (!live) {
-      await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}&project_id=eq.${project.id}`, {
-        method: 'PATCH',
-        headers: { Prefer: 'return=minimal' },
-        body: JSON.stringify({ status: 'deleted' }),
-      })
-      await supabase('audit_events', {
-        method: 'POST',
-        headers: { Prefer: 'return=minimal' },
-        body: JSON.stringify({ project_id: project.id, event_type: 'file.deleted.externally', file_name: upload.name, metadata: { driveFileId: upload.drive_file_id } }),
-      })
+      await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}&project_id=eq.${project.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'deleted' }) })
+      await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'file.deleted.externally', file_name: upload.name, metadata: { driveFileId: upload.drive_file_id } }) })
       return
     }
     if (live.size !== Number(upload.size_bytes) || live.name !== upload.name) {
-      await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}&project_id=eq.${project.id}`, {
-        method: 'PATCH',
-        headers: { Prefer: 'return=minimal' },
-        body: JSON.stringify({ size_bytes: live.size, name: live.name }),
-      })
+      await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}&project_id=eq.${project.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ size_bytes: live.size, name: live.name }) })
     }
   }))
 
