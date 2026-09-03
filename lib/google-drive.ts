@@ -4,6 +4,7 @@ import crypto from 'node:crypto'
 const TOKEN_URL = 'https://oauth2.googleapis.com/token'
 const DRIVE_API = 'https://www.googleapis.com/drive/v3'
 const UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3/files'
+const accessTokenCache = new Map<string, { token: string; expiresAt: number }>()
 
 function required(name: string) {
   const value = process.env[name]
@@ -12,15 +13,7 @@ function required(name: string) {
 }
 
 export function googleAuthUrl(state: string) {
-  const params = new URLSearchParams({
-    client_id: required('GOOGLE_CLIENT_ID'),
-    redirect_uri: required('GOOGLE_REDIRECT_URI'),
-    response_type: 'code',
-    access_type: 'offline',
-    prompt: 'consent',
-    scope: process.env.GOOGLE_DRIVE_SCOPE || 'https://www.googleapis.com/auth/drive',
-    state,
-  })
+  const params = new URLSearchParams({ client_id: required('GOOGLE_CLIENT_ID'), redirect_uri: required('GOOGLE_REDIRECT_URI'), response_type: 'code', access_type: 'offline', prompt: 'consent', scope: process.env.GOOGLE_DRIVE_SCOPE || 'https://www.googleapis.com/auth/drive', state })
   return `https://accounts.google.com/o/oauth2/v2/auth?${params}`
 }
 
@@ -32,10 +25,14 @@ export async function exchangeGoogleCode(code: string) {
 }
 
 export async function accessTokenFromRefreshToken(refreshToken: string) {
+  const cached = accessTokenCache.get(refreshToken)
+  if (cached && cached.expiresAt > Date.now() + 60_000) return { access_token: cached.token, expires_in: Math.max(1, Math.floor((cached.expiresAt - Date.now()) / 1000)) }
   const body = new URLSearchParams({ client_id: required('GOOGLE_CLIENT_ID'), client_secret: required('GOOGLE_CLIENT_SECRET'), refresh_token: refreshToken, grant_type: 'refresh_token' })
   const response = await fetch(TOKEN_URL, { method: 'POST', body })
   if (!response.ok) throw new Error(`Google token refresh ${response.status}: ${await response.text()}`)
-  return response.json() as Promise<{ access_token: string; expires_in: number }>
+  const result = await response.json() as { access_token: string; expires_in: number }
+  accessTokenCache.set(refreshToken, { token: result.access_token, expiresAt: Date.now() + Math.max(60, result.expires_in - 60) * 1000 })
+  return result
 }
 
 async function driveRequest<T>(accessToken: string, path: string, init: RequestInit = {}) {
