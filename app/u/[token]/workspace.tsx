@@ -7,7 +7,7 @@ type Item = { id: string; name: string; mimeType: string; sizeBytes: number; mod
 type Project = { id: string; name: string; clientName: string; expiresAt: string; storageLimitBytes: number | null }
 type UploadState = { name: string; progress: number; status: 'uploading' | 'complete' | 'error'; error?: string }
 const FOLDER_MIME = 'application/vnd.google-apps.folder'
-const CHUNK = 8 * 1024 * 1024
+const CHUNK = 1 * 1024 * 1024
 
 function formatBytes(bytes: number) {
   if (!bytes) return '0 B'
@@ -71,8 +71,8 @@ async function uploadToGoogle(file: File, sessionUrl: string, statusUrl: string,
         return result.data
       }
 
-      if (result.status === 308 && result.range) {
-        const match = result.range.match(/bytes=0-(\d+)/)
+      if (result.status === 308) {
+        const match = result.range?.match(/bytes=0-(\d+)/)
         if (match) {
           offset = Number(match[1]) + 1
           onProgress(offset / file.size)
@@ -80,9 +80,8 @@ async function uploadToGoogle(file: File, sessionUrl: string, statusUrl: string,
         }
       }
 
-      if (result.status >= 400 && result.status < 500) {
-        throw new Error(`Google upload failed (${result.status})`)
-      }
+      if (result.status >= 400 && result.status < 500) throw new Error(`Google upload failed (${result.status})`)
+      throw new Error(`Google upload failed (${result.status})`)
     } catch (error) {
       const status = await jsonFetch(`${statusUrl}?uploadId=${encodeURIComponent(uploadId)}`)
       if (status.complete && status.driveFileId) {
@@ -101,18 +100,6 @@ async function uploadToGoogle(file: File, sessionUrl: string, statusUrl: string,
       await new Promise(resolve => setTimeout(resolve, 700))
       continue
     }
-
-    const status = await jsonFetch(`${statusUrl}?uploadId=${encodeURIComponent(uploadId)}`)
-    if (status.complete && status.driveFileId) {
-      onProgress(1)
-      return { id: status.driveFileId }
-    }
-    if (typeof status.uploadedBytes === 'number' && status.uploadedBytes > offset) {
-      offset = Math.min(file.size, status.uploadedBytes)
-      onProgress(offset / file.size)
-      continue
-    }
-    throw new Error('Upload connection failed')
   }
 
   throw new Error('Google did not confirm the upload')
@@ -159,7 +146,7 @@ export default function Workspace({ token }: { token: string }) {
     try {
       const init = await jsonFetch(`/api/projects/${token}/upload`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: file.name, mimeType: file.type, size: file.size, parentId: currentFolderId || undefined }) })
       const statusUrl = `/api/projects/${token}/upload/status`
-      const driveFile = await uploadToGoogle(file, init.sessionUrl, statusUrl, init.uploadId, setProgress)
+      await uploadToGoogle(file, init.sessionUrl, statusUrl, init.uploadId, setProgress)
       await jsonFetch(`/api/projects/${token}/upload/complete`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uploadId: init.uploadId }) })
       setUploads(prev => prev.map(u => u.name === file.name ? { ...u, progress: 1, status: 'complete' } : u))
       await load(currentFolderId || undefined)
