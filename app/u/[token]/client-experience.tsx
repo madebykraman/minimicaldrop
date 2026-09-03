@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from 'react'
 import { Check, CircleHelp, Mail, MessageSquare, X } from 'lucide-react'
+import DropIcon from '@/components/drop-icon'
 
 const SUPPORT_EMAIL = 'contact@minimical.online'
 
@@ -38,6 +39,7 @@ export default function ClientExperience({ children }: { children: React.ReactNo
 
   return <>
     {children}
+    <div className="drop-private-app-icon" aria-hidden="true"><DropIcon size={22} priority /></div>
     {support && <div className="drop-support-backdrop" onMouseDown={event => event.target === event.currentTarget && setSupport(false)}>
       <section className="drop-support-card" role="dialog" aria-modal="true" aria-labelledby="drop-support-title">
         <button className="drop-support-close" onClick={() => setSupport(false)} aria-label="Close support"><X size={17}/></button>
