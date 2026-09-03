@@ -16,6 +16,8 @@ Create a Supabase project and run `supabase/schema.sql` in the SQL editor with R
 
 The current production metadata key is `SUPABASE_SECRET_KEY`. Never prefix it with `NEXT_PUBLIC_`.
 
+For v0.4, apply `supabase/migrations/006_v04_delivery_intelligence.sql`. It expands the delivery lifecycle to `in_progress`, `ready_for_review`, `changes_requested`, `approved`, `delivered` and `archived`, while converting the old `ready` value to `ready_for_review`.
+
 ## 3. Vercel
 
 Set these production environment variables:
@@ -32,6 +34,10 @@ Set these production environment variables:
 - `SESSION_SECRET`
 - `GOOGLE_DRIVE_ROOT_FOLDER_ID` (optional)
 - `CRON_SECRET`
+- `RESEND_API_KEY` (required for actual email delivery)
+- `RESEND_FROM_EMAIL` (verified Resend sender, for example `MINIMICAL DROP <drop@your-verified-domain>`)
+
+`ADMIN_EMAIL` is also used as the studio recipient for client approval, change-request and comment notifications. If you prefer a separate studio notification address, set `DROP_NOTIFICATION_EMAIL`.
 
 For a quick MVP, `ADMIN_PASSWORD` can be used instead of `ADMIN_PASSWORD_HASH`, but it remains server-only and should not be committed.
 
@@ -51,7 +57,7 @@ Open `/admin`, sign in with `ADMIN_EMAIL` and the configured admin password, the
 
 ## 6. Create a client project
 
-From `/admin`, create a project with its name, client name, optional email, expiry date and storage limit. MINIMICAL DROP creates a dedicated folder in the configured Drive root and returns a tokenized client URL. Share that URL with the client.
+From `/admin`, create a project with its name, client name, optional email, expiry date and storage limit. MINIMICAL DROP creates a dedicated folder in the configured Drive root and returns a tokenized client URL. If a client email is provided and Resend is configured, DROP sends the project access email automatically.
 
 Client links use `/u/<token>`. The raw token is only returned when a link is generated; the database stores a SHA-256 hash.
 
@@ -60,6 +66,14 @@ Client links use `/u/<token>`. The raw token is only returned when a link is gen
 The client requests a Drive resumable session from the server. The server verifies the project and target folder, atomically reserves the requested storage against the project row, creates the session against the selected Drive folder and returns the session URL. The browser uploads 1 MB chunks directly to Google's resumable upload endpoint, avoiding Vercel request-body limits for large footage files. Completion is verified against Drive metadata before the upload is marked complete.
 
 Interrupted uploads are retained as active records with their resumable session URL and activity timestamp. Reopening the project discovers recoverable sessions; selecting the same file again resumes from Google's confirmed byte offset. Sessions older than 24 hours are abandoned by the cleanup job.
+
+## v0.4 delivery intelligence
+
+Admin can set the delivery state, publish a project message and add delivery comments from the **Delivery intelligence** control. Clients see the current state, project message and chronological activity, and can approve a delivery, request changes with context, or leave a project comment.
+
+Client approval changes the project to `approved`. A change request changes it to `changes_requested`. The studio can move it back to `ready_for_review` after revisions and finally to `delivered`. Every delivery state change, approval, change request and comment is recorded in `audit_events`, giving the project a delivery history without introducing a separate collaboration system.
+
+Email notifications are sent through Resend when `RESEND_API_KEY` and a verified `RESEND_FROM_EMAIL` are configured. Client notifications cover project creation, delivery state changes and studio messages. Studio notifications cover client approvals, change requests and comments. Email failures are recorded in the project activity trail and do not block the underlying delivery action.
 
 ## Production security
 
