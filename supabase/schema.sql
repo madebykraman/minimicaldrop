@@ -44,7 +44,8 @@ create table if not exists uploads (
   size_bytes bigint not null default 0,
   status text not null default 'initiated' check (status in ('initiated','uploading','complete','failed','deleted')),
   created_at timestamptz not null default now(),
-  completed_at timestamptz
+  completed_at timestamptz,
+  last_activity_at timestamptz not null default now()
 );
 
 create table if not exists audit_events (
@@ -60,6 +61,7 @@ create index if not exists projects_access_token_hash_idx on projects(access_tok
 create index if not exists folders_project_parent_idx on folders(project_id, parent_id);
 create index if not exists uploads_project_idx on uploads(project_id);
 create index if not exists uploads_project_status_created_idx on uploads(project_id, status, created_at);
+create index if not exists uploads_status_activity_idx on uploads(status, last_activity_at);
 
 create or replace function public.reserve_upload(
   p_project_id uuid,
@@ -101,8 +103,8 @@ begin
     raise exception 'This upload would exceed the project storage limit';
   end if;
 
-  insert into public.uploads (project_id, folder_id, name, mime_type, size_bytes, status, session_url)
-  values (p_project_id, p_folder_id, p_name, p_mime_type, p_size_bytes, 'uploading', p_session_url)
+  insert into public.uploads (project_id, folder_id, name, mime_type, size_bytes, status, session_url, last_activity_at)
+  values (p_project_id, p_folder_id, p_name, p_mime_type, p_size_bytes, 'uploading', p_session_url, now())
   returning id into v_upload_id;
 
   return v_upload_id;
@@ -113,3 +115,26 @@ revoke execute on function public.reserve_upload(uuid, uuid, text, text, bigint,
 revoke execute on function public.reserve_upload(uuid, uuid, text, text, bigint, text) from anon;
 revoke execute on function public.reserve_upload(uuid, uuid, text, text, bigint, text) from authenticated;
 grant execute on function public.reserve_upload(uuid, uuid, text, text, bigint, text) to service_role;
+
+create or replace function public.touch_upload_activity(p_upload_id uuid, p_project_id uuid)
+returns boolean
+language plpgsql
+as $$
+declare
+  v_updated integer;
+begin
+  update public.uploads
+     set last_activity_at = now()
+   where id = p_upload_id
+     and project_id = p_project_id
+     and status = 'uploading';
+
+  get diagnostics v_updated = row_count;
+  return v_updated = 1;
+end;
+$$;
+
+revoke execute on function public.touch_upload_activity(uuid, uuid) from public;
+revoke execute on function public.touch_upload_activity(uuid, uuid) from anon;
+revoke execute on function public.touch_upload_activity(uuid, uuid) from authenticated;
+grant execute on function public.touch_upload_activity(uuid, uuid) to service_role;
