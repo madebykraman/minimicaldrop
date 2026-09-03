@@ -38,6 +38,7 @@ create table if not exists uploads (
   project_id uuid not null references projects(id) on delete cascade,
   folder_id uuid references folders(id) on delete set null,
   drive_file_id text,
+  session_url text,
   name text not null,
   mime_type text,
   size_bytes bigint not null default 0,
@@ -58,3 +59,57 @@ create table if not exists audit_events (
 create index if not exists projects_access_token_hash_idx on projects(access_token_hash);
 create index if not exists folders_project_parent_idx on folders(project_id, parent_id);
 create index if not exists uploads_project_idx on uploads(project_id);
+create index if not exists uploads_project_status_created_idx on uploads(project_id, status, created_at);
+
+create or replace function public.reserve_upload(
+  p_project_id uuid,
+  p_folder_id uuid,
+  p_name text,
+  p_mime_type text,
+  p_size_bytes bigint,
+  p_session_url text
+)
+returns uuid
+language plpgsql
+as $$
+declare
+  v_limit bigint;
+  v_used bigint;
+  v_upload_id uuid;
+begin
+  if p_size_bytes < 0 then
+    raise exception 'Upload size cannot be negative';
+  end if;
+
+  select storage_limit_bytes
+    into v_limit
+    from public.projects
+   where id = p_project_id
+   for update;
+
+  if not found then
+    raise exception 'Project not found';
+  end if;
+
+  select coalesce(sum(size_bytes), 0)
+    into v_used
+    from public.uploads
+   where project_id = p_project_id
+     and status in ('uploading', 'complete');
+
+  if v_limit is not null and v_used + p_size_bytes > v_limit then
+    raise exception 'This upload would exceed the project storage limit';
+  end if;
+
+  insert into public.uploads (project_id, folder_id, name, mime_type, size_bytes, status, session_url)
+  values (p_project_id, p_folder_id, p_name, p_mime_type, p_size_bytes, 'uploading', p_session_url)
+  returning id into v_upload_id;
+
+  return v_upload_id;
+end;
+$$;
+
+revoke execute on function public.reserve_upload(uuid, uuid, text, text, bigint, text) from public;
+revoke execute on function public.reserve_upload(uuid, uuid, text, text, bigint, text) from anon;
+revoke execute on function public.reserve_upload(uuid, uuid, text, text, bigint, text) from authenticated;
+grant execute on function public.reserve_upload(uuid, uuid, text, text, bigint, text) to service_role;
