@@ -25,6 +25,28 @@ async function getProjectFile(request: Request, token: string, fileId: string) {
   return { project, accessToken: access.access_token, file }
 }
 
+async function getManagedFileForDelete(request: Request, token: string, fileId: string) {
+  const limited = rateLimit(request, 'file-delete', 60, token)
+  if (limited) return { error: limited }
+  const project = await getProjectByToken(token)
+  if (!project) return { error: NextResponse.json({ error: 'Upload space is unavailable or expired.' }, { status: 404 }) }
+  if (!fileId || fileId.length > 200 || !/^[A-Za-z0-9_-]+$/.test(fileId)) return { error: NextResponse.json({ error: 'Invalid file.' }, { status: 400 }) }
+
+  const uploads = await supabase<Array<{ id: string; name: string; size_bytes: number; folder_id: string | null }>>(`uploads?project_id=eq.${project.id}&drive_file_id=eq.${encodeURIComponent(fileId)}&status=eq.complete&select=id,name,size_bytes,folder_id&limit=1`)
+  const upload = uploads[0]
+  if (!upload) return { error: NextResponse.json({ error: 'File is not managed by this portal.' }, { status: 404 }) }
+  if (upload.folder_id) {
+    const folders = await supabase<Array<{ id: string }>>(`folders?project_id=eq.${project.id}&id=eq.${encodeURIComponent(upload.folder_id)}&select=id&limit=1`)
+    if (!folders[0]) return { error: NextResponse.json({ error: 'File is not part of this project.' }, { status: 403 }) }
+  }
+
+  const accounts = await supabase<Array<{ refresh_token: string }>>(`drive_accounts?id=eq.${project.drive_account_id}&select=refresh_token&limit=1`)
+  const account = accounts[0]
+  if (!account) return { error: NextResponse.json({ error: 'Storage account unavailable.' }, { status: 500 }) }
+  const access = await accessTokenFromRefreshToken(account.refresh_token)
+  return { project, accessToken: access.access_token, upload }
+}
+
 function safeFilename(name: string) {
   return name.replace(/["\\\r\n]/g, '_').replace(/[\u0000-\u001f\u007f]/g, '_')
 }
@@ -108,15 +130,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ to
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ token: string; fileId: string }> }) {
   const { token, fileId } = await params
-  const result = await getProjectFile(request, token, fileId)
+  const result = await getManagedFileForDelete(request, token, fileId)
   if ('error' in result) return result.error
-  const { project, accessToken } = result
-  const uploads = await supabase<Array<{ id: string; name: string }>>(`uploads?project_id=eq.${project.id}&drive_file_id=eq.${encodeURIComponent(fileId)}&status=eq.complete&select=id,name&limit=1`)
-  const upload = uploads[0]
-  if (!upload) return NextResponse.json({ error: 'File is not managed by this portal.' }, { status: 404 })
+  const { project, accessToken, upload } = result
 
   await deleteDriveFile(accessToken, fileId)
   await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}&project_id=eq.${project.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'deleted' }) })
-  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'file.deleted', file_name: upload.name, metadata: { driveFileId: fileId } }) })
-  return NextResponse.json({ ok: true })
+  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'file.deleted', file_name: upload.name, metadata: { driveFileId: fileId, deletedBytes: Number(upload.size_bytes) || 0 } }) })
+  return NextResponse.json({ ok: true, deletedBytes: Number(upload.size_bytes) || 0 })
 }
