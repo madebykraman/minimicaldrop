@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { DM_Mono, Manrope, Space_Grotesk } from 'next/font/google'
+import GlobalChrome from '@/components/global-chrome'
 import './globals.css'
 import './brand.css'
 import './drop.css'
@@ -16,5 +17,5 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en" className={`${spaceGrotesk.variable} ${manrope.variable} ${dmMono.variable}`}><body>{children}</body></html>
+  return <html lang="en" className={`${spaceGrotesk.variable} ${manrope.variable} ${dmMono.variable}`}><body><GlobalChrome/>{children}</body></html>
 }
