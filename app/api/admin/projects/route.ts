@@ -32,7 +32,7 @@ async function consolidateAccounts(accounts: Array<{ id: string; label: string; 
 
 export async function GET() {
   if (!(await isAdmin())) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
-  const projects = await supabase<Array<{ id: string; name: string; client_name: string; client_email: string | null; drive_account_id: string; drive_folder_id: string; storage_limit_bytes: number | null; expires_at: string; disabled_at: string | null; created_at: string }>>('projects?select=id,name,client_name,client_email,drive_account_id,drive_folder_id,storage_limit_bytes,expires_at,disabled_at,created_at&order=created_at.desc')
+  const projects = await supabase<Array<{ id: string; name: string; client_name: string; client_email: string | null; drive_account_id: string; drive_folder_id: string; storage_limit_bytes: number | null; expires_at: string; disabled_at: string | null; delivery_status: string; client_message: string | null; created_at: string }>>('projects?select=id,name,client_name,client_email,drive_account_id,drive_folder_id,storage_limit_bytes,expires_at,disabled_at,delivery_status,client_message,created_at&order=created_at.desc')
   const accounts = await supabase<Array<{ id: string; label: string; google_email: string; refresh_token: string; root_folder_id: string | null; created_at: string }>>('drive_accounts?select=id,label,google_email,refresh_token,root_folder_id,created_at&order=created_at.desc')
   const reconciledAccounts = await consolidateAccounts(accounts)
   const safeAccounts = reconciledAccounts.map(({ refresh_token: _refreshToken, created_at: _createdAt, ...account }) => account)
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
   const token = crypto.randomBytes(32).toString('base64url')
   const access = await accessTokenFromRefreshToken(account.refresh_token)
   const folder = await createDriveFolder(access.access_token, name, root)
-  const rows = await supabase<Array<{ id: string }>>('projects', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ name, client_name: clientName, client_email: clientEmail, access_token_hash: hashToken(token), drive_account_id: account.id, drive_folder_id: folder.id, storage_limit_bytes: limit, expires_at: expires.toISOString() }) })
+  const rows = await supabase<Array<{ id: string }>>('projects', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ name, client_name: clientName, client_email: clientEmail, access_token_hash: hashToken(token), drive_account_id: account.id, drive_folder_id: folder.id, storage_limit_bytes: limit, expires_at: expires.toISOString(), delivery_status: 'in_progress' }) })
   const projectId = rows[0]?.id
   if (!projectId) return NextResponse.json({ error: 'Project could not be created.' }, { status: 500 })
   await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: projectId, event_type: 'project.created', metadata: { clientName } }) })
