@@ -2,6 +2,8 @@ import 'server-only'
 import { hashToken } from '@/lib/google-drive'
 import { supabase } from '@/lib/supabase'
 
+export type DeliveryStatus = 'in_progress' | 'ready' | 'ready_for_review' | 'changes_requested' | 'approved' | 'delivered' | 'archived'
+
 export type Project = {
   id: string
   name: string
@@ -12,7 +14,7 @@ export type Project = {
   storage_limit_bytes?: number
   expires_at: string
   disabled_at?: string
-  delivery_status?: 'in_progress' | 'ready' | 'delivered' | 'archived'
+  delivery_status?: DeliveryStatus
   client_message?: string | null
 }
 
