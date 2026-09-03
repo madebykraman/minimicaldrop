@@ -17,7 +17,8 @@ code,kbd,.mono,.client-footer,.drop-home-footer,.legal-footer,.p5-link strong,.p
 .client-progress i,.client-usage-track i,.drop-window-storage em b{background:var(--gradient-brand)!important}
 
 .v5-shell,.v5-shell *,.client-header,.client-main,.client-preview,.client-overlay,.p5-admin,.p5-admin *{font-family:var(--body)}
-.v5-shell{background:var(--gradient-atmosphere),#08070c!important}
+.v5-shell{font-family:var(--body)!important;background:var(--gradient-atmosphere),#08070c!important}
+.p5-admin{font-family:var(--body)!important}
 .v5-shell h1,.v5-shell h2,.client-header h1,.client-dialog h2,.p5-admin h1,.p5-admin h2{font-family:var(--display)!important}
 .v5-track i,.v5-progress i{background:var(--gradient-brand)!important}
 .v5-dropzone{background:radial-gradient(circle at 50% 0,rgba(76,43,129,.16),transparent 55%),rgba(255,255,255,.012)!important}
