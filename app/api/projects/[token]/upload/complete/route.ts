@@ -11,10 +11,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
   const body = await request.json().catch(() => null) as { uploadId?: string; driveFileId?: string } | null
   if (!body?.uploadId) return NextResponse.json({ error: 'Upload completion data is required.' }, { status: 400 })
 
-  const uploads = await supabase<Array<{ id: string; project_id: string; folder_id: string | null; drive_file_id: string | null; size_bytes: number; status: string }>>(`uploads?id=eq.${encodeURIComponent(body.uploadId)}&project_id=eq.${project.id}&select=id,project_id,folder_id,drive_file_id,size_bytes,status&limit=1`)
+  const uploads = await supabase<Array<{ id: string; project_id: string; folder_id: string | null; drive_file_id: string | null; session_url: string | null; size_bytes: number; status: string }>>(`uploads?id=eq.${encodeURIComponent(body.uploadId)}&project_id=eq.${project.id}&select=id,project_id,folder_id,drive_file_id,session_url,size_bytes,status&limit=1`)
   const upload = uploads[0]
   if (!upload) return NextResponse.json({ error: 'Upload session not found.' }, { status: 404 })
-  if (upload.status === 'complete') return NextResponse.json({ ok: true })
+  if (upload.status === 'complete') return NextResponse.json({ ok: true, driveFileId: upload.drive_file_id })
 
   const accounts = await supabase<Array<{ refresh_token: string }>>(`drive_accounts?id=eq.${project.drive_account_id}&select=refresh_token&limit=1`)
   const account = accounts[0]
@@ -22,15 +22,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
   const access = await accessTokenFromRefreshToken(account.refresh_token)
 
   let driveFileId = body.driveFileId || ''
-  if (!driveFileId) {
-    if (!upload.drive_file_id) return NextResponse.json({ error: 'Upload session is missing.' }, { status: 409 })
-    const status = await queryResumableUpload(access.access_token, upload.drive_file_id, upload.size_bytes)
-    if (status.status >= 200 && status.status < 300 && status.data?.id) {
-      driveFileId = status.data.id
-    } else {
-      return NextResponse.json({ error: 'Google Drive has not finished receiving this upload.' }, { status: 409 })
-    }
+  if (!driveFileId && upload.session_url) {
+    const status = await queryResumableUpload(access.access_token, upload.session_url, Number(upload.size_bytes))
+    if ((status.status === 200 || status.status === 201) && status.data?.id) driveFileId = status.data.id
   }
+  if (!driveFileId) return NextResponse.json({ error: 'Google Drive has not finished receiving this upload.' }, { status: 409 })
 
   const file = await getDriveFile(access.access_token, driveFileId).catch(() => null)
   const expectedParent = upload.folder_id
@@ -38,15 +34,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
     : project.drive_folder_id
 
   if (!file || file.trashed || !expectedParent || !file.parents?.includes(expectedParent) || Number(file.size || 0) !== Number(upload.size_bytes)) {
-    await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'failed' }) })
     return NextResponse.json({ error: 'Google Drive did not confirm the uploaded file.' }, { status: 409 })
   }
 
   await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}`, {
     method: 'PATCH',
     headers: { Prefer: 'return=minimal' },
-    body: JSON.stringify({ drive_file_id: driveFileId, status: 'complete', completed_at: new Date().toISOString() }),
+    body: JSON.stringify({ drive_file_id: driveFileId, session_url: null, status: 'complete', completed_at: new Date().toISOString() }),
   })
-  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'upload.completed', metadata: { uploadId: upload.id, driveFileId, size: upload.size_bytes } }) })
+  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'upload.completed', file_name: upload.id, metadata: { uploadId: upload.id, driveFileId, size: upload.size_bytes } }) })
   return NextResponse.json({ ok: true, driveFileId })
 }
