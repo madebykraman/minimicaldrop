@@ -31,9 +31,23 @@ The operational layer is now implemented:
 - Branded operations control room
 - Branded responsive client workspace
 
+## v0.4 milestone
+
+Delivery intelligence is implemented on top of the v0.2 operational layer:
+
+- Email notifications through Resend
+- Rich delivery states: in progress, ready for review, changes requested, approved, delivered and archived
+- Client approval and change requests
+- Project-level comments for delivery context
+- Client project messaging from the studio
+- Client and admin activity timelines
+- Chronological delivery history through the existing audit trail
+
+v0.3 real-world workflow is intentionally skipped as a separate development milestone. Current client and teammate testing serves as the real-world validation loop for v0.4 and later work.
+
 ## Current surface
 
-The existing Drop layout and interaction model remain unchanged. The current brand pass is limited to typography, restrained purple gradients, correctly sized bundled brand assets, compact app-icon placement, Privacy and Terms footer links, and client Contact Support with a preformatted email handoff.
+The existing Drop layout and interaction model remain unchanged. Branding is limited to typography, restrained purple gradients, correctly sized bundled brand assets, compact app-icon placement, Privacy and Terms footer links, and client Contact Support with a preformatted email handoff. v0.4 adds delivery intelligence without turning DROP into a general collaboration platform.
 
 There is no client onboarding tour or welcome flow.
 
@@ -47,6 +61,7 @@ Supabase is the source of truth for project state and metadata. Google Drive sto
 - Vercel
 - PostgreSQL/Supabase
 - Google Drive API + OAuth
+- Resend for transactional delivery notifications
 - Server-only secrets
 
 Never commit Google OAuth client secrets, refresh tokens, database credentials or service credentials.
