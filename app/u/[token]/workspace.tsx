@@ -1,11 +1,32 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, ArrowUp, ChevronRight, File, Folder, FolderPlus, Upload, X } from 'lucide-react'
+import {
+  AlertCircle,
+  ArrowLeft,
+  ArrowUp,
+  Check,
+  ChevronRight,
+  Download,
+  File,
+  Folder,
+  FolderPlus,
+  HardDrive,
+  Loader2,
+  MoreHorizontal,
+  Pencil,
+  RefreshCw,
+  Trash2,
+  Upload,
+  X,
+} from 'lucide-react'
 
 type Item = { id: string; name: string; mimeType: string; sizeBytes: number; modifiedTime: string | null }
 type Project = { id: string; name: string; clientName: string; expiresAt: string; storageLimitBytes: number | null }
-type UploadState = { name: string; progress: number; status: 'uploading' | 'complete' | 'error'; error?: string }
+type UploadState = { id: string; name: string; progress: number; status: 'uploading' | 'complete' | 'error'; error?: string }
+type TrailItem = { id: string; name: string }
+type Dialog = { type: 'rename' | 'delete'; kind: 'file' | 'folder'; id: string; name: string } | null
+
 const FOLDER_MIME = 'application/vnd.google-apps.folder'
 const CHUNK = 1 * 1024 * 1024
 
@@ -14,6 +35,11 @@ function formatBytes(bytes: number) {
   const units = ['B', 'KB', 'MB', 'GB', 'TB']
   const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
   return `${(bytes / 1024 ** i).toFixed(i ? 1 : 0)} ${units[i]}`
+}
+
+function formatDate(value: string | null) {
+  if (!value) return ''
+  return new Date(value).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 async function jsonFetch(url: string, init?: RequestInit) {
@@ -58,19 +84,16 @@ async function uploadToGoogle(file: File, sessionUrl: string, statusUrl: string,
   }
 
   let offset = 0
-
   while (offset < file.size) {
     const end = Math.min(offset + CHUNK, file.size) - 1
     const chunk = file.slice(offset, end + 1)
 
     try {
       const result = await xhrUpload(sessionUrl, chunk, offset, end, file.size, onProgress)
-
       if (result.status >= 200 && result.status < 300 && result.data?.id) {
         onProgress(1)
         return result.data
       }
-
       if (result.status === 308) {
         const match = result.range?.match(/bytes=0-(\d+)/)
         if (match) {
@@ -79,7 +102,6 @@ async function uploadToGoogle(file: File, sessionUrl: string, statusUrl: string,
           continue
         }
       }
-
       throw new Error(`Google upload failed (${result.status})`)
     } catch (error) {
       const status = await jsonFetch(`${statusUrl}?uploadId=${encodeURIComponent(uploadId)}`)
@@ -97,7 +119,6 @@ async function uploadToGoogle(file: File, sessionUrl: string, statusUrl: string,
       }
       if (error instanceof Error && error.message.startsWith('Google upload failed')) throw error
       await new Promise(resolve => setTimeout(resolve, 700))
-      continue
     }
   }
 
@@ -110,6 +131,7 @@ export default function Workspace({ token }: { token: string }) {
   const [items, setItems] = useState<Item[]>([])
   const [currentFolderId, setCurrentFolderId] = useState('')
   const [rootId, setRootId] = useState('')
+  const [trail, setTrail] = useState<TrailItem[]>([])
   const [usedBytes, setUsedBytes] = useState(0)
   const [pendingBytes, setPendingBytes] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -117,41 +139,93 @@ export default function Workspace({ token }: { token: string }) {
   const [folderName, setFolderName] = useState('')
   const [showFolder, setShowFolder] = useState(false)
   const [uploads, setUploads] = useState<UploadState[]>([])
+  const [dialog, setDialog] = useState<Dialog>(null)
+  const [dialogValue, setDialogValue] = useState('')
+  const [actionBusy, setActionBusy] = useState(false)
 
   async function load(parentId?: string) {
-    setLoading(true); setError('')
+    setLoading(true)
+    setError('')
     try {
       const data = await jsonFetch(`/api/projects/${token}${parentId ? `?parentId=${encodeURIComponent(parentId)}` : ''}`)
-      setProject(data.project); setItems(data.items); setUsedBytes(data.usedBytes); setPendingBytes(data.pendingBytes || 0)
-      if (!rootId) setRootId(data.currentFolderId)
+      setProject(data.project)
+      setItems(data.items)
+      setUsedBytes(data.usedBytes)
+      setPendingBytes(data.pendingBytes || 0)
       setCurrentFolderId(data.currentFolderId)
-    } catch (e) { setError(e instanceof Error ? e.message : 'Unable to load project') }
-    finally { setLoading(false) }
+      if (!rootId) {
+        setRootId(data.currentFolderId)
+        setTrail([{ id: data.currentFolderId, name: data.project.name }])
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Unable to load project')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  useEffect(() => { load() }, [token])
+  useEffect(() => { void load() }, [token])
+
+  async function openFolder(folder: Item) {
+    await load(folder.id)
+    setTrail(prev => [...prev, { id: folder.id, name: folder.name }])
+  }
+
+  async function goToTrail(index: number) {
+    const target = trail[index]
+    if (!target) return
+    await load(target.id === rootId ? undefined : target.id)
+    setTrail(prev => prev.slice(0, index + 1))
+  }
 
   async function createFolder() {
     const name = folderName.trim()
     if (!name) return
+    setActionBusy(true)
     try {
-      await jsonFetch(`/api/projects/${token}/folders`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, parentId: currentFolderId || undefined }) })
-      setFolderName(''); setShowFolder(false); await load(currentFolderId || undefined)
-    } catch (e) { setError(e instanceof Error ? e.message : 'Unable to create folder') }
+      await jsonFetch(`/api/projects/${token}/folders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, parentId: currentFolderId || undefined }),
+      })
+      setFolderName('')
+      setShowFolder(false)
+      await load(currentFolderId || undefined)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Unable to create folder')
+    } finally {
+      setActionBusy(false)
+    }
   }
 
   async function uploadFile(file: File) {
-    setUploads(prev => [...prev, { name: file.name, progress: 0, status: 'uploading' }])
-    const setProgress = (progress: number) => setUploads(prev => prev.map(u => u.name === file.name ? { ...u, progress } : u))
+    const uploadId = crypto.randomUUID()
+    const parentId = currentFolderId
+    setUploads(prev => [...prev, { id: uploadId, name: file.name, progress: 0, status: 'uploading' }])
+    const setProgress = (progress: number) => setUploads(prev => prev.map(u => u.id === uploadId ? { ...u, progress } : u))
+
     try {
-      const init = await jsonFetch(`/api/projects/${token}/upload`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: file.name, mimeType: file.type, size: file.size, parentId: currentFolderId || undefined }) })
+      const init = await jsonFetch(`/api/projects/${token}/upload`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: file.name, mimeType: file.type, size: file.size, parentId: parentId || undefined }),
+      })
       const statusUrl = `/api/projects/${token}/upload/status`
       await uploadToGoogle(file, init.sessionUrl, statusUrl, init.uploadId, setProgress)
-      await jsonFetch(`/api/projects/${token}/upload/complete`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uploadId: init.uploadId }) })
-      setUploads(prev => prev.map(u => u.name === file.name ? { ...u, progress: 1, status: 'complete' } : u))
-      await load(currentFolderId || undefined)
+      await jsonFetch(`/api/projects/${token}/upload/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uploadId: init.uploadId }),
+      })
+      setUploads(prev => prev.map(u => u.id === uploadId ? { ...u, progress: 1, status: 'complete' } : u))
+      await load(parentId || undefined)
     } catch (e) {
-      setUploads(prev => prev.map(u => u.name === file.name ? { ...u, status: 'error', error: e instanceof Error ? e.message : 'Upload failed' } : u))
+      setUploads(prev => prev.map(u => u.id === uploadId ? { ...u, status: 'error', error: e instanceof Error ? e.message : 'Upload failed' } : u))
+      await jsonFetch(`/api/projects/${token}/upload/fail`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uploadId: (e as { uploadId?: string })?.uploadId }),
+      }).catch(() => undefined)
     }
   }
 
@@ -161,36 +235,205 @@ export default function Workspace({ token }: { token: string }) {
     if (input.current) input.current.value = ''
   }
 
-  if (loading && !project) return <div className="shell"><header className="topbar"><div className="brand">MINIMICAL <span>DROP</span></div></header><main className="main"><p>Loading secure upload space…</p></main></div>
-  if (error && !project) return <div className="shell"><header className="topbar"><div className="brand">MINIMICAL <span>DROP</span></div></header><main className="main"><div className="workspace"><div className="content"><h2>Upload space unavailable</h2><p>{error}</p></div></div></main></div>
+  async function renameItem() {
+    if (!dialog || dialog.type !== 'rename') return
+    const name = dialogValue.trim()
+    if (!name) return
+    setActionBusy(true)
+    try {
+      const path = dialog.kind === 'file'
+        ? `/api/projects/${token}/files/${encodeURIComponent(dialog.id)}`
+        : `/api/projects/${token}/folders/${encodeURIComponent(dialog.id)}`
+      await jsonFetch(path, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      })
+      setDialog(null)
+      await load(currentFolderId || undefined)
+      if (dialog.kind === 'folder') {
+        setTrail(prev => prev.map(item => item.id === dialog.id ? { ...item, name } : item))
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Unable to rename item')
+    } finally {
+      setActionBusy(false)
+    }
+  }
+
+  async function deleteItem() {
+    if (!dialog || dialog.type !== 'delete') return
+    setActionBusy(true)
+    try {
+      const path = dialog.kind === 'file'
+        ? `/api/projects/${token}/files/${encodeURIComponent(dialog.id)}`
+        : `/api/projects/${token}/folders/${encodeURIComponent(dialog.id)}`
+      await jsonFetch(path, { method: 'DELETE' })
+      setDialog(null)
+      await load(currentFolderId || undefined)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Unable to delete item')
+    } finally {
+      setActionBusy(false)
+    }
+  }
+
+  function startRename(kind: 'file' | 'folder', item: Item) {
+    setDialog({ type: 'rename', kind, id: item.id, name: item.name })
+    setDialogValue(item.name)
+  }
+
+  function startDelete(kind: 'file' | 'folder', item: Item) {
+    setDialog({ type: 'delete', kind, id: item.id, name: item.name })
+  }
+
+  function downloadFile(file: Item) {
+    const link = document.createElement('a')
+    link.href = `/api/projects/${token}/files/${encodeURIComponent(file.id)}`
+    link.download = file.name
+    link.target = '_blank'
+    link.rel = 'noreferrer'
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  }
+
+  if (loading && !project) return <div className="drop-shell"><div className="drop-loading"><div className="drop-logo">MINIMICAL<span>DROP</span></div><Loader2 className="drop-spin" size={20}/><p>Opening your private project space</p></div></div>
+  if (error && !project) return <div className="drop-shell"><div className="drop-empty"><div className="drop-logo">MINIMICAL<span>DROP</span></div><AlertCircle size={28}/><h2>Upload space unavailable</h2><p>{error}</p></div></div>
   if (!project) return null
 
   const folders = items.filter(item => item.mimeType === FOLDER_MIME)
   const files = items.filter(item => item.mimeType !== FOLDER_MIME)
   const usage = project.storageLimitBytes ? Math.min(100, usedBytes / project.storageLimitBytes * 100) : 0
   const reservedUsage = project.storageLimitBytes ? Math.min(100, (usedBytes + pendingBytes) / project.storageLimitBytes * 100) : 0
-  const isRoot = currentFolderId === rootId
   const expires = new Date(project.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+  const isRoot = currentFolderId === rootId
 
-  return <div className="shell">
-    <header className="topbar"><div className="brand">MINIMICAL <span>DROP</span></div><div className="eyebrow">PRIVATE CLIENT PORTAL</div></header>
-    <main className="main">
-      <div className="hero"><div><div className="eyebrow">FILE DELIVERY / UPLOAD</div><h1>Your files.<br/>One private place.</h1></div><p>A private project space for sending files directly to the studio. Your access link is temporary and your Google Drive credentials are never shared.</p></div>
-      <section className="workspace">
-        <div className="workspaceHead"><div><div className="projectTitle">{project.name}</div><div className="meta">{project.clientName} · Access expires {expires}</div></div><div className="actions"><button className="btn" onClick={()=>setShowFolder(true)}><FolderPlus size={14}/> New folder</button><button className="btn lime" onClick={()=>input.current?.click()}><Upload size={14}/> Upload</button></div></div>
-        <div className="content">
-          <input ref={input} hidden type="file" multiple onChange={e=>addFiles(e.target.files)}/>
-          <div className="dropzone" onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();addFiles(e.dataTransfer.files)}} onClick={()=>input.current?.click()}>
-            <div><div className="dropicon"><ArrowUp size={20}/></div><h2>Drop files here</h2><p>or click to browse your computer</p></div>
-          </div>
-          {uploads.length > 0 && <div className="folders"><div className="sectionTitle">Uploads</div>{uploads.map((u,i)=><div className="folder" key={`${u.name}-${i}`}><div className="folderIcon"><Upload size={16}/></div><div style={{flex:1}}><div className="folderName">{u.name}</div><div className="folderCount">{u.status === 'complete' ? 'Uploaded' : u.status === 'error' ? u.error : `${Math.round(u.progress*100)}%`}</div></div>{u.status === 'uploading' && <div style={{width:90,height:4,background:'#e9e9e3',borderRadius:9,overflow:'hidden'}}><i style={{display:'block',height:'100%',width:`${u.progress*100}%`,background:'#171713'}}/></div>}</div>)}</div>}
-          <div className="folders"><div className="sectionTitle">{!isRoot && <button className="btn" style={{marginRight:8,padding:'6px 9px'}} onClick={()=>load(rootId)}><ArrowLeft size={13}/></button>} Folders</div>{folders.map(folder=><button className="folder" style={{width:'100%',textAlign:'left'}} key={folder.id} onClick={()=>load(folder.id)}><div className="folderIcon"><Folder size={17}/></div><div style={{flex:1}}><div className="folderName">{folder.name}</div><div className="folderCount">Folder</div></div><ChevronRight size={16} color="#aaa"/></button>)}</div>
-          <div className="folders"><div className="sectionTitle">Files</div>{files.length ? files.map(file=><div className="folder" key={file.id}><div className="folderIcon"><File size={17}/></div><div style={{flex:1}}><div className="folderName">{file.name}</div><div className="folderCount">{formatBytes(file.sizeBytes)}</div></div></div>) : <div className="meta">No files in this folder yet.</div>}</div>
-          <div className="footer"><span>Storage · {formatBytes(usedBytes)}{pendingBytes ? ` used · ${formatBytes(pendingBytes)} uploading` : ''}{project.storageLimitBytes ? ` of ${formatBytes(project.storageLimitBytes)}` : ''}</span><span>{project.storageLimitBytes ? `${Math.round(usage)}% used${pendingBytes ? ` · ${Math.round(reservedUsage)}% reserved` : ''}` : 'No limit set'}</span></div>{project.storageLimitBytes && <div className="progress"><i style={{width:`${reservedUsage}%`}}/></div>}
-          {error && <p className="meta" style={{marginTop:16}}>{error}</p>}
+  return <div className="drop-shell">
+    <header className="drop-topbar">
+      <div className="drop-logo">MINIMICAL<span>DROP</span></div>
+      <div className="drop-secure"><span className="drop-secure-dot"/> PRIVATE CLIENT SPACE</div>
+    </header>
+
+    <main className="drop-main">
+      <section className="drop-intro">
+        <div>
+          <div className="drop-kicker">PROJECT DELIVERY</div>
+          <h1>{project.name}</h1>
+          <p className="drop-intro-meta">Prepared for {project.clientName} <span/> Access expires {expires}</p>
+        </div>
+        <div className="drop-intro-note">
+          <span>PRIVATE BY DESIGN</span>
+          <p>Files move directly between this space and the studio storage. Your access link is temporary.</p>
         </div>
       </section>
+
+      <section className="drop-card">
+        <div className="drop-toolbar">
+          <div className="drop-breadcrumbs">
+            {trail.map((item, index) => <span key={item.id}>
+              {index > 0 && <ChevronRight size={13}/>}<button onClick={() => void goToTrail(index)} className={index === trail.length - 1 ? 'active' : ''}>{item.name}</button>
+            </span>)}
+          </div>
+          <div className="drop-actions">
+            <button className="drop-button ghost" onClick={() => setShowFolder(true)}><FolderPlus size={15}/> New folder</button>
+            <button className="drop-button accent" onClick={() => input.current?.click()}><Upload size={15}/> Upload</button>
+          </div>
+        </div>
+
+        <div className="drop-body">
+          <input ref={input} hidden type="file" multiple onChange={e => addFiles(e.target.files)}/>
+
+          <div className="dropzone-v2" onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); addFiles(e.dataTransfer.files) }} onClick={() => input.current?.click()}>
+            <div className="dropzone-glow"/>
+            <div className="drop-upload-mark"><ArrowUp size={21}/></div>
+            <div className="dropzone-copy"><strong>Drop files anywhere</strong><span>or click to browse from your computer</span></div>
+            <div className="dropzone-hint">DIRECT TO DRIVE</div>
+          </div>
+
+          {uploads.length > 0 && <section className="drop-section drop-upload-section">
+            <div className="drop-section-head"><span>Current transfers</span><span>{uploads.filter(u => u.status === 'uploading').length ? 'Uploading' : 'Complete'}</span></div>
+            {uploads.map(upload => <div className="drop-row transfer" key={upload.id}>
+              <div className="drop-file-icon"><Upload size={16}/></div>
+              <div className="drop-row-main"><strong>{upload.name}</strong><span>{upload.status === 'complete' ? 'Uploaded successfully' : upload.status === 'error' ? upload.error : `${Math.round(upload.progress * 100)}% uploaded`}</span></div>
+              {upload.status === 'uploading' && <div className="drop-transfer-progress"><i style={{ width: `${upload.progress * 100}%` }}/></div>}
+              {upload.status === 'complete' && <Check size={17} className="drop-success"/>}
+              {upload.status === 'error' && <AlertCircle size={17} className="drop-error"/>}
+            </div>)}
+          </section>}
+
+          {!isRoot && <button className="drop-parent" onClick={() => void goToTrail(Math.max(0, trail.length - 2))}><ArrowLeft size={15}/> Back to {trail.length > 1 ? trail[trail.length - 2]?.name : project.name}</button>}
+
+          {folders.length > 0 && <section className="drop-section">
+            <div className="drop-section-head"><span>Folders</span><span>{folders.length} {folders.length === 1 ? 'folder' : 'folders'}</span></div>
+            <div className="drop-list">
+              {folders.map(folder => <div className="drop-row" key={folder.id}>
+                <button className="drop-row-click" onClick={() => void openFolder(folder)}>
+                  <div className="drop-folder-icon"><Folder size={17}/></div>
+                  <div className="drop-row-main"><strong>{folder.name}</strong><span>Folder</span></div>
+                </button>
+                <div className="drop-row-actions">
+                  <button title="Rename folder" aria-label={`Rename ${folder.name}`} onClick={() => startRename('folder', folder)}><Pencil size={14}/></button>
+                  <button title="Delete folder" aria-label={`Delete ${folder.name}`} onClick={() => startDelete('folder', folder)}><Trash2 size={14}/></button>
+                  <button className="drop-open" title="Open folder" aria-label={`Open ${folder.name}`} onClick={() => void openFolder(folder)}><ChevronRight size={16}/></button>
+                </div>
+              </div>)}
+            </div>
+          </section>}
+
+          <section className="drop-section">
+            <div className="drop-section-head"><span>Files</span><span>{files.length} {files.length === 1 ? 'file' : 'files'}</span></div>
+            {files.length ? <div className="drop-list">
+              {files.map(file => <div className="drop-row" key={file.id}>
+                <div className="drop-file-icon"><File size={17}/></div>
+                <div className="drop-row-main"><strong>{file.name}</strong><span>{formatBytes(file.sizeBytes)} {file.modifiedTime ? `· ${formatDate(file.modifiedTime)}` : ''}</span></div>
+                <div className="drop-row-actions">
+                  <button title="Download file" aria-label={`Download ${file.name}`} onClick={() => downloadFile(file)}><Download size={15}/></button>
+                  <button title="Rename file" aria-label={`Rename ${file.name}`} onClick={() => startRename('file', file)}><Pencil size={14}/></button>
+                  <button title="Delete file" aria-label={`Delete ${file.name}`} onClick={() => startDelete('file', file)}><Trash2 size={14}/></button>
+                  <button className="drop-more" title="More actions" aria-label={`More actions for ${file.name}`}><MoreHorizontal size={15}/></button>
+                </div>
+              </div>)}
+            </div> : <div className="drop-empty-folder"><File size={19}/><span>No files in this folder yet.</span></div>}
+          </section>
+
+          <section className="drop-storage">
+            <div className="drop-storage-top">
+              <div className="drop-storage-title"><HardDrive size={15}/><span>Storage</span></div>
+              <div className="drop-storage-value">{formatBytes(usedBytes)}{project.storageLimitBytes ? ` / ${formatBytes(project.storageLimitBytes)}` : ''}</div>
+            </div>
+            {project.storageLimitBytes ? <>
+              <div className="drop-storage-track"><i style={{ width: `${reservedUsage}%` }}/></div>
+              <div className="drop-storage-bottom"><span>{Math.round(usage)}% used{pendingBytes ? ` · ${Math.round(reservedUsage)}% reserved` : ''}</span><span>{pendingBytes ? `${formatBytes(pendingBytes)} uploading` : 'Ready for uploads'}</span></div>
+            </> : <div className="drop-storage-bottom"><span>No project storage limit</span><span>Ready for uploads</span></div>}
+          </section>
+
+          {error && <div className="drop-inline-error"><AlertCircle size={15}/>{error}<button onClick={() => void load(currentFolderId || undefined)}><RefreshCw size={14}/></button></div>}
+        </div>
+      </section>
+
+      <footer className="drop-footer"><span>MINIMICAL DROP</span><span>Private project delivery</span></footer>
     </main>
-    {showFolder&&<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.28)',display:'grid',placeItems:'center',zIndex:30}} onClick={()=>setShowFolder(false)}><div style={{width:'min(420px,calc(100% - 32px))',background:'#fff',borderRadius:16,padding:24}} onClick={e=>e.stopPropagation()}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}><b>New folder</b><button className="btn" onClick={()=>setShowFolder(false)}><X size={15}/></button></div><input autoFocus value={folderName} onChange={e=>setFolderName(e.target.value)} onKeyDown={e=>e.key==='Enter'&&createFolder()} placeholder="Folder name" style={{width:'100%',marginTop:20,padding:'13px 14px',border:'1px solid #deded7',borderRadius:10,outline:'none'}}/><button className="btn primary" style={{marginTop:12,width:'100%'}} onClick={createFolder}>Create folder</button></div></div>}
+
+    {showFolder && <div className="drop-overlay" onClick={() => !actionBusy && setShowFolder(false)}>
+      <div className="drop-dialog" onClick={e => e.stopPropagation()}>
+        <div className="drop-dialog-head"><div><span className="drop-dialog-kicker">PROJECT ORGANISATION</span><h3>New folder</h3></div><button onClick={() => setShowFolder(false)}><X size={17}/></button></div>
+        <input autoFocus value={folderName} onChange={e => setFolderName(e.target.value)} onKeyDown={e => e.key === 'Enter' && void createFolder()} placeholder="Folder name" maxLength={120}/>
+        <button className="drop-dialog-submit" disabled={actionBusy || !folderName.trim()} onClick={() => void createFolder()}>{actionBusy ? <Loader2 className="drop-spin" size={15}/> : <FolderPlus size={15}/>} Create folder</button>
+      </div>
+    </div>}
+
+    {dialog && <div className="drop-overlay" onClick={() => !actionBusy && setDialog(null)}>
+      <div className="drop-dialog" onClick={e => e.stopPropagation()}>
+        <div className="drop-dialog-head"><div><span className="drop-dialog-kicker">{dialog.type === 'rename' ? 'EDIT NAME' : 'CONFIRM ACTION'}</span><h3>{dialog.type === 'rename' ? 'Rename item' : `Delete ${dialog.kind}`}</h3></div><button onClick={() => setDialog(null)}><X size={17}/></button></div>
+        {dialog.type === 'rename' ? <>
+          <input autoFocus value={dialogValue} onChange={e => setDialogValue(e.target.value)} onKeyDown={e => e.key === 'Enter' && void renameItem()} maxLength={dialog.kind === 'file' ? 255 : 120}/>
+          <button className="drop-dialog-submit" disabled={actionBusy || !dialogValue.trim()} onClick={() => void renameItem()}>{actionBusy ? <Loader2 className="drop-spin" size={15}/> : <Pencil size={15}/>} Save name</button>
+        </> : <>
+          <div className="drop-delete-copy"><Trash2 size={18}/><p>Delete <strong>{dialog.name}</strong>? {dialog.kind === 'folder' ? 'Everything inside this folder will also be permanently deleted.' : 'This file will be permanently removed.'}</p></div>
+          <div className="drop-dialog-actions"><button className="drop-cancel" disabled={actionBusy} onClick={() => setDialog(null)}>Cancel</button><button className="drop-delete-submit" disabled={actionBusy} onClick={() => void deleteItem()}>{actionBusy ? <Loader2 className="drop-spin" size={15}/> : <Trash2 size={15}/>} Delete permanently</button></div>
+        </>}
+      </div>
+    </div>}
   </div>
 }
