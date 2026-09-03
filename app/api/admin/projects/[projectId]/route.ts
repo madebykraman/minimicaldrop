@@ -9,6 +9,54 @@ function bytes(value: unknown) {
   return Number.isSafeInteger(n) && n > 0 ? n : null
 }
 
+export async function GET(_request: Request, { params }: { params: Promise<{ projectId: string }> }) {
+  if (!(await isAdmin())) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
+  const { projectId } = await params
+  if (!projectId) return NextResponse.json({ error: 'Project ID is required.' }, { status: 400 })
+
+  const projects = await supabase<Array<{
+    id: string
+    name: string
+    client_name: string
+    client_email: string | null
+    drive_account_id: string
+    drive_folder_id: string
+    storage_limit_bytes: number | null
+    expires_at: string
+    disabled_at: string | null
+    created_at: string
+  }>>(`projects?id=eq.${encodeURIComponent(projectId)}&select=id,name,client_name,client_email,drive_account_id,drive_folder_id,storage_limit_bytes,expires_at,disabled_at,created_at&limit=1`)
+  const project = projects[0]
+  if (!project) return NextResponse.json({ error: 'Project not found.' }, { status: 404 })
+
+  const [accounts, completeRows, pendingRows, activity] = await Promise.all([
+    supabase<Array<{ id: string; label: string; google_email: string; root_folder_id: string | null }>>(`drive_accounts?id=eq.${encodeURIComponent(project.drive_account_id)}&select=id,label,google_email,root_folder_id&limit=1`),
+    supabase<Array<{ size_bytes: number }>>(`uploads?project_id=eq.${project.id}&status=eq.complete&select=size_bytes`),
+    supabase<Array<{ size_bytes: number }>>(`uploads?project_id=eq.${project.id}&status=eq.uploading&select=size_bytes`),
+    supabase<Array<{ id: string; event_type: string; file_name: string | null; metadata: unknown; created_at: string }>>(`audit_events?project_id=eq.${project.id}&select=id,event_type,file_name,metadata,created_at&order=created_at.desc&limit=100`),
+  ])
+
+  const usedBytes = completeRows.reduce((sum, row) => sum + Number(row.size_bytes || 0), 0)
+  const pendingBytes = pendingRows.reduce((sum, row) => sum + Number(row.size_bytes || 0), 0)
+
+  return NextResponse.json({
+    project,
+    account: accounts[0] || null,
+    storage: {
+      usedBytes,
+      pendingBytes,
+      limitBytes: project.storage_limit_bytes,
+      availableBytes: project.storage_limit_bytes == null ? null : Math.max(0, Number(project.storage_limit_bytes) - usedBytes - pendingBytes),
+    },
+    clientAccess: {
+      path: '/u/••••••••••••••••',
+      tokenStoredAsHash: true,
+      active: !project.disabled_at && new Date(project.expires_at).getTime() > Date.now(),
+    },
+    activity,
+  })
+}
+
 export async function PATCH(request: Request, { params }: { params: Promise<{ projectId: string }> }) {
   if (!(await isAdmin())) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
   const { projectId } = await params
