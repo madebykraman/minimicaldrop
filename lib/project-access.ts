@@ -12,6 +12,8 @@ export type Project = {
   storage_limit_bytes?: number
   expires_at: string
   disabled_at?: string
+  delivery_status?: 'in_progress' | 'ready' | 'delivered' | 'archived'
+  client_message?: string | null
 }
 
 export function isValidClientToken(token: string) {
@@ -20,7 +22,7 @@ export function isValidClientToken(token: string) {
 
 export async function getProjectByToken(token: string): Promise<Project | null> {
   if (!isValidClientToken(token)) return null
-  const rows = await supabase<Project[]>(`projects?access_token_hash=eq.${encodeURIComponent(hashToken(token))}&select=id,name,client_name,client_email,drive_account_id,drive_folder_id,storage_limit_bytes,expires_at,disabled_at&limit=1`)
+  const rows = await supabase<Project[]>(`projects?access_token_hash=eq.${encodeURIComponent(hashToken(token))}&select=id,name,client_name,client_email,drive_account_id,drive_folder_id,storage_limit_bytes,expires_at,disabled_at,delivery_status,client_message&limit=1`)
   const project = rows[0]
   if (!project || project.disabled_at || new Date(project.expires_at).getTime() <= Date.now()) return null
   return project
