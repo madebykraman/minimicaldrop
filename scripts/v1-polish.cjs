@@ -8,8 +8,22 @@ const dropCss = path.join(root, 'app', 'drop.css')
 let source = fs.readFileSync(workspace, 'utf8')
 source = source.replace('const CHUNK = 1024 * 1024', 'const CHUNK = 8 * 1024 * 1024')
 
+source = source.replace(
+  "const [used, setUsed] = useState(0); const [pending, setPending] = useState(0); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [recoveries, setRecoveries] = useState<Recovery[]>([]); const [queue, setQueue] = useState<QueueItem[]>([])",
+  "const [used, setUsed] = useState(0); const [pending, setPending] = useState(0); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [recoveries, setRecoveries] = useState<Recovery[]>([]); const [queue, setQueue] = useState<QueueItem[]>([]); const [resumeTarget, setResumeTarget] = useState<Recovery | null>(null)"
+)
+source = source.replace('async function startUpload(file: File) {', 'async function startUpload(file: File, preferredRecovery?: Recovery) {')
+source = source.replace(
+  "const id = crypto.randomUUID(); const parentId = folderId; const recovery = recoveries.find(r => r.name === file.name && r.sizeBytes === file.size && r.folderId === (parentId === rootId ? null : parentId)); let serverId: string | null = recovery?.uploadId || null",
+  "const id = crypto.randomUUID(); const parentId = folderId; const recovery = preferredRecovery || recoveries.find(r => r.name === file.name && r.sizeBytes === file.size && r.folderId === (parentId === rootId ? null : parentId)); if (preferredRecovery && (preferredRecovery.name !== file.name || preferredRecovery.sizeBytes !== file.size)) { setError(`Choose \\\"${preferredRecovery.name}\\\" to resume this upload.`); return } let serverId: string | null = recovery?.uploadId || null"
+)
+source = source.replace(
+  "function addFiles(list: FileList | null) { if (!list) return; Array.from(list).forEach(file => { void startUpload(file) }); if (input.current) input.current.value = '' }",
+  "function addFiles(list: FileList | null) { if (!list) return; const files = Array.from(list); const target = resumeTarget; setResumeTarget(null); if (target) { const file = files[0]; if (file) void startUpload(file, target) } else { files.forEach(file => { void startUpload(file) }) } if (input.current) input.current.value = '' }"
+)
+
 const oldRecovery = '{recoveries.length > 0 && <div className="v5-recovery"><RefreshCw size={15}/><div><strong>Uploads ready to resume</strong><span>{recoveries.length} interrupted upload{recoveries.length === 1 ? \'\' : \'s\'} can continue when you select the same file again.</span></div></div>}'
-const newRecovery = `{recoveries.length > 0 && <section className="v5-recovery" aria-label="Uploads ready to resume"><div className="v5-recovery-head"><RefreshCw size={16}/><div><strong>{recoveries.length === 1 ? 'Upload ready to resume' : 'Uploads ready to resume'}</strong><span>Select the same file to continue from where it stopped. Nothing already uploaded will be sent again.</span></div></div>{recoveries.map(recovery => { const percent = Math.min(100, Math.round(recovery.uploadedBytes / Math.max(1, recovery.sizeBytes) * 100)); return <div className="v5-recovery-item" key={recovery.uploadId}><div className="v5-recovery-file"><File size={15}/><div><strong>{recovery.name}</strong><span>{percent}% uploaded · {formatBytes(recovery.uploadedBytes)} of {formatBytes(recovery.sizeBytes)}</span></div></div><div className="v5-recovery-progress"><i style={{ width: percent + '%' }}/></div><button className="v5-recovery-resume" onClick={() => input.current?.click()}><Upload size={14}/> Choose file to resume</button></div>})}</section>}`
+const newRecovery = `{recoveries.length > 0 && <section className="v5-recovery" aria-label="Uploads ready to resume"><div className="v5-recovery-head"><RefreshCw size={16}/><div><strong>{recoveries.length === 1 ? 'Upload ready to resume' : 'Uploads ready to resume'}</strong><span>Select the same file to continue from where it stopped. Nothing already uploaded will be sent again.</span></div></div>{recoveries.map(recovery => { const percent = Math.min(100, Math.round(recovery.uploadedBytes / Math.max(1, recovery.sizeBytes) * 100)); return <div className="v5-recovery-item" key={recovery.uploadId}><div className="v5-recovery-file"><File size={15}/><div><strong>{recovery.name}</strong><span>{percent}% uploaded · {formatBytes(recovery.uploadedBytes)} of {formatBytes(recovery.sizeBytes)}</span><em>{recovery.folderId ? 'Original folder will be preserved' : 'Project root · original location preserved'}</em></div></div><div className="v5-recovery-progress"><i style={{ width: percent + '%' }}/></div><button className="v5-recovery-resume" onClick={() => { setResumeTarget(recovery); input.current?.click() }}><Upload size={14}/> Choose this file to resume</button></div>})}</section>}`
 if (source.includes(oldRecovery) && !source.includes('/* v1-recovery-ux */')) {
   source = source.replace(oldRecovery, newRecovery)
   const styleBlock = `
@@ -22,11 +36,12 @@ if (source.includes(oldRecovery) && !source.includes('/* v1-recovery-ux */')) {
 .v5-recovery-head span{font-size:11px;line-height:1.5;color:#9992a6;margin-top:4px}
 .v5-recovery-item{padding:14px 16px 16px;border-bottom:1px solid rgba(255,255,255,.055)}
 .v5-recovery-item:last-child{border-bottom:0}
-.v5-recovery-file{display:flex;align-items:center;gap:10px;color:#b9a7d2;min-width:0}
+.v5-recovery-file{display:flex;align-items:flex-start;gap:10px;color:#b9a7d2;min-width:0}
 .v5-recovery-file>div{min-width:0}
-.v5-recovery-file strong,.v5-recovery-file span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v5-recovery-file strong,.v5-recovery-file span,.v5-recovery-file em{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .v5-recovery-file strong{font-size:11px;color:#f7f5fa}
 .v5-recovery-file span{font-size:10px;color:#77707f;margin-top:3px}
+.v5-recovery-file em{font-size:9px;font-style:normal;color:#7650ad;margin-top:3px}
 .v5-recovery-progress{height:4px;background:#19151f;border-radius:10px;overflow:hidden;margin:11px 0 12px}
 .v5-recovery-progress i{display:block;height:100%;background:linear-gradient(90deg,#4c2b81,#7650ad);border-radius:10px;transition:width .45s cubic-bezier(.22,1,.36,1)}
 .v5-recovery-resume{height:34px;border:1px solid rgba(118,80,173,.45);background:#17131e;color:#f7f5fa;border-radius:7px;padding:0 10px;display:inline-flex;align-items:center;gap:7px;font:600 10px inherit;cursor:pointer;transition:transform .24s cubic-bezier(.22,1,.36,1),background-color .24s ease,border-color .24s ease,box-shadow .24s ease}
