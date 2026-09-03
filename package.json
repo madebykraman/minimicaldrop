@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/v1-polish.cjs && node scripts/v1-runtime-polish.cjs && next build",
+    "build": "node scripts/v1-polish.cjs && node scripts/v1-runtime-polish.cjs && node scripts/v1-admin-polish.cjs && next build",
     "start": "next start"
   },
   "dependencies": {
