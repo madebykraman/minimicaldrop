@@ -58,14 +58,16 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ t
   }
 
   const descendantIds = Array.from(descendants)
-  const uploads = await supabase<Array<{ id: string; name: string; drive_file_id: string | null }>>(`uploads?project_id=eq.${result.project.id}&folder_id=in.(${descendantIds.map(encodeURIComponent).join(',')})&status=eq.complete&select=id,name,drive_file_id`)
-  for (const upload of uploads) {
-    if (upload.drive_file_id) await deleteDriveFile(result.accessToken, upload.drive_file_id).catch(() => undefined)
-    await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}&project_id=eq.${result.project.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'deleted' }) })
-  }
+  const uploads = await supabase<Array<{ id: string; size_bytes: number }>>(`uploads?project_id=eq.${result.project.id}&folder_id=in.(${descendantIds.map(encodeURIComponent).join(',')})&status=eq.complete&select=id,size_bytes`)
+  const deletedBytes = uploads.reduce((total, upload) => total + (Number(upload.size_bytes) || 0), 0)
 
+  // Google Drive permanently deletes a folder and all descendants owned by the account.
+  // Do this once instead of deleting every child sequentially. That removes the old
+  // multi-request bottleneck and avoids partial folder deletion failures.
   await deleteDriveFile(result.accessToken, result.folder.drive_folder_id)
+
+  await supabase(`uploads?project_id=eq.${result.project.id}&folder_id=in.(${descendantIds.map(encodeURIComponent).join(',')})&status=eq.complete`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'deleted' }) })
   await supabase(`folders?id=in.(${descendantIds.map(encodeURIComponent).join(',')})&project_id=eq.${result.project.id}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } })
-  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: result.project.id, event_type: 'folder.deleted', metadata: { folderId, name: result.folder.name, descendantCount: descendantIds.length, fileCount: uploads.length } }) })
-  return NextResponse.json({ ok: true })
+  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: result.project.id, event_type: 'folder.deleted', metadata: { folderId, name: result.folder.name, descendantCount: descendantIds.length, fileCount: uploads.length, deletedBytes } }) })
+  return NextResponse.json({ ok: true, deletedBytes, deletedCount: uploads.length })
 }
