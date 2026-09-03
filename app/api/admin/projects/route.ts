@@ -10,12 +10,8 @@ function bytes(value: unknown) {
   return Number.isSafeInteger(n) && n > 0 ? n : null
 }
 
-export async function GET() {
-  if (!(await isAdmin())) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
-  const projects = await supabase<Array<{ id: string; name: string; client_name: string; client_email: string | null; drive_account_id: string; drive_folder_id: string; storage_limit_bytes: number | null; expires_at: string; disabled_at: string | null; created_at: string }>>('projects?select=id,name,client_name,client_email,drive_account_id,drive_folder_id,storage_limit_bytes,expires_at,disabled_at,created_at&order=created_at.desc')
-  const accounts = await supabase<Array<{ id: string; label: string; google_email: string; refresh_token: string; root_folder_id: string | null }>>('drive_accounts?select=id,label,google_email,refresh_token,root_folder_id&order=created_at.desc')
-
-  const repairedAccounts = await Promise.all(accounts.map(async (account) => {
+async function consolidateAccounts(accounts: Array<{ id: string; label: string; google_email: string; refresh_token: string; root_folder_id: string | null; created_at: string }>) {
+  const repaired = await Promise.all(accounts.map(async (account) => {
     if (account.google_email && account.google_email !== 'unknown') return account
     try {
       const access = await accessTokenFromRefreshToken(account.refresh_token)
@@ -31,7 +27,39 @@ export async function GET() {
     }
   }))
 
-  const safeAccounts = repairedAccounts.map(({ refresh_token: _refreshToken, ...account }) => account)
+  const grouped = new Map<string, typeof repaired>()
+  for (const account of repaired) {
+    if (!account.google_email || account.google_email === 'unknown') continue
+    const key = account.google_email.trim().toLowerCase()
+    const group = grouped.get(key) || []
+    group.push(account)
+    grouped.set(key, group)
+  }
+
+  const duplicateIds = new Set<string>()
+  for (const group of grouped.values()) {
+    group.sort((a, b) => b.created_at.localeCompare(a.created_at))
+    const canonical = group[0]
+    for (const duplicate of group.slice(1)) {
+      duplicateIds.add(duplicate.id)
+      await supabase(`projects?drive_account_id=eq.${encodeURIComponent(duplicate.id)}`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({ drive_account_id: canonical.id }),
+      })
+      await supabase(`drive_accounts?id=eq.${encodeURIComponent(duplicate.id)}`, { method: 'DELETE' })
+    }
+  }
+
+  return repaired.filter(account => !duplicateIds.has(account.id))
+}
+
+export async function GET() {
+  if (!(await isAdmin())) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
+  const projects = await supabase<Array<{ id: string; name: string; client_name: string; client_email: string | null; drive_account_id: string; drive_folder_id: string; storage_limit_bytes: number | null; expires_at: string; disabled_at: string | null; created_at: string }>>('projects?select=id,name,client_name,client_email,drive_account_id,drive_folder_id,storage_limit_bytes,expires_at,disabled_at,created_at&order=created_at.desc')
+  const accounts = await supabase<Array<{ id: string; label: string; google_email: string; refresh_token: string; root_folder_id: string | null; created_at: string }>>('drive_accounts?select=id,label,google_email,refresh_token,root_folder_id,created_at&order=created_at.desc')
+  const reconciledAccounts = await consolidateAccounts(accounts)
+  const safeAccounts = reconciledAccounts.map(({ refresh_token: _refreshToken, created_at: _createdAt, ...account }) => account)
   return NextResponse.json({ projects, accounts: safeAccounts })
 }
 
@@ -49,7 +77,6 @@ export async function POST(request: Request) {
   const accounts = await supabase<Array<{ id: string; refresh_token: string; root_folder_id: string | null }>>(`drive_accounts?select=id,refresh_token,root_folder_id${body?.driveAccountId ? `&id=eq.${encodeURIComponent(body.driveAccountId)}` : ''}&limit=1`)
   const account = accounts[0]
   if (!account) return NextResponse.json({ error: 'Connect a Google Drive account first.' }, { status: 400 })
-  // A custom root is optional. Without one, projects are created in My Drive.
   const root = account.root_folder_id || process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID || 'root'
 
   const token = crypto.randomBytes(32).toString('base64url')
