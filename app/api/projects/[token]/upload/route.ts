@@ -5,9 +5,10 @@ import { rateLimit } from '@/lib/rate-limit'
 import { supabase } from '@/lib/supabase'
 
 const MAX_NAME = 255
+function validName(value: string) { return value.length > 0 && value.length <= MAX_NAME && !/[\u0000-\u001f\u007f]/.test(value) }
 
-function validName(value: string) {
-  return value.length > 0 && value.length <= MAX_NAME && !/[\u0000-\u001f\u007f]/.test(value)
+async function auditStart(projectId: string, uploadId: string, name: string, size: number) {
+  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: projectId, event_type: 'upload.started', file_name: name, metadata: { uploadId, size } }) }).catch(() => undefined)
 }
 
 export async function POST(request: Request, { params }: { params: Promise<{ token: string }> }) {
@@ -39,17 +40,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
   if (size === 0) {
     let uploadId: string | null = null
     try {
-      uploadId = await supabase<string>('rpc/reserve_upload', {
-        method: 'POST',
-        body: JSON.stringify({ p_project_id: project.id, p_folder_id: folderId, p_name: name, p_mime_type: mimeType, p_size_bytes: 0, p_session_url: null }),
-      })
+      uploadId = await supabase<string>('rpc/reserve_upload', { method: 'POST', body: JSON.stringify({ p_project_id: project.id, p_folder_id: folderId, p_name: name, p_mime_type: mimeType, p_size_bytes: 0, p_session_url: null }) })
       if (!uploadId) throw new Error('Upload reservation failed')
+      await auditStart(project.id, uploadId, name, 0)
       const file = await createEmptyDriveFile(accessToken, name, mimeType, parentId)
-      await supabase(`uploads?id=eq.${encodeURIComponent(uploadId)}&project_id=eq.${project.id}`, {
-        method: 'PATCH',
-        headers: { Prefer: 'return=minimal' },
-        body: JSON.stringify({ drive_file_id: file.id, status: 'complete', completed_at: new Date().toISOString(), last_activity_at: new Date().toISOString() }),
-      })
+      const now = new Date().toISOString()
+      await supabase(`uploads?id=eq.${encodeURIComponent(uploadId)}&project_id=eq.${project.id}&status=eq.uploading`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ drive_file_id: file.id, status: 'complete', completed_at: now, last_activity_at: now }) })
       await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'upload.completed', file_name: name, metadata: { uploadId, driveFileId: file.id, size: 0 } }) })
       return NextResponse.json({ uploadId, driveFileId: file.id, complete: true })
     } catch (error) {
@@ -62,11 +58,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
 
   const sessionUrl = await initiateResumableUpload(accessToken, name, mimeType, size, parentId)
   try {
-    const uploadId = await supabase<string>('rpc/reserve_upload', {
-      method: 'POST',
-      body: JSON.stringify({ p_project_id: project.id, p_folder_id: folderId, p_name: name, p_mime_type: mimeType, p_size_bytes: size, p_session_url: sessionUrl }),
-    })
+    const uploadId = await supabase<string>('rpc/reserve_upload', { method: 'POST', body: JSON.stringify({ p_project_id: project.id, p_folder_id: folderId, p_name: name, p_mime_type: mimeType, p_size_bytes: size, p_session_url: sessionUrl }) })
     if (!uploadId) return NextResponse.json({ error: 'Upload session could not be created.' }, { status: 500 })
+    await auditStart(project.id, uploadId, name, size)
     return NextResponse.json({ uploadId, sessionUrl })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unable to reserve upload space.'
