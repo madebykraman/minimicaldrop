@@ -42,7 +42,7 @@ create table if not exists uploads (
   name text not null,
   mime_type text,
   size_bytes bigint not null default 0,
-  status text not null default 'initiated' check (status in ('initiated','uploading','complete','failed')),
+  status text not null default 'initiated' check (status in ('initiated','uploading','complete','failed','deleted')),
   created_at timestamptz not null default now(),
   completed_at timestamptz
 );
