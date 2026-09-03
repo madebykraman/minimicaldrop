@@ -43,7 +43,7 @@ Transactional email support remains optional infrastructure and is not required 
 
 ## v0.5 milestone
 
-Studio efficiency is now implemented without changing the client-facing product model:
+Studio efficiency is implemented without changing the client-facing product model:
 
 - Studio overview with project health and operational metrics
 - Aggregate storage usage and reservation visibility
@@ -52,7 +52,19 @@ Studio efficiency is now implemented without changing the client-facing product 
 - One-click duplication into a fresh client workspace with a new secure token and Drive folder
 - Richer project health visibility including file counts, usage and expiry proximity
 
-Templates, automated reminders and separate archive-management machinery are intentionally deferred until they provide enough operational value to justify their complexity.
+Templates, automated reminders and separate archive-management machinery are intentionally deferred.
+
+## 1.0 milestone
+
+1.0 is the mature internal infrastructure release. It focuses on operational reliability, recovery, security and launch readiness rather than adding another product layer.
+
+- Graceful application and global error recovery surfaces
+- Production health, build and runtime verification
+- Auditable project and delivery lifecycle
+- Secure admin and tokenized client access
+- Google Drive kept entirely behind the storage boundary
+
+See `V1.0.md` for the release gate.
 
 ## Product boundary
 
