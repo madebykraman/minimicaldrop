@@ -228,3 +228,8 @@ body:has(.finder-admin-shell){background:#eff0f5!important}
 .p5-admin.p5-login .p5-error{background:#ffeff0;border:1px solid #f3d4db;color:#aa5166;border-radius:8px}
 @media(max-width:760px){.p5-admin.p5-login{padding:88px 20px 40px}.p5-admin.p5-login .p5-login-form{padding:22px;margin-top:28px}}
 @media(prefers-reduced-motion:reduce){.finder-admin-shell *, .finder-admin-shell *::before,.finder-admin-shell *::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+.finder-inline-error{display:flex;align-items:center;gap:9px;margin:12px 20px 0;border:1px solid #f1d6dd;border-radius:10px;background:#fff5f6;color:#a75b70;font-size:11px;line-height:1.5;padding:11px 13px}
+.finder-inline-error span{min-width:0;flex:1}.finder-inline-error button{border:0;background:none;color:#b7808d;cursor:pointer;display:grid;place-items:center;height:27px;width:27px}
+.finder-empty-transfers{font-size:11px;color:#9c94a5;padding:21px;text-align:center}
+@media(max-width:700px){.finder-inline-error{margin:11px 11px 0}}
