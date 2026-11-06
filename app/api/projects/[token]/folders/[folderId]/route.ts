@@ -42,7 +42,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ to
 
   const folder = await renameDriveFile(result.accessToken, result.folder.drive_folder_id, name)
   await supabase(`folders?id=eq.${encodeURIComponent(result.folder.id)}&project_id=eq.${result.project.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ name: folder.name }) })
-  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: result.project.id, event_type: 'folder.renamed', metadata: { folderId: result.folder.id, driveFolderId: result.folder.drive_folder_id, name: folder.name } }) })
+  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: result.project.id, event_type: 'folder.renamed', metadata: { folderId: result.folder.id, driveFolderId: result.folder.drive_folder_id, name: folder.name } }) }).catch(() => console.warn('Audit event write failed'))
   return NextResponse.json({ id: folder.id, name: folder.name })
 }
 
@@ -75,6 +75,6 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ t
 
   await supabase(`uploads?project_id=eq.${result.project.id}&folder_id=in.(${descendantIds.map(encodeURIComponent).join(',')})&status=eq.complete`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'deleted' }) })
   await supabase(`folders?id=in.(${descendantIds.map(encodeURIComponent).join(',')})&project_id=eq.${result.project.id}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } })
-  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: result.project.id, event_type: 'folder.deleted', metadata: { folderId: result.folder.id, driveFolderId: result.folder.drive_folder_id, name: result.folder.name, descendantCount: descendantIds.length, fileCount: uploads.length, deletedBytes } }) })
+  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: result.project.id, event_type: 'folder.deleted', metadata: { folderId: result.folder.id, driveFolderId: result.folder.drive_folder_id, name: result.folder.name, descendantCount: descendantIds.length, fileCount: uploads.length, deletedBytes } }) }).catch(() => console.warn('Audit event write failed'))
   return NextResponse.json({ ok: true, deletedBytes, deletedCount: uploads.length })
 }
