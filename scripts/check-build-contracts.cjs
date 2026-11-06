@@ -9,6 +9,8 @@ const admin = fs.readFileSync('app/admin/admin.css', 'utf8')
 const finderCss = fs.readFileSync('app/finder-ui.css', 'utf8')
 const adminPage = fs.readFileSync('app/admin/page.tsx', 'utf8')
 const layout = fs.readFileSync('app/layout.tsx', 'utf8')
+const projectRoute = fs.readFileSync('app/api/admin/projects/route.ts', 'utf8')
+const projectRead = projectRoute.split('export async function GET()')[1]?.split('export async function POST(')[0] || ''
 
 const checks = [
   ['8 MB resumable chunks', workspace.includes('const CHUNK = 8 * 1024 * 1024')],
@@ -24,6 +26,8 @@ const checks = [
   ['Studio project card and list controls', adminPage.includes('finder-project-card') && adminPage.includes('changeProjectView')],
   ['Responsive Finder breakpoints and accessible focus', finderCss.includes('@media(max-width:700px)') && finderCss.includes(':focus-visible')],
   ['Finder styles imported for all surfaces', layout.includes("import './finder-ui.css'")],
+  ['Dashboard distinguishes unavailable data from an empty list', adminPage.includes('projectsLoaded') && adminPage.includes('finder-admin-data-unavailable')],
+  ['Project listing is read-only and never fetches refresh tokens', projectRead.length > 0 && !/method:\s*['"](?:PATCH|DELETE|POST)/.test(projectRead) && !projectRead.includes('refresh_token')],
 ]
 
 const failed = checks.filter(([, passed]) => !passed)
