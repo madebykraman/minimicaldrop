@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { AlertCircle, Check, ChevronRight, Download, File, FileAudio, FileImage, FileText, FileVideo, Folder, FolderPlus, HardDrive, Loader2, MoreHorizontal, Pencil, RefreshCw, Search, Trash2, Upload, X } from 'lucide-react'
+import { AlertCircle, Check, ChevronLeft, ChevronRight, Download, File, FileAudio, FileImage, FileText, FileVideo, Folder, FolderPlus, Grid2X2, HardDrive, LayoutList, Loader2, LockKeyhole, Menu, MoreHorizontal, Pencil, RefreshCw, Search, Trash2, Upload, X } from 'lucide-react'
 import { isSafeInlineMime } from '@/lib/preview-types'
 
 type Item = { id: string; name: string; mimeType: string; sizeBytes: number; modifiedTime: string | null }
@@ -49,17 +49,49 @@ async function uploadToGoogle(file: File, sessionUrl: string, statusUrl: string,
   throw new Error('Google did not confirm the upload')
 }
 
-export default function WorkspaceV5({ token }: { token: string }) {
+export default function WorkspaceV5({ token, deliveryPanel }: { token: string; deliveryPanel?: React.ReactNode }) {
   const input = useRef<HTMLInputElement>(null)
   const [project, setProject] = useState<Project | null>(null); const [items, setItems] = useState<Item[]>([]); const [folderId, setFolderId] = useState(''); const [rootId, setRootId] = useState(''); const [trail, setTrail] = useState<{ id: string; name: string }[]>([])
   const [used, setUsed] = useState(0); const [pending, setPending] = useState(0); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [recoveries, setRecoveries] = useState<Recovery[]>([]); const [queue, setQueue] = useState<QueueItem[]>([])
-  const [search, setSearch] = useState(''); const [sort, setSort] = useState<'name' | 'newest' | 'size'>('name'); const [selected, setSelected] = useState<string[]>([]); const [folderName, setFolderName] = useState(''); const [showFolder, setShowFolder] = useState(false); const [dialog, setDialog] = useState<Dialog>(null); const [dialogValue, setDialogValue] = useState(''); const [preview, setPreview] = useState<Item | null>(null); const [busy, setBusy] = useState(false); const [dragging, setDragging] = useState(false); const [showQueue, setShowQueue] = useState(true)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid'); const [navScope, setNavScope] = useState<'all' | 'folders' | 'recent'>('all'); const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [search, setSearch] = useState(''); const [sort, setSort] = useState<'name' | 'newest' | 'size'>('name'); const [selected, setSelected] = useState<string[]>([]); const [folderName, setFolderName] = useState(''); const [showFolder, setShowFolder] = useState(false); const [dialog, setDialog] = useState<Dialog>(null); const [dialogValue, setDialogValue] = useState(''); const [preview, setPreview] = useState<Item | null>(null); const [busy, setBusy] = useState(false); const [dragging, setDragging] = useState(false); const [showQueue, setShowQueue] = useState(false)
 
   async function load(parentId?: string) { setLoading(true); setError(''); try { const data = await jsonFetch(`/api/projects/${token}${parentId ? `?parentId=${encodeURIComponent(parentId)}` : ''}`); setProject(data.project); setItems(data.items || []); setUsed(data.usedBytes || 0); setPending(data.pendingBytes || 0); setFolderId(data.currentFolderId); if (!rootId) { setRootId(data.currentFolderId); setTrail([{ id: data.currentFolderId, name: data.project.name }]) } } catch (e) { setError(e instanceof Error ? e.message : 'Unable to load project') } finally { setLoading(false) } }
   async function loadRecoveries() { try { const data = await jsonFetch(`/api/projects/${token}/upload/recover`); setRecoveries(data.uploads || []) } catch {} }
   useEffect(() => { void load(); void loadRecoveries() }, [token])
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem('drop-file-view')
+      if (saved === 'grid' || saved === 'list') setViewMode(saved)
+    } catch {}
+  }, [])
+  function changeView(mode: 'grid' | 'list') {
+    setViewMode(mode)
+    try { window.localStorage.setItem('drop-file-view', mode) } catch {}
+  }
+  function changeScope(scope: 'all' | 'folders' | 'recent') {
+    setNavScope(scope)
+    setSelected([])
+    setSidebarOpen(false)
+    if (scope === 'recent') setSort('newest')
+  }
+  function refreshFolder() { void load(folderId || undefined); void loadRecoveries() }
 
-  const visible = useMemo(() => { const q = search.trim().toLowerCase(); const filtered = items.filter(item => !q || item.name.toLowerCase().includes(q)); return [...filtered].sort((a, b) => sort === 'size' ? b.sizeBytes - a.sizeBytes : sort === 'newest' ? new Date(b.modifiedTime || 0).getTime() - new Date(a.modifiedTime || 0).getTime() : a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })) }, [items, search, sort])
+
+  const visible = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    const filtered = items.filter(item =>
+      (!q || item.name.toLowerCase().includes(q)) &&
+      (navScope !== 'folders' || item.mimeType === FOLDER_MIME)
+    )
+    return [...filtered].sort((a, b) =>
+      (navScope === 'recent' || sort === 'newest')
+        ? new Date(b.modifiedTime || 0).getTime() - new Date(a.modifiedTime || 0).getTime()
+        : sort === 'size'
+          ? b.sizeBytes - a.sizeBytes
+          : a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+    )
+  }, [items, search, sort, navScope])
   const folders = visible.filter(item => item.mimeType === FOLDER_MIME); const files = visible.filter(item => item.mimeType !== FOLDER_MIME); const selectedItems = items.filter(item => selected.includes(item.id)); const selectedFiles = selectedItems.filter(item => item.mimeType !== FOLDER_MIME)
   const reserved = used + pending; const usage = project?.storageLimitBytes ? Math.min(100, reserved / project.storageLimitBytes * 100) : 0; const isRoot = folderId === rootId
 
@@ -69,6 +101,7 @@ export default function WorkspaceV5({ token }: { token: string }) {
 
   async function startUpload(file: File) {
     const id = crypto.randomUUID(); const parentId = folderId; const recovery = recoveries.find(r => r.name === file.name && r.sizeBytes === file.size && r.folderId === (parentId === rootId ? null : parentId)); let serverId: string | null = recovery?.uploadId || null
+    setShowQueue(true)
     setQueue(prev => [...prev, { id, name: file.name, size: file.size, progress: recovery ? recovery.uploadedBytes / Math.max(1, recovery.sizeBytes) : 0, status: 'uploading', file }])
     const progress = (value: number) => setQueue(prev => prev.map(q => q.id === id ? { ...q, progress: value } : q))
     try {
@@ -90,31 +123,81 @@ export default function WorkspaceV5({ token }: { token: string }) {
   function toggle(id: string) { setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]) }
   function toggleAll() { setSelected(prev => prev.length === visible.length ? [] : visible.map(x => x.id)) }
 
-  useEffect(() => { const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setDialog(null); setPreview(null); setShowFolder(false) } if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); document.getElementById('drop-search')?.focus() } }; window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey) }, [])
+  useEffect(() => { const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setDialog(null); setPreview(null); setShowFolder(false); setSidebarOpen(false) } if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); document.getElementById('drop-search')?.focus() } }; window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey) }, [])
 
   if (loading && !project) return <Shell><div className="v5-loading"><Loader2 className="v5-spin" size={20}/><span>Opening your private project space</span></div></Shell>
   if (error && !project) return <Shell><div className="v5-error"><AlertCircle size={28}/><h2>Upload space unavailable</h2><p>{error}</p></div></Shell>
   if (!project) return null
 
+
   return <Shell>
-    <header className="v5-header"><div className="v5-brand">MINIMICAL<span>DROP</span></div><div className="v5-private"><i/> PRIVATE PROJECT SPACE</div></header>
-    <main className="v5-main">
-      <section className="v5-hero"><div><span className="v5-kicker">PROJECT DELIVERY</span><h1>{project.name}</h1><p>Prepared for <strong>{project.clientName}</strong><b/>Access expires {new Date(project.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p></div><div className="v5-note"><span>PRIVATE BY DESIGN</span><p>Your files stay inside this project space and move directly to studio storage.</p></div></section>
-      <section className="v5-workspace">
-        <div className="v5-toolbar"><div className="v5-crumbs">{trail.map((item, i) => <span key={item.id}>{i > 0 && <ChevronRight size={13}/>}<button className={i === trail.length - 1 ? 'active' : ''} onClick={() => void goTrail(i)}>{item.name}</button></span>)}</div><div className="v5-actions"><button className="v5-btn ghost" onClick={() => setShowFolder(true)}><FolderPlus size={15}/> New folder</button><button className="v5-btn primary" onClick={() => input.current?.click()}><Upload size={15}/> Upload</button></div></div>
-        <div className="v5-controls"><label className="v5-search"><Search size={16}/><input id="drop-search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search this folder" aria-label="Search this folder"/><kbd>⌘ K</kbd></label><label className="v5-sort"><span>Sort</span><select value={sort} onChange={e => setSort(e.target.value as typeof sort)}><option value="name">Name</option><option value="newest">Newest</option><option value="size">Size</option></select></label>{visible.length > 0 && <button className="v5-select-all" onClick={toggleAll}>{selected.length === visible.length ? 'Clear selection' : 'Select all'}</button>}</div>
-        <input ref={input} hidden type="file" multiple onChange={e => addFiles(e.target.files)}/>
-        <div className={`v5-dropzone ${dragging ? 'dragging' : ''}`} onDragOver={e => { e.preventDefault(); setDragging(true) }} onDragLeave={() => setDragging(false)} onDrop={e => { e.preventDefault(); setDragging(false); addFiles(e.dataTransfer.files) }}><Upload size={19}/><div><strong>{dragging ? 'Release to upload' : 'Drop files here'}</strong><span>or use Upload to choose multiple files</span></div></div>
-        {selected.length > 0 && <div className="v5-selection"><span><strong>{selected.length}</strong> selected</span><div>{selectedFiles.length > 0 && <button onClick={bulkDownload}><Download size={14}/> Download {selectedFiles.length > 1 ? 'files' : 'file'}</button>}<button className="danger" onClick={() => void bulkDelete()} disabled={busy}><Trash2 size={14}/> Delete</button></div></div>}
-        <div className="v5-list-head"><span><input type="checkbox" checked={visible.length > 0 && selected.length === visible.length} onChange={toggleAll} aria-label="Select all visible items"/></span><span>NAME</span><span>SIZE</span><span>MODIFIED</span><span>ACTION</span></div>
-        {folders.map(item => <Row key={item.id} item={item} selected={selected.includes(item.id)} toggle={toggle} open={() => void openFolder(item)} rename={() => { setDialog({ type: 'rename', kind: 'folder', id: item.id, name: item.name }); setDialogValue(item.name) }} remove={() => { setDialog({ type: 'delete', kind: 'folder', id: item.id, name: item.name }) }}/>) }
-        {files.map(item => <Row key={item.id} item={item} selected={selected.includes(item.id)} toggle={toggle} open={() => previewable(item.mimeType) ? setPreview(item) : download(item)} rename={() => { setDialog({ type: 'rename', kind: 'file', id: item.id, name: item.name }); setDialogValue(item.name) }} remove={() => { setDialog({ type: 'delete', kind: 'file', id: item.id, name: item.name }) }} download={() => download(item)} previewable={previewable(item.mimeType)}/>) }
-        {!folders.length && !files.length && <div className="v5-empty"><Folder size={25}/><strong>{search ? 'No matching files' : 'This folder is empty'}</strong><span>{search ? 'Try a different search.' : isRoot ? 'Upload files or create a folder to start.' : 'Upload files here or go back to the project root.'}</span></div>}
-      </section>
-      <section className="v5-storage"><div><span>STORAGE</span><strong>{formatBytes(used)} {project.storageLimitBytes ? <small>of {formatBytes(project.storageLimitBytes)}</small> : <small>used</small>}</strong></div><div className="v5-track"><i style={{ width: `${usage}%` }}/></div><span>{pending ? `${formatBytes(pending)} currently uploading` : 'No active uploads'}</span></section>
+    <div className="finder-app-shell">
+      <div className="finder-window">
+        <div className="finder-window-bar">
+          <div className="finder-traffic" aria-hidden="true"><span/><span/><span/></div>
+          <div className="finder-window-title"><Folder size={15}/><strong>Minimical Drop</strong><span>/</span><span>Files</span></div>
+          <span className="finder-window-secure"><LockKeyhole size={15}/> Secure workspace</span>
+        </div>
+        <div className="finder-window-body">
+          {sidebarOpen && <button className="finder-sidebar-scrim" aria-label="Close navigation" onClick={() => setSidebarOpen(false)}/>}
+          <aside className={`finder-sidebar ${sidebarOpen ? 'is-open' : ''}`} id="finder-navigation" aria-label="File navigation">
+            <div className="finder-sidebar-brand"><div className="finder-sidebar-logo"><HardDrive size={18}/></div><div><strong>Drop</strong><span>CLIENT WORKSPACE</span></div></div>
+            <div className="finder-sidebar-group"><span>LIBRARY</span>
+              <button className={navScope === 'all' ? 'active' : ''} onClick={() => { changeScope('all'); void goTrail(0) }}><Grid2X2 size={17}/> All files <em>{items.length}</em></button>
+              <button className={navScope === 'folders' ? 'active' : ''} onClick={() => changeScope('folders')}><Folder size={17}/> Folders <em>{items.filter(i => i.mimeType === FOLDER_MIME).length}</em></button>
+              <button className={navScope === 'recent' ? 'active' : ''} onClick={() => changeScope('recent')}><RefreshCw size={17}/> Recent</button>
+            </div>
+            <div className="finder-sidebar-group"><span>WORKSPACE</span>
+              <button onClick={() => { setShowQueue(true); setSidebarOpen(false); requestAnimationFrame(() => document.getElementById('finder-transfers')?.scrollIntoView({block:'center', behavior:'smooth'})) }}><Upload size={17}/> Transfers {queue.some(q=>q.status==='uploading') && <em>{queue.filter(q=>q.status==='uploading').length}</em>}</button>
+              <button onClick={() => { setSidebarOpen(false); document.getElementById('finder-storage')?.scrollIntoView({block:'center', behavior:'smooth'}) }}><HardDrive size={17}/> Storage</button>
+            </div>
+            <div className="finder-sidebar-spacer"/>
+            <div className="finder-sidebar-storage"><span>STORAGE USED</span><strong>{formatBytes(used)} <small>{project.storageLimitBytes ? `/ ${formatBytes(project.storageLimitBytes)}` : 'of unlimited'}</small></strong><div className="finder-meter"><i style={{width:`${usage}%`}}/></div><p>{project.storageLimitBytes ? `${Math.round(usage)}% of space reserved` : 'No storage limit'}</p></div>
+            <div className="finder-sidebar-foot"><span className="finder-status-dot"/><span>PRIVATE & ENCRYPTED IN TRANSIT</span></div>
+          </aside>
+          <div className="finder-stage">
+            <div className="finder-stage-top">
+              <button className="finder-mobile-menu" onClick={() => setSidebarOpen(true)} aria-label="Open navigation" aria-expanded={sidebarOpen} aria-controls="finder-navigation"><Menu size={20}/></button>
+              <div className="finder-stage-title"><span>CLIENT SPACE</span><strong>{project.name}</strong></div>
+              <span className="finder-private-label"><span/> Private link</span>
+            </div>
+            <div className="finder-stage-scroll">
+              <div className="finder-intro"><div><span>YOUR FILES, BEAUTIFULLY ORGANISED</span><h1>{project.name}</h1><p>Shared with <strong>{project.clientName}</strong> <span className="finder-intro-divider">·</span> Available until {new Date(project.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p></div><div className="finder-intro-chip"><LockKeyhole size={15}/><span>A private place for your project files.</span></div></div>
+              {deliveryPanel}
+              <section className="v5-workspace">
+                <div className="finder-toolbar">
+                  <div className="finder-navigation-controls"><button className="finder-icon-button" onClick={() => void goTrail(Math.max(0,trail.length-2))} disabled={trail.length<2} aria-label="Go back"><ChevronLeft size={18}/></button><div className="v5-crumbs" aria-label="Current folder">{trail.map((item,i) => <span key={item.id}>{i > 0 && <ChevronRight size={14}/>}<button className={i === trail.length-1 ? 'active' : ''} onClick={() => void goTrail(i)}>{item.name}</button></span>)}</div></div>
+                  <div className="v5-actions"><button className="v5-btn ghost" onClick={refreshFolder} aria-label="Refresh files"><RefreshCw size={16}/><span>Refresh</span></button><button className="v5-btn ghost" onClick={() => setShowFolder(true)}><FolderPlus size={17}/> New folder</button><button className="v5-btn primary" onClick={() => input.current?.click()}><Upload size={17}/> Upload files</button></div>
+                </div>
+                <div className="finder-tools">
+                  <label className="v5-search"><Search size={18}/><input id="drop-search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search files and folders…" aria-label="Search files and folders"/>{search && <button aria-label="Clear search" onClick={() => setSearch('')}><X size={15}/></button>}</label>
+                  <div className="finder-tools-right"><label className="v5-sort"><span>Sort by</span><select value={sort} onChange={e => { setSort(e.target.value as typeof sort); if(navScope==='recent') setNavScope('all') }} aria-label="Sort items"><option value="name">Name</option><option value="newest">Recently modified</option><option value="size">File size</option></select></label><div className="finder-view-toggle" role="group" aria-label="Display mode"><button className={viewMode==='grid'?'active':''} onClick={()=>changeView('grid')} aria-label="Grid view" aria-pressed={viewMode==='grid'} title="Grid view"><Grid2X2 size={17}/></button><button className={viewMode==='list'?'active':''} onClick={()=>changeView('list')} aria-label="List view" aria-pressed={viewMode==='list'} title="List view"><LayoutList size={17}/></button></div></div>
+                </div>
+                <input ref={input} hidden type="file" multiple onChange={e => addFiles(e.target.files)}/>
+                <div className={`v5-dropzone finder-dropzone ${dragging ? 'dragging' : ''}`} onDragOver={e => {e.preventDefault();setDragging(true)}} onDragLeave={() => setDragging(false)} onDrop={e => {e.preventDefault();setDragging(false);addFiles(e.dataTransfer.files)}}><div className="finder-drop-icon"><Upload size={20}/></div><div><strong>{dragging ? 'Release to upload your files' : 'Drop files to upload'}</strong><span>Drag and drop here, or use Upload files above</span></div><span className="finder-drop-hint">Supports multiple files</span></div>
+                {selected.length > 0 && <div className="v5-selection"><span><strong>{selected.length}</strong> selected</span><div>{selectedFiles.length > 0 && <button onClick={bulkDownload}><Download size={15}/> Download {selectedFiles.length > 1 ? 'files' : 'file'}</button>}<button className="danger" onClick={() => void bulkDelete()} disabled={busy}><Trash2 size={15}/> Delete</button><button onClick={() => setSelected([])}>Clear</button></div></div>}
+                {error && <div className="finder-inline-error" role="alert"><AlertCircle size={16}/><span>{error}</span><button onClick={() => setError('')} aria-label="Dismiss error"><X size={16}/></button></div>}
+                <div className="finder-files-head"><div><strong>{navScope==='folders'?'Folders':navScope==='recent'?'Recently modified':'All files'}</strong><span>{visible.length} {visible.length===1?'item':'items'} {loading ? '· Refreshing…' : ''}</span></div>{visible.length > 0 && <button onClick={toggleAll}>{selected.length===visible.length?'Clear selection':'Select all'}</button>}</div>
+                <div className="finder-file-content">
+                  {viewMode === 'list' ? <>
+                    <div className="v5-list-head"><span><input type="checkbox" checked={visible.length > 0 && selected.length === visible.length} onChange={toggleAll} aria-label="Select all visible items"/></span><span>NAME</span><span>SIZE</span><span>MODIFIED</span><span>ACTIONS</span></div>
+                    {folders.map(item => <Row key={item.id} item={item} selected={selected.includes(item.id)} toggle={toggle} open={() => void openFolder(item)} rename={() => {setDialog({type:'rename',kind:'folder',id:item.id,name:item.name});setDialogValue(item.name)}} remove={() => setDialog({type:'delete',kind:'folder',id:item.id,name:item.name})}/>)}
+                    {files.map(item => <Row key={item.id} item={item} selected={selected.includes(item.id)} toggle={toggle} open={() => previewable(item.mimeType) ? setPreview(item) : download(item)} rename={() => {setDialog({type:'rename',kind:'file',id:item.id,name:item.name});setDialogValue(item.name)}} remove={() => setDialog({type:'delete',kind:'file',id:item.id,name:item.name})} download={() => download(item)} previewable={previewable(item.mimeType)}/>)}
+                  </> : <>
+                    {folders.length > 0 && <section className="finder-file-group"><header><Folder size={16}/><strong>Folders</strong><span>{folders.length}</span></header><div className="finder-card-grid">{folders.map(item => <FinderCard key={item.id} item={item} selected={selected.includes(item.id)} toggle={toggle} open={() => void openFolder(item)} rename={() => {setDialog({type:'rename',kind:'folder',id:item.id,name:item.name});setDialogValue(item.name)}} remove={() => setDialog({type:'delete',kind:'folder',id:item.id,name:item.name})}/>)}</div></section>}
+                    {files.length > 0 && <section className="finder-file-group"><header><File size={16}/><strong>Files</strong><span>{files.length}</span></header><div className="finder-card-grid">{files.map(item => <FinderCard key={item.id} item={item} selected={selected.includes(item.id)} toggle={toggle} open={() => previewable(item.mimeType) ? setPreview(item) : download(item)} rename={() => {setDialog({type:'rename',kind:'file',id:item.id,name:item.name});setDialogValue(item.name)}} remove={() => setDialog({type:'delete',kind:'file',id:item.id,name:item.name})} download={() => download(item)} previewable={previewable(item.mimeType)}/>)}</div></section>}
+                  </>}
+                  {!visible.length && <div className="finder-empty"><div><Folder size={32}/></div><strong>{search?'No matching files':navScope==='folders'?'No folders here':'This folder is empty'}</strong><p>{search?'Try a different search term.':'Create a folder or upload files to get started.'}</p><button onClick={()=>input.current?.click()}><Upload size={16}/> Upload files</button></div>}
+                </div>
+              </section>
+              <section id="finder-storage" className="v5-storage finder-storage-card"><div className="finder-storage-icon"><HardDrive size={20}/></div><div className="finder-storage-copy"><span>SPACE USED</span><strong>{formatBytes(used)} <small>{project.storageLimitBytes ? `of ${formatBytes(project.storageLimitBytes)}` : 'used · Unlimited'}</small></strong><div className="v5-track"><i style={{width:`${usage}%`}}/></div></div><span className="finder-storage-status">{pending ? `${formatBytes(pending)} uploading` : 'Everything is up to date'}</span></section>
       {recoveries.length > 0 && <div className="v5-recovery"><RefreshCw size={15}/><div><strong>Uploads ready to resume</strong><span>{recoveries.length} interrupted upload{recoveries.length === 1 ? '' : 's'} can continue when you select the same file again.</span></div></div>}
-      {queue.length > 0 && showQueue && <section className="v5-queue"><div className="v5-queue-head"><div><span>TRANSFERS</span><strong>{queue.filter(q => q.status === 'uploading').length ? `${queue.filter(q => q.status === 'uploading').length} uploading` : 'Transfer history'}</strong></div><div><button onClick={() => setShowQueue(false)} aria-label="Hide transfer queue"><X size={15}/></button><button onClick={clearCompleted}>Clear completed</button></div></div>{queue.map(q => <div className="v5-transfer" key={q.id}><div className="v5-file-icon"><File size={16}/></div><div className="v5-transfer-main"><div><strong>{q.name}</strong><span>{formatBytes(q.size)}</span></div>{q.status === 'error' ? <p className="v5-transfer-error">{q.error || 'Upload failed'} {q.file && <button onClick={() => retryUpload(q)}>Retry</button>}</p> : <div className="v5-progress"><i style={{ width: `${q.progress * 100}%` }}/><span>{q.status === 'complete' ? 'Complete' : `${Math.round(q.progress * 100)}%`}</span></div>}</div>{q.status === 'complete' && <Check size={16}/>}</div>)}</section>}
-    </main>
+      {showQueue && <section className="v5-queue" id="finder-transfers"><div className="v5-queue-head"><div><span>TRANSFERS</span><strong>{queue.filter(q => q.status === 'uploading').length ? `${queue.filter(q => q.status === 'uploading').length} uploading` : 'Transfer history'}</strong></div><div><button onClick={() => setShowQueue(false)} aria-label="Hide transfer queue"><X size={15}/></button><button onClick={clearCompleted}>Clear completed</button></div></div>{queue.length === 0 && <div className="finder-empty-transfers">No transfers yet. Uploaded files will appear here.</div>}{queue.map(q => <div className="v5-transfer" key={q.id}><div className="v5-file-icon"><File size={16}/></div><div className="v5-transfer-main"><div><strong>{q.name}</strong><span>{formatBytes(q.size)}</span></div>{q.status === 'error' ? <p className="v5-transfer-error">{q.error || 'Upload failed'} {q.file && <button onClick={() => retryUpload(q)}>Retry</button>}</p> : <div className="v5-progress"><i style={{ width: `${q.progress * 100}%` }}/><span>{q.status === 'complete' ? 'Complete' : `${Math.round(q.progress * 100)}%`}</span></div>}</div>{q.status === 'complete' && <Check size={16}/>}</div>)}</section>}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     {queue.length > 0 && !showQueue && <button className="v5-show-queue" onClick={() => setShowQueue(true)}><Upload size={14}/> Transfers <span>{queue.filter(q => q.status === 'uploading').length || queue.length}</span></button>}
     {showFolder && <Modal title="New folder" onClose={() => setShowFolder(false)}><label className="v5-modal-field">Folder name<input autoFocus value={folderName} onChange={e => setFolderName(e.target.value)} onKeyDown={e => e.key === 'Enter' && void createFolder()} placeholder="e.g. Final exports"/></label><div className="v5-modal-actions"><button onClick={() => setShowFolder(false)}>Cancel</button><button className="primary" disabled={busy || !folderName.trim()} onClick={() => void createFolder()}>{busy ? 'Creating…' : 'Create folder'}</button></div></Modal>}
     {dialog?.type === 'rename' && <Modal title={`Rename ${dialog.kind}`} onClose={() => setDialog(null)}><label className="v5-modal-field">Name<input autoFocus value={dialogValue} onChange={e => setDialogValue(e.target.value)} onKeyDown={e => e.key === 'Enter' && void renameItem()}/></label><div className="v5-modal-actions"><button onClick={() => setDialog(null)}>Cancel</button><button className="primary" disabled={busy || !dialogValue.trim()} onClick={() => void renameItem()}>{busy ? 'Saving…' : 'Save name'}</button></div></Modal>}
@@ -122,6 +205,24 @@ export default function WorkspaceV5({ token }: { token: string }) {
     {preview && <div className="v5-preview" role="dialog" aria-modal="true" aria-label={preview.name}><button className="v5-preview-close" onClick={() => setPreview(null)} aria-label="Close preview"><X size={18}/></button>{preview.mimeType.startsWith('image/') && <img src={`/api/projects/${token}/files/${encodeURIComponent(preview.id)}?inline=1`} alt={preview.name}/>} {preview.mimeType.startsWith('video/') && <video src={`/api/projects/${token}/files/${encodeURIComponent(preview.id)}?inline=1`} controls autoPlay/>} {preview.mimeType.startsWith('audio/') && <audio src={`/api/projects/${token}/files/${encodeURIComponent(preview.id)}?inline=1`} controls autoPlay/>} {preview.mimeType === 'application/pdf' && <iframe src={`/api/projects/${token}/files/${encodeURIComponent(preview.id)}?inline=1`} title={preview.name}/>}<div className="v5-preview-name">{preview.name}</div></div>}
     <style>{STYLES}</style>
   </Shell>
+}
+
+function FinderCard({ item, selected, toggle, open, rename, remove, download, previewable: canPreview }: { item: Item; selected: boolean; toggle: (id: string) => void; open: () => void; rename: () => void; remove: () => void; download?: () => void; previewable?: boolean }) {
+  const isFolder = item.mimeType === FOLDER_MIME
+  const Icon = iconFor(item.mimeType)
+  return <article className={`finder-card ${selected ? 'selected' : ''}`}>
+    <div className="finder-card-top">
+      <div className={`finder-card-art ${isFolder ? 'is-folder' : item.mimeType.startsWith('image/') ? 'is-image' : item.mimeType.startsWith('video/') ? 'is-video' : item.mimeType.startsWith('audio/') ? 'is-audio' : ''}`}><Icon size={31} strokeWidth={1.55}/></div>
+      <input type="checkbox" checked={selected} onChange={() => toggle(item.id)} aria-label={`Select ${item.name}`}/>
+    </div>
+    <button className="finder-card-label" onClick={open} title={item.name}><strong>{item.name}</strong><span>{isFolder ? 'Folder' : formatBytes(item.sizeBytes)} {item.modifiedTime ? `· ${formatDate(item.modifiedTime)}` : ''}</span></button>
+    <div className="finder-card-actions">
+      <button onClick={open} aria-label={isFolder ? `Open ${item.name}` : canPreview ? `Preview ${item.name}` : `Open ${item.name}`} title={isFolder ? 'Open folder' : 'Open file'}><ChevronRight size={17}/></button>
+      {!isFolder && <button onClick={download || open} aria-label={`Download ${item.name}`} title="Download"><Download size={16}/></button>}
+      <button onClick={rename} aria-label={`Rename ${item.name}`} title="Rename"><Pencil size={16}/></button>
+      <button onClick={remove} aria-label={`Delete ${item.name}`} title="Delete"><Trash2 size={16}/></button>
+    </div>
+  </article>
 }
 
 function Row({ item, selected, toggle, open, rename, remove, download, previewable: canPreview }: { item: Item; selected: boolean; toggle: (id: string) => void; open: () => void; rename: () => void; remove: () => void; download?: () => void; previewable?: boolean }) { const Icon = iconFor(item.mimeType); return <div className="v5-row" role="row"><span><input type="checkbox" checked={selected} onChange={() => toggle(item.id)} aria-label={`Select ${item.name}`}/></span><button className="v5-name" onClick={open}><span className={`v5-icon ${item.mimeType === FOLDER_MIME ? 'folder' : ''}`}><Icon size={17}/></span><strong>{item.name}</strong></button><span>{item.mimeType === FOLDER_MIME ? 'Folder' : formatBytes(item.sizeBytes)}</span><span>{formatDate(item.modifiedTime)}</span><div className="v5-row-actions">{item.mimeType !== FOLDER_MIME && <button onClick={download || open} aria-label={`Download ${item.name}`}><Download size={14}/></button>}{canPreview && <button onClick={open} aria-label={`Preview ${item.name}`}>Preview</button>}<button onClick={rename} aria-label={`Rename ${item.name}`}><Pencil size={14}/></button><button onClick={remove} aria-label={`Delete ${item.name}`}><Trash2 size={14}/></button></div></div> }
