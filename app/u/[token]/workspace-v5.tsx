@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { AlertCircle, Check, ChevronRight, Download, File, FileAudio, FileImage, FileText, FileVideo, Folder, FolderPlus, HardDrive, Loader2, MoreHorizontal, Pencil, RefreshCw, Search, Trash2, Upload, X } from 'lucide-react'
+import { AlertCircle, Check, ChevronLeft, ChevronRight, Download, File, FileAudio, FileImage, FileText, FileVideo, Folder, FolderPlus, Grid2X2, HardDrive, LayoutList, Loader2, Menu, MoreHorizontal, Pencil, RefreshCw, Search, Trash2, Upload, X } from 'lucide-react'
 import { isSafeInlineMime } from '@/lib/preview-types'
 
 type Item = { id: string; name: string; mimeType: string; sizeBytes: number; modifiedTime: string | null }
@@ -53,13 +53,45 @@ export default function WorkspaceV5({ token }: { token: string }) {
   const input = useRef<HTMLInputElement>(null)
   const [project, setProject] = useState<Project | null>(null); const [items, setItems] = useState<Item[]>([]); const [folderId, setFolderId] = useState(''); const [rootId, setRootId] = useState(''); const [trail, setTrail] = useState<{ id: string; name: string }[]>([])
   const [used, setUsed] = useState(0); const [pending, setPending] = useState(0); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [recoveries, setRecoveries] = useState<Recovery[]>([]); const [queue, setQueue] = useState<QueueItem[]>([])
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid'); const [navScope, setNavScope] = useState<'all' | 'folders' | 'recent'>('all'); const [sidebarOpen, setSidebarOpen] = useState(false)
   const [search, setSearch] = useState(''); const [sort, setSort] = useState<'name' | 'newest' | 'size'>('name'); const [selected, setSelected] = useState<string[]>([]); const [folderName, setFolderName] = useState(''); const [showFolder, setShowFolder] = useState(false); const [dialog, setDialog] = useState<Dialog>(null); const [dialogValue, setDialogValue] = useState(''); const [preview, setPreview] = useState<Item | null>(null); const [busy, setBusy] = useState(false); const [dragging, setDragging] = useState(false); const [showQueue, setShowQueue] = useState(true)
 
   async function load(parentId?: string) { setLoading(true); setError(''); try { const data = await jsonFetch(`/api/projects/${token}${parentId ? `?parentId=${encodeURIComponent(parentId)}` : ''}`); setProject(data.project); setItems(data.items || []); setUsed(data.usedBytes || 0); setPending(data.pendingBytes || 0); setFolderId(data.currentFolderId); if (!rootId) { setRootId(data.currentFolderId); setTrail([{ id: data.currentFolderId, name: data.project.name }]) } } catch (e) { setError(e instanceof Error ? e.message : 'Unable to load project') } finally { setLoading(false) } }
   async function loadRecoveries() { try { const data = await jsonFetch(`/api/projects/${token}/upload/recover`); setRecoveries(data.uploads || []) } catch {} }
   useEffect(() => { void load(); void loadRecoveries() }, [token])
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem('drop-file-view')
+      if (saved === 'grid' || saved === 'list') setViewMode(saved)
+    } catch {}
+  }, [])
+  function changeView(mode: 'grid' | 'list') {
+    setViewMode(mode)
+    try { window.localStorage.setItem('drop-file-view', mode) } catch {}
+  }
+  function changeScope(scope: 'all' | 'folders' | 'recent') {
+    setNavScope(scope)
+    setSelected([])
+    setSidebarOpen(false)
+    if (scope === 'recent') setSort('newest')
+  }
+  function refreshFolder() { void load(folderId || undefined); void loadRecoveries() }
 
-  const visible = useMemo(() => { const q = search.trim().toLowerCase(); const filtered = items.filter(item => !q || item.name.toLowerCase().includes(q)); return [...filtered].sort((a, b) => sort === 'size' ? b.sizeBytes - a.sizeBytes : sort === 'newest' ? new Date(b.modifiedTime || 0).getTime() - new Date(a.modifiedTime || 0).getTime() : a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })) }, [items, search, sort])
+
+  const visible = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    const filtered = items.filter(item =>
+      (!q || item.name.toLowerCase().includes(q)) &&
+      (navScope !== 'folders' || item.mimeType === FOLDER_MIME)
+    )
+    return [...filtered].sort((a, b) =>
+      (navScope === 'recent' || sort === 'newest')
+        ? new Date(b.modifiedTime || 0).getTime() - new Date(a.modifiedTime || 0).getTime()
+        : sort === 'size'
+          ? b.sizeBytes - a.sizeBytes
+          : a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+    )
+  }, [items, search, sort, navScope])
   const folders = visible.filter(item => item.mimeType === FOLDER_MIME); const files = visible.filter(item => item.mimeType !== FOLDER_MIME); const selectedItems = items.filter(item => selected.includes(item.id)); const selectedFiles = selectedItems.filter(item => item.mimeType !== FOLDER_MIME)
   const reserved = used + pending; const usage = project?.storageLimitBytes ? Math.min(100, reserved / project.storageLimitBytes * 100) : 0; const isRoot = folderId === rootId
 
@@ -90,7 +122,7 @@ export default function WorkspaceV5({ token }: { token: string }) {
   function toggle(id: string) { setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]) }
   function toggleAll() { setSelected(prev => prev.length === visible.length ? [] : visible.map(x => x.id)) }
 
-  useEffect(() => { const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setDialog(null); setPreview(null); setShowFolder(false) } if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); document.getElementById('drop-search')?.focus() } }; window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey) }, [])
+  useEffect(() => { const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setDialog(null); setPreview(null); setShowFolder(false); setSidebarOpen(false) } if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); document.getElementById('drop-search')?.focus() } }; window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey) }, [])
 
   if (loading && !project) return <Shell><div className="v5-loading"><Loader2 className="v5-spin" size={20}/><span>Opening your private project space</span></div></Shell>
   if (error && !project) return <Shell><div className="v5-error"><AlertCircle size={28}/><h2>Upload space unavailable</h2><p>{error}</p></div></Shell>
