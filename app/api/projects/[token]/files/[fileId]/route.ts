@@ -36,15 +36,22 @@ async function getManagedFileForDelete(request: Request, token: string, fileId: 
   const uploads = await supabase<Array<{ id: string; name: string; size_bytes: number; folder_id: string | null }>>(`uploads?project_id=eq.${project.id}&drive_file_id=eq.${encodeURIComponent(fileId)}&status=eq.complete&select=id,name,size_bytes,folder_id&limit=1`)
   const upload = uploads[0]
   if (!upload) return { error: NextResponse.json({ error: 'File is not managed by this portal.' }, { status: 404 }) }
+  let expectedParent = project.drive_folder_id
   if (upload.folder_id) {
-    const folders = await supabase<Array<{ id: string }>>(`folders?project_id=eq.${project.id}&id=eq.${encodeURIComponent(upload.folder_id)}&select=id&limit=1`)
+    const folders = await supabase<Array<{ id: string; drive_folder_id: string }>>(`folders?project_id=eq.${project.id}&id=eq.${encodeURIComponent(upload.folder_id)}&select=id,drive_folder_id&limit=1`)
     if (!folders[0]) return { error: NextResponse.json({ error: 'File is not part of this project.' }, { status: 403 }) }
+    expectedParent = folders[0].drive_folder_id
   }
 
   const accounts = await supabase<Array<{ refresh_token: string }>>(`drive_accounts?id=eq.${project.drive_account_id}&select=refresh_token&limit=1`)
   const account = accounts[0]
   if (!account) return { error: NextResponse.json({ error: 'Storage account unavailable.' }, { status: 500 }) }
   const access = await accessTokenFromRefreshToken(account.refresh_token)
+  // The uploaded file may have been moved manually in Drive since it was indexed.
+  // Never delete a file that no longer belongs to the expected project folder.
+  const file = await getDriveFile(access.access_token, fileId).catch(() => null)
+  if (!file || file.trashed) return { error: NextResponse.json({ error: 'File no longer exists in Google Drive.' }, { status: 404 }) }
+  if (!file.parents?.includes(expectedParent)) return { error: NextResponse.json({ error: 'File has moved outside this project.' }, { status: 403 }) }
   return { project, accessToken: access.access_token, upload }
 }
 
