@@ -233,3 +233,63 @@ body:has(.finder-admin-shell){background:#eff0f5!important}
 .finder-inline-error span{min-width:0;flex:1}.finder-inline-error button{border:0;background:none;color:#b7808d;cursor:pointer;display:grid;place-items:center;height:27px;width:27px}
 .finder-empty-transfers{font-size:11px;color:#9c94a5;padding:21px;text-align:center}
 @media(max-width:700px){.finder-inline-error{margin:11px 11px 0}}
+
+
+/* Delivery card is now rendered inside the Finder content column. */
+body:has(.finder-app-shell){background:#eff0f5!important}
+body:has(.finder-app-shell) .drop-private-app-icon{display:none}
+.finder-app-shell .drop-delivery{width:100%;margin:0 0 16px;background:#fff;border:1px solid #eae7f0;border-radius:14px;color:#403b50;overflow:hidden;box-shadow:0 8px 24px rgba(40,35,55,.035)}
+.finder-app-shell .drop-delivery-head{border-color:#eeeaf2;padding:19px 22px;gap:15px}
+.finder-app-shell .drop-delivery-kicker,.finder-app-shell .drop-delivery-message>span,.finder-app-shell .drop-delivery-history-head span{color:#9675bf;font-weight:800}
+.finder-app-shell .drop-delivery-status h2{color:#3f3852}.finder-app-shell .drop-delivery-status p{color:#9e98aa}
+.finder-app-shell .drop-delivery-icon{background:linear-gradient(145deg,#e9ddfa,#dcd0ef);color:#815eb4;border-radius:11px}
+.finder-app-shell .drop-delivery button{background:#f5f1fa;border:1px solid #e8e0f1;color:#795aab;border-radius:9px;font-weight:750}
+.finder-app-shell .drop-delivery button.primary{background:#7b58b4;border-color:#7b58b4;color:#fff}
+.finder-app-shell .drop-delivery-message{background:#faf7ff;border-color:#eee8f5}.finder-app-shell .drop-delivery-message p{color:#7b7388}
+.finder-app-shell .drop-delivery-comment{background:#fdfcfe;border-color:#eeeaf3;border-radius:12px}
+.finder-app-shell .drop-delivery-comment strong{color:#3e374f}.finder-app-shell .drop-delivery-comment span{color:#9a95a7}
+.finder-app-shell .drop-delivery-comment textarea{background:#fff;border:1px solid #e9e3ef;color:#50465e;border-radius:9px}
+.finder-app-shell .drop-delivery-comment small{color:#a19baa}
+.finder-app-shell .drop-delivery-history{border-color:#eeeaf1}.finder-app-shell .drop-delivery-history-head strong{color:#514b60}
+.finder-app-shell .drop-delivery-events article>i{box-shadow:0 0 0 4px #fff}.finder-app-shell .drop-delivery-event-top strong{color:#51495e}
+.finder-app-shell .drop-delivery-event-top time,.finder-app-shell .drop-delivery-events article>div>span{color:#aaa5b1}.finder-app-shell .drop-delivery-events p{color:#938d9b}
+.finder-app-shell .drop-delivery-notice{color:#6a9c7c;background:#eff8f3}.finder-app-shell .drop-delivery-error{color:#ad5970;background:#fff0f3}
+body:has(.finder-app-shell) .drop-support{background:#fff;border:1px solid #e7e3ee;color:#7c61a8;box-shadow:0 12px 35px rgba(62,47,80,.11);border-radius:999px;min-height:43px;z-index:38}
+body:has(.finder-app-shell) .drop-support-backdrop{z-index:75}
+body:has(.finder-app-shell) .drop-support-card{background:#fff;border:1px solid #e8e4ed;border-radius:16px;color:#4d475c;max-height:calc(100dvh - 24px);overflow-y:auto}
+body:has(.finder-app-shell) .drop-support-card h2{color:#3e364e}
+body:has(.finder-app-shell) .drop-support-card p{color:#938b9b}
+body:has(.finder-app-shell) .drop-support-card input,body:has(.finder-app-shell) .drop-support-card textarea,body:has(.finder-app-shell) .drop-support-card select{background:#f9f8fb;border:1px solid #e9e3f0;color:#51465e}
+body:has(.finder-app-shell) .drop-support-card .primary{background:#7c5bb6;color:#fff;border-color:#7c5bb6}
+body:has(.finder-app-shell) .drop-support-card label{color:#80778c}
+@media(max-width:700px){.finder-app-shell .drop-delivery-head{padding:16px}.finder-app-shell .drop-delivery-actions{gap:7px}.finder-app-shell .drop-delivery-message,.finder-app-shell .drop-delivery-history{padding:14px 16px}.finder-app-shell .drop-delivery-comment{margin:12px 16px}body:has(.finder-app-shell) .drop-support{right:12px;bottom:12px}}
+/* Integrated studio overlays and their floating launch controls. */
+body:has(.finder-admin-shell) .drop-admin-tools{right:21px;bottom:19px;gap:8px}
+body:has(.finder-admin-shell) .admin-delivery-trigger,body:has(.finder-admin-shell) .admin-overview-trigger{background:#fff;border:1px solid #e5dfec;color:#7459a1;border-radius:11px;font-size:11px;font-weight:800;min-height:40px;box-shadow:0 8px 28px rgba(57,45,76,.12);padding:0 14px}
+body:has(.finder-admin-shell) .admin-delivery-trigger:hover,body:has(.finder-admin-shell) .admin-overview-trigger:hover{background:#f4eefa;border-color:#bea9db}
+.admin-delivery-panel,.admin-overview-panel{background:#fbfbfe;border:1px solid #edeaf3;color:#41384e;color-scheme:light;box-shadow:-20px 0 70px rgba(25,20,45,.15)}
+.admin-delivery-kicker,.admin-overview-kicker{color:#9475bb}
+.admin-delivery-panel h2,.admin-overview-panel h2{color:#343147}
+.admin-delivery-close,.admin-overview-close{color:#9b91a7;width:38px;height:38px;display:grid;place-items:center;background:#f1ecf8;border-radius:9px;cursor:pointer}
+.admin-delivery-select,.admin-delivery-fields label{color:#857d92}
+.admin-delivery-select select,.admin-delivery-fields select,.admin-delivery-fields textarea,.admin-delivery-comment textarea{background:#fff;border:1px solid #e4deeb;color:#4b415c;border-radius:9px}
+.admin-delivery-meta,.admin-delivery-fields,.admin-delivery-comment{border-color:#eee9f2}
+.admin-delivery-meta{color:#9792a4}.admin-delivery-meta b{background:#ede4f8;color:#8062ad}
+.admin-delivery-comment>div{color:#856ab0}.admin-delivery-comment strong{color:#49405b}
+.admin-delivery-fields .primary{background:#7c5bb6;border-color:#7c5bb6;border-radius:9px}
+.admin-delivery-comment>button{background:#f0e9f9;border-color:#e6dcef;color:#7858a7;border-radius:9px}
+.admin-delivery-history>span{color:#988ca8}.admin-delivery-history>strong{color:#51465e}
+.admin-delivery-history article i{box-shadow:0 0 0 4px #fbfbfe}.admin-delivery-history article b{color:#51495d}
+.admin-delivery-history article small,.admin-delivery-history article p{color:#9b94a3}
+.admin-delivery-notice,.admin-overview-notice{background:#eff7f3;color:#5e9378}.admin-delivery-error,.admin-overview-error{background:#ffeff2;color:#b15b71}
+.admin-overview-intro{color:#9891a3}
+.admin-overview-stats div{background:#fff;border-color:#e8e2ee;border-radius:11px}.admin-overview-stats span{color:#aba5b1}.admin-overview-stats b{color:#51435f}
+.admin-overview-storage{background:#fff;border-color:#e9e4ef;border-radius:11px}.admin-overview-storage span{color:#a6a0af}.admin-overview-storage strong{color:#8564b2}.admin-overview-storage>i{background:#e7deef}
+.admin-overview-search{background:#fff;border-color:#e5e0eb;border-radius:9px;color:#a5a0b1}
+.admin-overview-search input{color:#453b52}
+.admin-overview-projects article{background:#fff;border-color:#e7e3ec;border-radius:10px}.admin-overview-projects article:hover,.admin-overview-projects article.selected{background:#f7f3fc;border-color:#c6b3df}.admin-overview-projects article strong{color:#514558}
+.admin-overview-project-meta b{color:#805ab1}.admin-overview-project-meta span,.admin-overview-project-meta small,.admin-overview-projects article>div:first-child span{color:#a29ba9}
+.admin-overview-detail{background:#fff;border-color:#e7dff0;border-radius:11px}.admin-overview-detail-head strong{color:#51445e}.admin-overview-detail-head span{color:#a19aaa}.admin-overview-detail-head button{background:#eee7f7;border-color:#ddcff0;color:#7b5eaa}
+.admin-overview-detail-meta{border-color:#eae5ee;color:#948b9c}.admin-overview-events b{color:#4e445e}.admin-overview-events small{color:#9b93a1}
+.admin-delivery-panel button:focus-visible,.admin-overview-panel button:focus-visible,.admin-delivery-panel input:focus-visible,.admin-overview-panel input:focus-visible,.admin-delivery-panel select:focus-visible,.admin-overview-panel select:focus-visible,.admin-delivery-panel textarea:focus-visible,.admin-overview-panel textarea:focus-visible{outline:3px solid #b39bd5;outline-offset:2px}
+@media(max-width:700px){body:has(.finder-admin-shell) .drop-admin-tools{right:12px;bottom:12px}.admin-delivery-panel,.admin-overview-panel{padding:25px 18px 30px}}
