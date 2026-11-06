@@ -1,4 +1,5 @@
 import 'server-only'
+import { supabaseRequestHeaders } from './supabase-headers'
 
 const url = process.env.SUPABASE_URL
 const key = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -14,12 +15,7 @@ export async function supabase<T>(path: string, init: RequestInit = {}): Promise
   const cleanPath = path.replace(/^\/?rest\/v1\/?/, '').replace(/^\//, '')
   const response = await fetch(`${url}/rest/v1/${cleanPath}`, {
     ...init,
-    headers: {
-      apikey: key,
-      Authorization: `Bearer ${key}`,
-      'Content-Type': 'application/json',
-      ...(init.headers || {}),
-    },
+    headers: supabaseRequestHeaders(key, init.headers),
     cache: 'no-store',
   })
   if (!response.ok) throw new Error(`Supabase ${response.status}: ${await response.text()}`)
