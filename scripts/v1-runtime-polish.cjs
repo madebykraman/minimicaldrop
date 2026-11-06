@@ -14,11 +14,11 @@ const stateLineNext = stateLine + "; const [navigating, setNavigating] = useStat
 source = source.replace(stateLine, stateLineNext)
 
 const oldOpen = "async function openFolder(item: Item) { await load(item.id); setTrail(prev => [...prev, { id: item.id, name: item.name }]); setSelected([]) }"
-const newOpen = "async function openFolder(item: Item) { setNavigating(true); setTrail(prev => [...prev, { id: item.id, name: item.name }]); setSelected([]); try { await load(item.id) } finally { setNavigating(false) } }"
+const newOpen = "async function openFolder(item: Item) { if (navigating) return; setNavigating(true); try { const success = await load(item.id); if (success) { setNavScope('all'); setTrail(prev => [...prev, { id: item.id, name: item.name }]); setSelected([]) } } finally { setNavigating(false) } }"
 source = source.replace(oldOpen, newOpen)
 
 const oldTrail = "async function goTrail(index: number) { const target = trail[index]; if (!target) return; await load(target.id === rootId ? undefined : target.id); setTrail(prev => prev.slice(0, index + 1)); setSelected([]) }"
-const newTrail = "async function goTrail(index: number) { const target = trail[index]; if (!target) return; setNavigating(true); setTrail(prev => prev.slice(0, index + 1)); setSelected([]); try { await load(target.id === rootId ? undefined : target.id) } finally { setNavigating(false) } }"
+const newTrail = "async function goTrail(index: number) { const target = trail[index]; if (!target || navigating) return; setNavigating(true); try { const success = await load(target.id === rootId ? undefined : target.id); if (success) { setTrail(prev => prev.slice(0, index + 1)); setSelected([]) } } finally { setNavigating(false) } }"
 source = source.replace(oldTrail, newTrail)
 
 const oldCreate = "async function createFolder() { const name = folderName.trim(); if (!name) return; setBusy(true); try { await jsonFetch(`/api/projects/${token}/folders`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, parentId: folderId || undefined }) }); setFolderName(''); setShowFolder(false); await load(folderId || undefined) } catch (e) { setError(e instanceof Error ? e.message : 'Unable to create folder') } finally { setBusy(false) } }"

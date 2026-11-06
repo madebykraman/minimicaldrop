@@ -10,8 +10,10 @@ function text(value: unknown, max: number) { if (typeof value !== 'string') retu
 
 export async function GET() {
   if (!(await isAdmin())) return NextResponse.json({error:'Unauthorized.'},{status:401})
-  const projects=await supabase<Array<{id:string;name:string;client_name:string;client_email:string|null;drive_account_id:string;drive_folder_id:string;storage_limit_bytes:number|null;expires_at:string;disabled_at:string|null;delivery_status:string;client_message:string|null;created_at:string}>>('projects?select=id,name,client_name,client_email,drive_account_id,drive_folder_id,storage_limit_bytes,expires_at,disabled_at,delivery_status,client_message,created_at&order=created_at.desc')
-  const accounts=await supabase<Array<{id:string;label:string;google_email:string;root_folder_id:string|null;created_at:string}>>('drive_accounts?select=id,label,google_email,root_folder_id,created_at&order=created_at.desc')
+  const [projects, accounts] = await Promise.all([
+    supabase<Array<{id:string;name:string;client_name:string;client_email:string|null;drive_account_id:string;drive_folder_id:string;storage_limit_bytes:number|null;expires_at:string;disabled_at:string|null;delivery_status:string;client_message:string|null;created_at:string}>>('projects?select=id,name,client_name,client_email,drive_account_id,drive_folder_id,storage_limit_bytes,expires_at,disabled_at,delivery_status,client_message,created_at&order=created_at.desc'),
+    supabase<Array<{id:string;label:string;google_email:string;root_folder_id:string|null;created_at:string}>>('drive_accounts?select=id,label,google_email,root_folder_id,created_at&order=created_at.desc'),
+  ])
   // A GET request must not update or delete connected Drive account records.
   // Do not fetch refresh tokens when the UI only needs account metadata.
   const safeAccounts=accounts.map(({created_at:_createdAt,...account})=>account)

@@ -20,21 +20,25 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
     if (!folders[0]) return NextResponse.json({ error: 'Folder is not part of this project.' }, { status: 403 })
   }
 
-  const accounts = await supabase<Array<{ refresh_token: string }>>(`drive_accounts?id=eq.${project.drive_account_id}&select=refresh_token&limit=1`)
-  const account = accounts[0]
-  if (!account) return NextResponse.json({ error: 'Storage account unavailable.' }, { status: 500 })
-  const { access_token } = await accessTokenFromRefreshToken(account.refresh_token)
-
-  const [drive, usageRows, pendingRows] = await Promise.all([
-    listDriveChildren(access_token, parentId),
+  // Fetch independent storage metadata concurrently with each other, rather
+  // than waiting for a Google token refresh and Drive listing to finish first.
+  const storageStart = performance.now()
+  const [accounts, usageRows, pendingRows] = await Promise.all([
+    supabase<Array<{ refresh_token: string }>>(`drive_accounts?id=eq.${project.drive_account_id}&select=refresh_token&limit=1`),
     supabase<Array<{ size_bytes: number }>>(`uploads?project_id=eq.${project.id}&status=eq.complete&select=size_bytes`),
     supabase<Array<{ size_bytes: number }>>(`uploads?project_id=eq.${project.id}&status=eq.uploading&select=size_bytes`),
   ])
+  const account = accounts[0]
+  if (!account) return NextResponse.json({ error: 'Storage account unavailable.' }, { status: 500 })
+  const metadataDuration = performance.now() - storageStart
+  const { access_token } = await accessTokenFromRefreshToken(account.refresh_token)
+  const drive = await listDriveChildren(access_token, parentId)
+  const googleDuration = performance.now() - storageStart - metadataDuration
 
   const usedBytes = usageRows.reduce((sum, row) => sum + Number(row.size_bytes || 0), 0)
   const pendingBytes = pendingRows.reduce((sum, row) => sum + Number(row.size_bytes || 0), 0)
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     project: {
       id: project.id,
       name: project.name,
@@ -49,4 +53,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
     usedBytes,
     pendingBytes,
   })
+  response.headers.set('Server-Timing', `metadata;dur=${metadataDuration.toFixed(1)}, google;dur=${googleDuration.toFixed(1)}, total;dur=${(performance.now() - storageStart).toFixed(1)}`)
+  return response
 }

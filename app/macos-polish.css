@@ -1,0 +1,216 @@
+/* macOS-inspired finish for Minimical Drop. Native font stack, system neutrals,
+   one blue accent, and restrained materials. No bundled Apple font files. */
+:root{
+  --font-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","Segoe UI",Arial,sans-serif;
+  --font-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue","Segoe UI",Arial,sans-serif;
+  --font-mono:"SFMono-Regular",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --mac-accent:#007aff;
+  --mac-accent-pressed:#0066d6;
+  --mac-accent-soft:#e7f2ff;
+  --mac-surface:#fff;
+  --mac-canvas:#f5f5f7;
+  --mac-sidebar:#f2f2f6;
+  --mac-line:#e5e5ea;
+  --mac-ink:#1d1d1f;
+  --mac-secondary:#6e6e73;
+  --mac-tertiary:#86868b;
+  --mac-ease:cubic-bezier(.2,.75,.2,1);
+  --gradient-brand:linear-gradient(110deg,#007aff,#338fff);
+}
+html,body{font-family:var(--font-body)!important;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font-family:var(--font-body)}
+button,summary{-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--mac-accent);outline-offset:2px}
+body:has(.finder-app-shell),body:has(.finder-admin-shell),body:has(.finder-admin-loading),
+html:has(.finder-app-shell),html:has(.finder-admin-shell){background:var(--mac-canvas)!important;color:var(--mac-ink)!important}
+
+/* Shared macOS window anatomy */
+.finder-app-shell,.finder-admin-shell{font-family:var(--font-body)!important;color:var(--mac-ink);--fd-bg:var(--mac-canvas);--fd-panel:var(--mac-surface);--fd-line:var(--mac-line);--fd-ink:var(--mac-ink);--fd-sub:var(--mac-secondary);--fd-violet:var(--mac-accent);--fd-violet-soft:var(--mac-accent-soft)}
+.finder-app-shell{background:var(--mac-canvas)!important}
+.finder-app-shell .finder-window,.finder-admin-shell.p5-admin{background:var(--mac-surface)!important;border:1px solid rgba(0,0,0,.075)!important;border-radius:16px!important;box-shadow:0 14px 42px rgba(20,25,36,.07),0 1px 4px rgba(20,25,36,.045)!important}
+.finder-app-shell .finder-window-bar,.finder-admin-window-bar{background:linear-gradient(180deg,#fafafa,#f6f6f8)!important;border-bottom:1px solid var(--mac-line)!important}
+.finder-window-title,.finder-admin-window-title{color:#55565c!important}
+.finder-window-title svg,.finder-admin-window-title svg{color:#697380!important}
+.finder-app-shell .finder-sidebar,.finder-admin-shell .finder-admin-sidebar{background:var(--mac-sidebar)!important;border-color:var(--mac-line)!important;box-shadow:none}
+.finder-app-shell .finder-sidebar-logo,.finder-admin-shell .finder-admin-sidebar-brand>div{background:#e5effd!important;color:var(--mac-accent)!important;box-shadow:none!important}
+.finder-sidebar-brand strong,.finder-admin-sidebar-brand strong{color:var(--mac-ink)!important}
+.finder-app-shell .finder-sidebar-group>span,.finder-admin-shell .finder-admin-sidebar p{color:var(--mac-tertiary)!important}
+.finder-app-shell .finder-sidebar-group button,.finder-admin-shell .finder-admin-sidebar button,.finder-admin-shell .finder-admin-sidebar a{color:#595b64!important}
+.finder-app-shell .finder-sidebar-group button svg,.finder-admin-shell .finder-admin-sidebar svg{color:#777b85!important}
+.finder-app-shell .finder-sidebar-group button.active,.finder-admin-shell .finder-admin-sidebar button.active{background:var(--mac-accent-soft)!important;color:#0067c6!important;box-shadow:none!important}
+.finder-app-shell .finder-sidebar-group button.active svg,.finder-admin-shell .finder-admin-sidebar button.active svg{color:var(--mac-accent)!important}
+.finder-app-shell .finder-sidebar-group button:hover,.finder-admin-shell .finder-admin-sidebar button:hover,.finder-admin-shell .finder-admin-sidebar a:hover{background:#e8eaf0!important}
+.finder-app-shell .finder-sidebar-group button.active:hover,.finder-admin-shell .finder-admin-sidebar button.active:hover{background:#deedff!important}
+
+/* Client primary task: browse files, upload, review */
+.finder-app-shell .finder-stage-top,.finder-admin-shell .p5-head{background:#fff!important;border-color:var(--mac-line)!important}
+.finder-app-shell .finder-stage-title strong,.finder-app-shell .finder-intro h1,.finder-admin-shell .p5-dashboard h1,.finder-admin-shell .p5-detail-head h1{color:var(--mac-ink)!important;font-family:var(--font-display)!important;font-weight:700;letter-spacing:-.035em}
+.finder-app-shell .finder-intro p,.finder-admin-shell .p5-dashboard p,.finder-admin-shell .p5-detail-head p{color:var(--mac-secondary)!important}
+.finder-app-shell .finder-private-label{background:#f7f7f9!important;border:1px solid #e9e9ed!important;color:#6c6f75!important}
+.finder-app-shell .finder-private-label svg,.finder-app-shell .finder-mobile-menu svg{color:#6b7078!important}
+.finder-app-shell .finder-mobile-menu,.finder-app-shell .finder-icon-button{background:#f8f8fa!important;border-color:var(--mac-line)!important;color:#63666c!important}
+.finder-app-shell .finder-mobile-menu:hover,.finder-app-shell .finder-icon-button:hover{background:#f0f0f3!important}
+.finder-app-shell .v5-workspace{border:1px solid var(--mac-line)!important;box-shadow:none!important;border-radius:13px}
+.finder-app-shell .finder-toolbar{background:#fafafb!important;border-bottom:1px solid #eeeef1!important}
+.finder-app-shell .v5-crumbs button.active{color:#242529!important}
+.finder-app-shell .v5-btn,.finder-app-shell .v5-selection button{background:#fff!important;border:1px solid #dedee3!important;color:#363a41!important;box-shadow:none!important}
+.finder-app-shell .v5-btn:hover,.finder-app-shell .v5-selection button:hover{background:#f3f4f6!important;border-color:#d1d2d8!important;color:#242529!important}
+.finder-app-shell .v5-btn.primary,.finder-app-shell .finder-toolbar .v5-actions .primary{background:var(--mac-accent)!important;border-color:var(--mac-accent)!important;color:#fff!important;box-shadow:none!important}
+.finder-app-shell .v5-btn.primary:hover,.finder-app-shell .finder-toolbar .v5-actions .primary:hover{background:var(--mac-accent-pressed)!important;color:#fff!important}
+.finder-app-shell .v5-search,.finder-app-shell .finder-tools .v5-search{background:#f5f5f7!important;border:1px solid #e9e9ed!important;color:#8a8d94!important}
+.finder-app-shell .v5-search:focus-within{border-color:#8abbff!important;box-shadow:0 0 0 3px rgba(0,122,255,.1)!important}
+.finder-app-shell .v5-search input{color:var(--mac-ink)!important}
+.finder-app-shell .v5-sort{border-color:var(--mac-line)!important;background:#fff!important}
+.finder-app-shell .v5-sort select{color:#42454e!important}
+.finder-app-shell .finder-view-toggle,.finder-admin-shell .finder-view-toggle{background:#f2f2f5!important;border-color:#e4e4e9!important}
+.finder-app-shell .finder-view-toggle button.active,.finder-admin-shell .finder-view-toggle button.active{color:var(--mac-accent)!important;background:#fff!important;box-shadow:0 1px 3px rgba(0,0,0,.08)!important}
+.finder-app-shell .finder-dropzone.v5-dropzone{background:#f8fbff!important;border:1px dashed #c6d9f1!important;color:#69798e!important}
+.finder-app-shell .finder-drop-icon,.finder-app-shell .finder-empty>div{background:#eaf3ff!important;color:var(--mac-accent)!important}
+.finder-app-shell .finder-dropzone strong{color:#63758a!important}
+.finder-app-shell .finder-files-head strong,.finder-app-shell .finder-file-group header strong{color:#33343a!important}
+.finder-app-shell .finder-files-head>button{color:var(--mac-accent)!important}
+.finder-app-shell .finder-card{background:#fff!important;border:1px solid #e7e7ec!important;box-shadow:none!important;transform:none!important}
+.finder-app-shell .finder-card:hover{background:#fafcff!important;border-color:#accbf4!important;box-shadow:0 4px 12px rgba(0,76,160,.065)!important;transform:none!important}
+.finder-app-shell .finder-card.selected{background:#eff6ff!important;border-color:var(--mac-accent)!important;box-shadow:0 0 0 1px rgba(0,122,255,.12)!important}
+.finder-app-shell .finder-card-top{background:#f6f7f9!important}
+.finder-app-shell .finder-card-art{background:#eceef2!important;color:#79808a!important}
+.finder-app-shell .finder-card-art.is-folder{background:#dcecff!important;color:var(--mac-accent)!important;box-shadow:none!important}
+.finder-app-shell .finder-card-art.is-image{background:#e5f2ed!important;color:#48936c!important}
+.finder-app-shell .finder-card-art.is-video{background:#f0eafc!important;color:#8169b0!important}
+.finder-app-shell .finder-card-art.is-audio{background:#e7f3fb!important;color:#4b96c6!important}
+.finder-app-shell .finder-card-label strong,.finder-app-shell .v5-name strong{color:#303238!important}
+.finder-app-shell .finder-card-more summary{background:rgba(255,255,255,.93)!important;border-color:#e5e6ea!important;color:#5e6571!important}
+.finder-app-shell .finder-card-more summary:hover,.finder-app-shell .finder-card-more[open] summary{background:#eaf3ff!important;color:var(--mac-accent)!important}
+.finder-app-shell .finder-card-more .finder-card-actions{border-color:#dfe2e8!important;box-shadow:0 12px 25px rgba(31,38,57,.13)!important}
+.finder-app-shell .finder-card-more .finder-card-actions button:hover{background:#eaf3ff!important;color:#006fcf!important}
+.finder-app-shell input[type=checkbox],.finder-admin-shell input[type=checkbox]{accent-color:var(--mac-accent)}
+.finder-app-shell .v5-selection{background:#eaf3ff!important;border-color:#c5defe!important;color:#0b61b6!important}
+.finder-app-shell .v5-row{border-color:#e9eaee!important;background:#fff!important}
+.finder-app-shell .v5-row:hover{background:#f4f8fe!important}
+.finder-app-shell .v5-row .v5-icon{background:#e9eef5!important;color:#647790!important}
+.finder-app-shell .finder-project-details{background:#fafafa!important;border-color:var(--mac-line)!important}
+.finder-app-shell .finder-project-details>summary{color:#62656d!important}
+.finder-app-shell .finder-project-details>summary:hover{background:#f0f4fa!important;color:var(--mac-accent)!important}
+.finder-app-shell .finder-project-meter{background:#e2e7ef!important}
+.finder-app-shell .finder-project-meter i,.finder-app-shell .finder-meter i,.finder-app-shell .v5-progress i{background:var(--mac-accent)!important}
+
+/* Client review + upload operations */
+.finder-app-shell .drop-delivery{background:#fff!important;border-color:var(--mac-line)!important;box-shadow:none!important}
+.finder-app-shell .drop-delivery-icon{background:#eaf3ff!important;color:var(--mac-accent)!important}
+.finder-app-shell .drop-delivery-status h2{color:#33343a!important}
+.finder-app-shell .drop-delivery-more>summary{color:#5c6572!important}
+.finder-app-shell .drop-delivery-more>summary:hover{background:#f5f8fc!important}
+.finder-app-shell .drop-delivery button.primary,.finder-app-shell .drop-delivery button[class*="primary"]{background:var(--mac-accent)!important;border-color:var(--mac-accent)!important;color:#fff!important}
+.finder-app-shell .drop-delivery button.secondary{background:#f5f5f7!important;border:1px solid var(--mac-line)!important;color:#4e535b!important}
+.finder-app-shell .v5-queue,.finder-app-shell .v5-recovery{background:#fff!important;border-color:var(--mac-line)!important}
+.finder-app-shell .v5-queue-head strong,.finder-app-shell .v5-transfer-main strong,.finder-app-shell .v5-recovery strong{color:#35383c!important}
+.finder-app-shell .v5-recovery-resume{background:var(--mac-accent)!important;border-color:var(--mac-accent)!important;color:#fff!important}
+.finder-app-shell .v5-nav-status{background:rgba(246,249,253,.97)!important;border:1px solid #d2e3f9!important;color:#366999!important;box-shadow:0 4px 14px rgba(0,70,140,.08)!important}
+.finder-app-shell .v5-nav-status .v5-spin{color:var(--mac-accent)!important}
+body:has(.finder-app-shell) .drop-support{background:#fff!important;border-color:#dedee4!important;color:#646b75!important;box-shadow:0 4px 14px rgba(19,28,41,.1)!important}
+body:has(.finder-app-shell) .drop-support:hover{color:var(--mac-accent)!important}
+body:has(.finder-app-shell) .drop-support-card{background:#fff!important;border-color:var(--mac-line)!important;color:var(--mac-ink)!important}
+body:has(.finder-app-shell) .drop-support-card .primary{background:var(--mac-accent)!important;border-color:var(--mac-accent)!important}
+
+/* Studio/admin — information first, color reserved for actions and status */
+.finder-admin-shell .p5-brand span{color:#547d9e!important}
+.finder-admin-shell .finder-admin-sidebar-brand>div{color:var(--mac-accent)!important}
+.finder-admin-shell .p5-dashboard>div>span,.finder-admin-shell .p5-detail-head>div>span{color:#7d8089!important}
+.finder-admin-shell .p5-summary>div,.finder-admin-shell .p5-panel,.finder-admin-shell .p5-projects{background:#fff!important;border:1px solid var(--mac-line)!important;box-shadow:none!important}
+.finder-admin-shell .p5-summary b,.finder-admin-shell .p5-projects strong{color:#303238!important}
+.finder-admin-shell .p5-dashboard>button,.finder-admin-shell .p5-modal-actions button.primary{background:var(--mac-accent)!important;border-color:var(--mac-accent)!important;color:#fff!important;box-shadow:none!important}
+.finder-admin-shell .p5-dashboard>button:hover,.finder-admin-shell .p5-modal-actions button.primary:hover{background:var(--mac-accent-pressed)!important}
+.finder-admin-shell .finder-project-card{background:#fff!important;border-color:var(--mac-line)!important;box-shadow:none!important;transform:none!important}
+.finder-admin-shell .finder-project-card:hover{background:#fafdff!important;border-color:#a5c9f6!important;box-shadow:0 4px 14px rgba(0,74,150,.07)!important;transform:none!important}
+.finder-admin-shell .finder-project-card-icon{background:#eaf3ff!important;color:var(--mac-accent)!important}
+.finder-admin-shell .finder-project-card-open{background:#eef6ff!important;color:var(--mac-accent)!important;border-color:#dceafc!important}
+.finder-admin-shell .p5-project-tools{background:#fafafa!important}
+.finder-admin-shell .p5-project-tools label{background:#f5f5f7!important;border-color:var(--mac-line)!important}
+.finder-admin-shell .p5-project-tools input{color:var(--mac-ink)!important}
+.finder-admin-shell .p5-drive-strip{background:#f8fafc!important;border-color:var(--mac-line)!important}
+.finder-admin-shell .p5-drive-strip a,.finder-admin-shell .p5-detail-head>button{background:#eaf3ff!important;color:var(--mac-accent)!important;border-color:#d9eafd!important}
+.finder-admin-shell .p5-modal{background:#fff!important;border-color:var(--mac-line)!important;color:var(--mac-ink)!important}
+.finder-admin-shell .p5-modal input,.finder-admin-shell .p5-modal select{background:#f7f7f9!important;color:var(--mac-ink)!important;border-color:var(--mac-line)!important}
+.finder-admin-shell .p5-track i{background:var(--mac-accent)!important}
+.finder-admin-shell .p5-fresh{background:#edf5ff!important;color:#246ca7!important;border-color:#d8e9fa!important}
+.finder-admin-shell .p5-fresh code{color:#3f637d!important}
+.finder-admin-shell .p5-message{background:#eaf5ed!important;color:#32764a!important;border-color:#d4ead8!important}
+.finder-admin-shell .finder-admin-error{background:#fff5f5!important;color:#aa4e58!important;border-color:#f1d7da!important}
+.p5-admin.p5-login{background:#f5f5f7!important;color:var(--mac-ink)!important}
+.p5-admin.p5-login:before{background:radial-gradient(circle at 70% 35%,rgba(0,122,255,.06),transparent 45%)!important;animation:none!important}
+.p5-admin.p5-login .p5-login-copy h1{color:var(--mac-ink)!important}
+.p5-admin.p5-login .p5-login-copy>span{color:#74777e!important}
+.p5-admin.p5-login .p5-login-form{background:#fff!important;border:1px solid var(--mac-line)!important;box-shadow:0 18px 45px rgba(20,28,38,.09)!important;backdrop-filter:none!important;animation:none!important}
+.p5-admin.p5-login .p5-login-form input{background:#f7f7f9!important;color:var(--mac-ink)!important;border-color:var(--mac-line)!important}
+.p5-admin.p5-login .p5-login-form>button{background:var(--mac-accent)!important;border-color:var(--mac-accent)!important;color:#fff!important}
+.finder-admin-loading{background:var(--mac-canvas)!important}
+.finder-admin-loading-content{background:#fff!important;border-color:var(--mac-line)!important}
+
+/* Entire public site: polished macOS-style dark graphite and blue accent,
+   with the content layer kept opaque for text contrast. */
+body:has(.drop-home),html:has(.drop-home){background:#1c1c1e!important;color:#f5f5f7!important}
+.drop-home{background:radial-gradient(circle at 78% 10%,rgba(36,99,153,.11),transparent 30%),#1c1c1e!important;color:#f5f5f7!important}
+.drop-home-nav{background:rgba(28,28,30,.94)!important;border-color:#37373b!important}
+.drop-home-kicker,.drop-home-hero-meta>span,.drop-section-index{color:#76baff!important}
+.drop-home .drop-live{background:var(--mac-accent)!important;box-shadow:none!important}
+.drop-home .drop-home-primary{background:var(--mac-accent)!important;color:#fff!important;border-radius:10px!important}
+.drop-home .drop-home-secondary{color:#b9bec6!important}
+.drop-home .drop-window{background:#252528!important;border:1px solid #424247!important;box-shadow:0 18px 50px rgba(0,0,0,.22)!important}
+.drop-home .drop-window:before{opacity:.12!important}
+.drop-home .drop-home-cta{border-color:#38383e!important}
+.legal-shell,.legal-page{background:#1c1c1e;color:#ededf0}
+.drop-error{background:#f5f5f7!important;color:#29292e!important}
+.drop-error h1{color:#1d1d1f!important}
+.drop-error button{background:var(--mac-accent)!important;color:#fff!important;border-radius:9px!important}
+
+/* Fast, predictable interactions: no decorative slide-ins, bounce or
+   whole-page snapshots on file selection/deletion. Preserve spinners/progress. */
+.finder-app-shell .finder-card,.finder-app-shell .v5-row,.finder-app-shell .v5-workspace,
+.finder-app-shell .finder-intro,.finder-app-shell .finder-card-more .finder-card-actions,
+.finder-admin-shell .finder-project-card,.finder-admin-shell .p5-summary>div,
+.finder-admin-shell .p5-projects{animation:none!important;will-change:auto!important}
+.finder-app-shell .finder-card,.finder-app-shell .v5-row,
+.finder-app-shell .v5-btn,.finder-app-shell .finder-card-more summary,
+.finder-admin-shell .finder-project-card,.finder-admin-shell button{
+  transition-property:background-color,border-color,color,box-shadow,opacity!important;
+  transition-duration:125ms!important;transition-timing-function:var(--mac-ease)!important;
+}
+.finder-app-shell .v5-btn:hover,.finder-app-shell .v5-row:hover,
+.finder-admin-shell .finder-project-card:hover{transform:none!important}
+.finder-app-shell .v5-workspace:after{display:none!important}
+::view-transition-old(root),::view-transition-new(root){animation:none!important}
+.finder-app-shell .v5-dropzone,.finder-app-shell .finder-card,.finder-admin-shell .finder-project-card{contain:layout style}
+.finder-app-shell button:focus-visible,.finder-app-shell summary:focus-visible,
+.finder-admin-shell button:focus-visible,.finder-admin-shell input:focus-visible{
+ outline:2px solid var(--mac-accent)!important;outline-offset:2px!important;
+}
+
+/* Mobile: keep content first and use stable, touch-friendly controls. */
+@media(max-width:760px){
+  .finder-app-shell{padding:0!important;background:#fff!important}
+  .finder-app-shell .finder-window,.finder-admin-shell.p5-admin{border:0!important;border-radius:0!important;box-shadow:none!important}
+  .finder-app-shell .finder-stage-scroll{padding:18px 12px 44px!important}
+  .finder-app-shell .finder-intro h1{font-size:clamp(23px,6.1vw,30px)!important}
+  .finder-app-shell .finder-toolbar{gap:8px!important}
+  .finder-app-shell .v5-actions button,.finder-app-shell .finder-view-toggle button,
+  .finder-app-shell .finder-card-more summary,.finder-app-shell .finder-mobile-menu{min-height:42px!important;min-width:42px!important}
+  .finder-app-shell .finder-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+  .finder-app-shell .finder-card{padding:9px!important}
+  .finder-app-shell .finder-card-more{top:10px!important;right:10px!important}
+  .finder-app-shell .finder-card-art{width:50px!important;height:50px!important}
+  .finder-app-shell .finder-card-top{height:80px!important}
+  .finder-app-shell .finder-card-more .finder-card-actions{right:0;max-width:min(190px,80vw)}
+  .finder-app-shell .v5-search input{font-size:16px!important}
+  .finder-admin-shell .p5-project-tools input,.finder-admin-shell .p5-modal input{font-size:16px!important}
+  .finder-admin-shell .finder-admin-card-grid{gap:10px!important}
+  .finder-app-shell .finder-sidebar,.finder-admin-shell .finder-admin-sidebar{backdrop-filter:none!important}
+  .finder-app-shell .finder-card:hover,.finder-admin-shell .finder-project-card:hover{box-shadow:none!important}
+}
+@media(max-width:380px){
+  .finder-app-shell .finder-file-group{padding-left:8px!important;padding-right:8px!important}
+  .finder-app-shell .finder-toolbar .v5-btn{padding:0 9px!important}
+  .finder-app-shell .finder-stage-title strong{font-size:12px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .finder-app-shell *,.finder-admin-shell *,.p5-login *{scroll-behavior:auto!important;animation-duration:0.01ms!important;transition-duration:0.01ms!important}
+}
