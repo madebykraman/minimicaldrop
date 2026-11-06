@@ -36,14 +36,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
       if (file && !file.trashed && Number(file.size || 0) === Number(upload.size_bytes)) {
         const now = new Date().toISOString()
         await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}&project_id=eq.${project.id}&status=eq.uploading`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ drive_file_id: result.data.id, session_url: null, status: 'complete', completed_at: now, last_activity_at: now }) })
-        await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'upload.recovered_completed', file_name: upload.name, metadata: { uploadId: upload.id, driveFileId: result.data.id, size: upload.size_bytes } }) })
+        await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'upload.recovered_completed', file_name: upload.name, metadata: { uploadId: upload.id, driveFileId: result.data.id, size: upload.size_bytes } }) }).catch(() => console.warn('Audit event write failed'))
         continue
       }
     }
     if (result.status === 404 || result.status === 410) {
       const now = new Date().toISOString()
       await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}&project_id=eq.${project.id}&status=eq.uploading`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'failed', session_url: null, last_activity_at: now }) })
-      await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'upload.recovery_expired', file_name: upload.name, metadata: { uploadId: upload.id } }) })
+      await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'upload.recovery_expired', file_name: upload.name, metadata: { uploadId: upload.id } }) }).catch(() => console.warn('Audit event write failed'))
       continue
     }
     const uploadedBytes = result.status === 308 ? offsetFromRange(result.range) : 0
