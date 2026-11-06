@@ -16,7 +16,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ pro
   const body = await request.json().catch(()=>null) as { comment?:string } | null
   const comment = clean(body?.comment)
   if (!comment) return NextResponse.json({ error:'Comment is required and must be 2,000 characters or fewer.' }, { status:400 })
-  await supabase('audit_events', { method:'POST', headers:{Prefer:'return=minimal'}, body:JSON.stringify({ project_id:project.id, event_type:'delivery.comment_added', metadata:{ role:'studio', author:'MINIMICAL', body:comment } }) })
+  await supabase('audit_events', { method:'POST', headers:{Prefer:'return=minimal'}, body:JSON.stringify({ project_id:project.id, event_type:'delivery.comment_added', metadata:{ role:'studio', author:'MINIMICAL', body:comment } }) }).catch(() => console.warn('Audit event write failed'))
   let emailSent = false
   if (project.client_email) {
     try { const result = await sendDropEmail(project.client_email, `New project message: ${project.name}`, 'A new message from Minimical', comment) ; emailSent = !!result.sent } catch {}
