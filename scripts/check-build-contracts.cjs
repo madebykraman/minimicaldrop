@@ -6,6 +6,9 @@ const fs = require('node:fs')
 const workspace = fs.readFileSync('app/u/[token]/workspace-v5.tsx', 'utf8')
 const css = fs.readFileSync('app/drop.css', 'utf8')
 const admin = fs.readFileSync('app/admin/admin.css', 'utf8')
+const finderCss = fs.readFileSync('app/finder-ui.css', 'utf8')
+const adminPage = fs.readFileSync('app/admin/page.tsx', 'utf8')
+const layout = fs.readFileSync('app/layout.tsx', 'utf8')
 
 const checks = [
   ['8 MB resumable chunks', workspace.includes('const CHUNK = 8 * 1024 * 1024')],
@@ -15,6 +18,12 @@ const checks = [
   ['responsive design audit styles', workspace.includes('/* audit-responsive: 2026-11 */')],
   ['delete interaction styles', css.includes('/* v1-delete-polish */')],
   ['admin login styles', admin.includes('/* v1.1 admin login surface */')],
+  ['Finder app shell and functional view toggle', workspace.includes('finder-app-shell') && workspace.includes("changeView('grid')") && workspace.includes("changeView('list')")],
+  ['Finder card component and actionable controls', workspace.includes('function FinderCard(') && workspace.includes('finder-card-actions')],
+  ['Finder navigation and transfer queue', workspace.includes('finder-sidebar') && workspace.includes('finder-transfers')],
+  ['Studio project card and list controls', adminPage.includes('finder-project-card') && adminPage.includes('changeProjectView')],
+  ['Responsive Finder breakpoints and accessible focus', finderCss.includes('@media(max-width:700px)') && finderCss.includes(':focus-visible')],
+  ['Finder styles imported for all surfaces', layout.includes("import './finder-ui.css'")],
 ]
 
 const failed = checks.filter(([, passed]) => !passed)
