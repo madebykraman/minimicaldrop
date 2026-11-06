@@ -32,6 +32,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
   if (!account) return NextResponse.json({ error: 'Storage account unavailable.' }, { status: 500 })
   const folder = await createDriveFolder((await accessTokenFromRefreshToken(account.refresh_token)).access_token, name, parent)
   await supabase('folders', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, name, drive_folder_id: folder.id, parent_id: parentId }) })
-  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'folder.created', metadata: { name, parentId: parent } }) })
+  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'folder.created', metadata: { name, parentId: parent } }) }).catch(() => console.warn('Audit event write failed'))
   return NextResponse.json({ id: folder.id, name: folder.name })
 }

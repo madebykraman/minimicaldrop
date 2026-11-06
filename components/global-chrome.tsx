@@ -11,9 +11,13 @@ export default function GlobalChrome() {
   const [authorized, setAuthorized] = useState(false)
 
   useEffect(() => {
-    if (!pathname.startsWith('/admin')) return
+    if (!pathname.startsWith('/admin')) {
+      setAuthorized(false)
+      return
+    }
     let cancelled = false
-    fetch('/api/admin/projects', { cache: 'no-store' })
+    // A database outage should not make a valid admin session appear logged out.
+    fetch('/api/admin/session', { cache: 'no-store' })
       .then(response => {
         if (!cancelled) setAuthorized(response.ok)
       })

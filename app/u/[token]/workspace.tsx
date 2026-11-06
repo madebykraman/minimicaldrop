@@ -6,6 +6,7 @@ import {
   FileVideo, Folder, FolderPlus, HardDrive, Loader2, MoreHorizontal, Pencil, RefreshCw,
   Trash2, Upload, X,
 } from 'lucide-react'
+import { isSafeInlineMime } from '@/lib/preview-types'
 
 type Item = { id: string; name: string; mimeType: string; sizeBytes: number; modifiedTime: string | null }
 type Project = { id: string; name: string; clientName: string; expiresAt: string; storageLimitBytes: number | null }
@@ -37,9 +38,7 @@ function fileIcon(mime: string) {
   return File
 }
 
-function canPreview(mime: string) {
-  return mime.startsWith('image/') || mime.startsWith('video/') || mime.startsWith('audio/') || mime === 'application/pdf'
-}
+function canPreview(mime: string) { return isSafeInlineMime(mime) }
 
 async function jsonFetch(url: string, init?: RequestInit) {
   const response = await fetch(url, init)

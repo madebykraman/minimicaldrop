@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { accessTokenFromRefreshToken, createEmptyDriveFile, initiateResumableUpload } from '@/lib/google-drive'
+import { accessTokenFromRefreshToken, createEmptyDriveFile, deleteDriveFile, initiateResumableUpload } from '@/lib/google-drive'
 import { getProjectByToken } from '@/lib/project-access'
 import { rateLimit } from '@/lib/rate-limit'
 import { supabase } from '@/lib/supabase'
@@ -39,16 +39,22 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
 
   if (size === 0) {
     let uploadId: string | null = null
+    let newDriveFileId: string | null = null
     try {
       uploadId = await supabase<string>('rpc/reserve_upload', { method: 'POST', body: JSON.stringify({ p_project_id: project.id, p_folder_id: folderId, p_name: name, p_mime_type: mimeType, p_size_bytes: 0, p_session_url: null }) })
       if (!uploadId) throw new Error('Upload reservation failed')
       await auditStart(project.id, uploadId, name, 0)
       const file = await createEmptyDriveFile(accessToken, name, mimeType, parentId)
+      newDriveFileId = file.id
       const now = new Date().toISOString()
       await supabase(`uploads?id=eq.${encodeURIComponent(uploadId)}&project_id=eq.${project.id}&status=eq.uploading`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ drive_file_id: file.id, status: 'complete', completed_at: now, last_activity_at: now }) })
-      await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'upload.completed', file_name: name, metadata: { uploadId, driveFileId: file.id, size: 0 } }) })
+      // At this point the Drive file and the database agree. Audit logging is best-effort.
+      newDriveFileId = null
+      await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'upload.completed', file_name: name, metadata: { uploadId, driveFileId: file.id, size: 0 } }) }).catch(() => undefined)
       return NextResponse.json({ uploadId, driveFileId: file.id, complete: true })
     } catch (error) {
+      // Avoid orphan Drive files when a newly created empty upload cannot be committed.
+      if (newDriveFileId) await deleteDriveFile(accessToken, newDriveFileId).catch(() => undefined)
       if (uploadId) await supabase(`uploads?id=eq.${encodeURIComponent(uploadId)}&project_id=eq.${project.id}&status=eq.uploading`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'failed', session_url: null }) }).catch(() => undefined)
       const message = error instanceof Error ? error.message : 'Unable to create empty file.'
       if (message.toLowerCase().includes('storage limit')) return NextResponse.json({ error: 'This upload would exceed the project storage limit.' }, { status: 413 })
