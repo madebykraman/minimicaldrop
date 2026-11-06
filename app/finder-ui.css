@@ -126,3 +126,105 @@
 }
 @media(max-width:390px){.finder-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.finder-window-title span{display:none}.finder-app-shell .v5-actions .v5-btn{font-size:10px;gap:5px}.finder-app-shell .v5-actions .ghost>span{display:none}.finder-card-label strong{font-size:10px}.finder-view-toggle button{width:32px}.finder-stage-title strong{max-width:120px}}
 @media(prefers-reduced-motion:reduce){.finder-app-shell *, .finder-app-shell *::before,.finder-app-shell *::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+
+/* Studio/admin Finder companion */
+body:has(.finder-admin-shell){background:#eff0f5!important}
+.p5-admin.finder-admin-shell{--fa-border:#e7e7ef;--fa-ink:#343449;--fa-muted:#9897a8;color:#343449;color-scheme:light;min-height:calc(100dvh - 28px);max-width:1536px;margin:14px auto;padding:0;background:#fff;border:1px solid #fff;border-radius:21px;overflow:hidden;box-shadow:0 24px 72px rgba(45,43,72,.12),0 55px 120px rgba(31,30,56,.08);font-family:var(--font-body),system-ui,sans-serif}
+.finder-admin-shell *, .finder-admin-shell *::before,.finder-admin-shell *::after{box-sizing:border-box}
+.finder-admin-shell button:focus-visible,.finder-admin-shell a:focus-visible,.finder-admin-shell input:focus-visible,.finder-admin-shell select:focus-visible{outline:3px solid #ac96dc;outline-offset:3px}
+.finder-admin-window-bar{height:50px;background:linear-gradient(#fff,#f8f8fb);border-bottom:1px solid #e9e9f0;display:flex;align-items:center;padding:0 21px;position:relative}
+.finder-admin-window-title{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:9px;white-space:nowrap;font-weight:750;color:#615b70;font-size:12px}.finder-admin-window-title svg{color:#8a69be}.finder-admin-window-title b{color:#b9b5c3}
+.finder-admin-live{margin-left:auto;display:flex;gap:7px;align-items:center;color:#9797a6;font-size:10px;font-weight:700}.finder-admin-live i{width:7px;height:7px;border-radius:50%;background:#58ba93}
+.finder-admin-shell .p5-head{background:#fff;height:64px;border-bottom:1px solid #edeaf2;padding:0 26px;color:#3b3548}
+.finder-admin-shell .p5-brand{color:#333047;font-weight:800;letter-spacing:-.01em;font-size:15px}.finder-admin-shell .p5-brand span{color:#8c6fbe}
+.finder-admin-shell .p5-head-right{gap:14px;color:#8a8a9b}.finder-admin-shell .p5-head-right>span{display:flex;align-items:center;border:1px solid #e4e9e8;background:#f4faf7;color:#619077;padding:7px 11px;border-radius:99px;font-size:10px;font-weight:750}.finder-admin-shell .p5-head-right i{background:#55b88f}.finder-admin-shell .p5-head-right button{border:1px solid #e8e7ee;background:#faf9fc;color:#807b91;display:grid;place-items:center;width:36px;height:36px;border-radius:9px;cursor:pointer}
+.finder-admin-layout{display:flex;align-items:stretch;min-height:calc(100dvh - 143px)}.finder-admin-sidebar{width:237px;flex:none;display:flex;flex-direction:column;gap:5px;background:linear-gradient(155deg,#f7f7fb,#f1f0f7);border-right:1px solid #e9e7f0;padding:28px 16px 20px}
+.finder-admin-sidebar-brand{display:grid;grid-template-columns:37px 1fr;column-gap:10px;align-items:center;margin:0 9px 20px}.finder-admin-sidebar-brand>div{width:37px;height:37px;display:grid;place-items:center;border-radius:11px;background:#e9e1f6;color:#8464b8;grid-row:1/3}.finder-admin-sidebar-brand strong{font-size:14px;color:#474055;letter-spacing:-.035em}.finder-admin-sidebar-brand span{font-size:8px;letter-spacing:.12em;color:#a5a0b0;font-weight:800}
+.finder-admin-sidebar p{color:#a2a0b1;font-size:9px;letter-spacing:.1em;font-weight:800;margin:18px 12px 6px}
+.finder-admin-sidebar button,.finder-admin-sidebar a{display:flex;align-items:center;text-decoration:none;gap:12px;text-align:left;border:0;border-radius:10px;min-height:42px;width:100%;padding:0 12px;background:none;color:#797788;font-size:12px;font-weight:700;cursor:pointer}
+.finder-admin-sidebar button svg,.finder-admin-sidebar a svg{color:#9995aa;flex:none}.finder-admin-sidebar button:hover,.finder-admin-sidebar a:hover{color:#6d509d;background:#ebe7f4}.finder-admin-sidebar button.active{background:#e7ddf8;color:#7752b0}.finder-admin-sidebar button.active svg{color:#7752b0}.finder-admin-sidebar button em{font-size:10px;color:#a6a0b3;font-style:normal;font-weight:700;margin-left:auto}
+.finder-admin-sidebar-bottom{margin-top:auto;padding:16px 12px;border-radius:13px;background:#fff;border:1px solid #e9e7ef}
+.finder-admin-sidebar-bottom div>span{display:block;font-size:9px;letter-spacing:.07em;color:#a4a0ae;font-weight:800}.finder-admin-sidebar-bottom strong{display:block;font-size:13px;color:#655879;margin-top:5px}.finder-admin-sidebar-bottom>span{display:flex;align-items:center;gap:7px;margin-top:16px;font-size:9px;color:#8e9b90}.finder-admin-sidebar-bottom>span i{width:6px;height:6px;border-radius:50%;background:#62bf96}
+.finder-admin-workspace{flex:1;min-width:0;background:#fff;padding:0 clamp(16px,2.6vw,38px) 38px}
+.finder-admin-mobile-toggle{display:none}
+.finder-admin-shell .p5-dashboard,.finder-admin-shell .p5-detail-head{width:100%;padding:33px 0 25px;gap:20px}
+.finder-admin-shell .p5-dashboard>div>span,.finder-admin-shell .p5-detail-head>div>span{font-size:9px;letter-spacing:.12em;font-weight:800;color:#9375bc}
+.finder-admin-shell .p5-dashboard h1,.finder-admin-shell .p5-detail-head h1{font-family:var(--font-display),system-ui;color:#2f2c41;font-size:clamp(34px,3.8vw,49px);font-weight:760;letter-spacing:-.055em;overflow-wrap:anywhere;line-height:1.1}
+.finder-admin-shell .p5-dashboard p,.finder-admin-shell .p5-detail-head p{color:#9996a5}
+.finder-admin-shell .p5-dashboard>button{background:#7957b4;color:#fff;border-color:#7957b4;border-radius:9px;height:42px;box-shadow:0 4px 11px rgba(104,73,162,.15);font-size:12px;font-weight:750}
+.finder-admin-shell .p5-summary,.finder-admin-shell .p5-projects,.finder-admin-shell .p5-drive-strip,.finder-admin-shell .p5-grid{width:100%;margin-left:0;margin-right:0}
+.finder-admin-shell .p5-summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;border:0;margin-bottom:15px}
+.finder-admin-shell .p5-summary>div{background:linear-gradient(145deg,#fff,#fbfaff);border:1px solid #eae8f0;border-radius:13px;padding:18px 20px;box-shadow:0 4px 16px rgba(36,30,58,.025)}
+.finder-admin-shell .p5-summary span{color:#9592a3;font-size:10px;letter-spacing:.08em;font-weight:800}
+.finder-admin-shell .p5-summary b{font:760 27px var(--font-display),system-ui;color:#403850}
+.finder-admin-shell .p5-projects{background:#fff;border:1px solid #e9e8ee;border-radius:14px;overflow:hidden;box-shadow:0 8px 24px rgba(27,20,57,.025)}
+.finder-admin-shell .p5-project-tools{background:#fcfcfe;border-color:#eceaf1;padding:15px;align-items:center}
+.finder-admin-shell .p5-project-tools label{max-width:none;height:42px;flex:1;background:#f6f6fa;border:1px solid #eceaf1;color:#a1a0ac;border-radius:9px}
+.finder-admin-shell .p5-project-tools input{color:#343247;font-size:12px}.finder-admin-shell .p5-project-tools input::placeholder{color:#a7a4b1}
+.finder-admin-shell .p5-project-tools select{border:1px solid #e7e5ee;background:#fff;color:#60576b;font-size:11px;font-weight:700;min-height:41px;border-radius:9px}
+.finder-admin-shell .finder-view-toggle{flex:none}
+.finder-admin-section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:21px 19px 13px}.finder-admin-section-head strong{font:750 16px var(--font-display),system-ui;letter-spacing:-.03em;color:#434058}.finder-admin-section-head>span{font-size:11px;color:#aaa7b2}
+.finder-admin-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;padding:0 18px 22px}
+.finder-project-card{display:flex;flex-direction:column;gap:0;min-width:0;text-align:left;border:1px solid #e9e7ee;border-radius:13px;background:#fff;padding:15px;cursor:pointer;color:#504b61;transition:transform .2s,box-shadow .2s,border-color .2s}
+.finder-project-card:hover,.finder-project-card:focus-visible{transform:translateY(-3px);border-color:#c8b8e6;box-shadow:0 14px 32px rgba(70,57,98,.09);background:#fefcff}
+.finder-project-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:9px;margin-bottom:14px}
+.finder-project-card-icon{height:48px;width:48px;border-radius:13px;background:#ede4f9;color:#8561bd;display:grid;place-items:center}
+.finder-project-card-top>.on,.finder-project-card-top>.off{display:flex;gap:0;align-items:center;padding:6px 9px;border-radius:99px;font-size:10px;font-weight:800;white-space:nowrap}
+.finder-project-card-top>.on{background:#eef8f2;color:#579574!important}.finder-project-card-top>.on i{background:#62b68b}.finder-project-card-top>.off{background:#f5f3f5;color:#918d99!important}.finder-project-card-top>.off i{background:#9e9aa4}
+.finder-project-card>strong{font-size:13px;color:#363447;font-weight:800;letter-spacing:-.025em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.finder-project-client{font-size:11px;font-weight:650;color:#706b7d;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.finder-project-email{font-size:10px;color:#a8a4b3;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.finder-project-card-meta{display:flex;flex-direction:column;gap:9px;margin-top:17px;border-top:1px solid #f0eef3;padding-top:13px;font-size:10px;color:#9591a1}
+.finder-project-card-meta>span{display:flex;align-items:center;gap:8px}.finder-project-card-meta svg{color:#9a7dbf}
+.finder-project-card-open{display:flex;align-items:center;justify-content:space-between;margin-top:17px;padding:10px 11px;border:1px solid #eee9f6;background:#f7f4fc;border-radius:8px;color:#7658a8;font-size:11px;font-weight:800}
+.finder-admin-empty{padding:50px 15px 65px;display:flex;align-items:center;flex-direction:column;gap:9px;color:#a09baa}.finder-admin-empty svg{color:#a98dcf;background:#f1ebfa;padding:12px;height:62px;width:62px;border-radius:18px}.finder-admin-empty strong{font-size:13px;color:#59536a}.finder-admin-empty span{font-size:11px}
+.finder-admin-shell .p5-list-head{background:#fdfcfe;border-color:#eeeaf2;color:#aaa5b5}
+.finder-admin-shell .p5-row{color:#908c9b;border-color:#f0eef4;background:#fff}.finder-admin-shell .p5-row:hover{background:#fbf9ff}.finder-admin-shell .p5-row strong{color:#4e465c}.finder-admin-shell .p5-row span{color:#928f9d}
+.finder-admin-shell .p5-row .on{color:#63a07e!important}.finder-admin-shell .p5-row .off{color:#9a97a4!important}
+.finder-admin-shell .p5-drive-strip{background:#fdfbff;border:1px solid #eae5f1;border-radius:12px;margin-top:15px;padding:16px 18px;align-items:center}
+.finder-admin-shell .p5-drive-strip strong{color:#494259}.finder-admin-shell .p5-drive-strip div>span{color:#938d9f}.finder-admin-shell .p5-drive-strip a{background:#eae3f4;color:#7856aa;border-radius:9px;padding:10px 12px;text-decoration:none;font-size:11px;font-weight:700}
+.finder-admin-shell .p5-message,.finder-admin-shell .p5-error{color:#6f5791;background:#f4eefb;border:1px solid #e6d9f5;border-radius:10px;width:100%;padding:12px 14px;margin:0 0 13px;font-size:12px}
+.finder-admin-shell .p5-error{background:#fff2f2;color:#aa4d64;border-color:#f5dce3}
+.finder-admin-shell .p5-detail-head{padding:35px 0 25px;flex-wrap:wrap}.finder-admin-shell .p5-detail-head>button{color:#7455a9;font-weight:800;padding:10px 12px;border-radius:9px;background:#f3ecfc;font-size:11px}.finder-admin-shell .p5-detail-head>strong{background:#f1faf4;border:1px solid #e0eee4;color:#5d9679!important;border-radius:99px}
+.finder-admin-shell .p5-grid{grid-template-columns:minmax(0,1.35fr) minmax(280px,1fr);gap:14px}
+.finder-admin-shell .p5-panel{background:#fff;border:1px solid #e9e6ee;border-radius:14px;color:#4b445b;min-width:0;padding:21px;box-shadow:0 4px 15px rgba(55,45,70,.023)}
+.finder-admin-shell .p5-panel-title>div>span{color:#947eba;font-size:9px;font-weight:800}.finder-admin-shell .p5-panel-title h2{color:#393449}.finder-admin-shell .p5-panel-title>button{border:1px solid #eee9f2;border-radius:8px;padding:7px;background:#faf8ff;color:#8b78ac}
+.finder-admin-shell .p5-fields label{color:#797287}.finder-admin-shell .p5-fields input{background:#f8f7fb;color:#443d56;border-color:#e7e2ec}
+.finder-admin-shell .p5-link{border-color:#eee9f2}.finder-admin-shell .p5-link strong{color:#443f52}.finder-admin-shell .p5-link button,.finder-admin-shell .p5-actions button{background:#f5f1fa;border:1px solid #e5dcee;color:#7d60a8;border-radius:8px;min-height:38px}.finder-admin-shell .p5-actions .danger{background:#fff2f4;color:#b75d73;border-color:#f4e0e6}
+.finder-admin-shell .p5-fresh{border-color:#e8dff3;background:#f7f3fc;color:#7958ab;border-radius:9px}.finder-admin-shell .p5-fresh code{color:#69547c}
+.finder-admin-shell .p5-storage-line,.finder-admin-shell .p5-note{color:#96909e}.finder-admin-shell .p5-storage-line strong{color:#4f495f}
+.finder-admin-shell .p5-track{background:#ece8f2;border-radius:6px;height:6px}.finder-admin-shell .p5-track i{background:#8c6bbd;border-radius:6px}
+.finder-admin-shell .p5-limit{color:#746d80}.finder-admin-shell .p5-limit select{background:#f9f7fc;color:#5c4f6e;border:1px solid #e7e0f0}
+.finder-admin-shell .p5-drive>b{background:#f1eaf9;color:#9273bd}.finder-admin-shell .p5-drive strong{color:#3d394e}.finder-admin-shell .p5-drive span{color:#9f9ba9}
+.finder-admin-shell .p5-event{border-color:#f0eef4}.finder-admin-shell .p5-event strong{color:#4c4757}.finder-admin-shell .p5-event span,.finder-admin-shell .p5-event time{color:#aaa6b3}
+.finder-admin-shell .p5-modal-bg{color:#424052}.finder-admin-shell .p5-modal{background:#fff;color:#42394f;border-color:#ece7f2;box-shadow:0 32px 100px rgba(30,22,47,.3)}
+.finder-admin-shell .p5-modal>span{color:#9884b7}.finder-admin-shell .p5-modal h2{color:#393448}
+.finder-admin-shell .p5-modal label{color:#8f899c}.finder-admin-shell .p5-modal input,.finder-admin-shell .p5-modal select{background:#f9f8fc;border-color:#e6e1ed;color:#45405b}
+.finder-admin-shell .p5-modal-actions{background:#fff}.finder-admin-shell .p5-modal-actions button{background:#f5f2f8;color:#766c86;border-color:#e9e4ee}.finder-admin-shell .p5-modal-actions button.primary{background:#7958b2;color:#fff;border-color:#7958b2}
+.finder-admin-shell .p5-close{color:#8e8899}.finder-admin-shell .p5-close:hover{color:#4a405d}
+.finder-admin-shell .p5-overlay{background:rgba(245,242,251,.5)}
+.finder-admin-scrim{display:none}
+@media(max-width:1080px){.finder-admin-sidebar{width:207px}.finder-admin-workspace{padding:0 18px 25px}.finder-admin-card-grid{grid-template-columns:repeat(auto-fill,minmax(205px,1fr))}.finder-admin-shell .p5-list-head,.finder-admin-shell .p5-row{grid-template-columns:minmax(180px,1.5fr) 1fr 90px 100px 80px}}
+@media(max-width:750px){body:has(.finder-admin-shell){background:#fff!important}.p5-admin.finder-admin-shell{margin:0;min-height:100dvh;border-radius:0;border:0;box-shadow:none}
+.finder-admin-window-bar{height:44px;padding:0 15px}.finder-admin-window-title{position:static;transform:none;font-size:10px}.finder-admin-live{display:none}
+.finder-admin-shell .p5-head{padding:0 15px;height:60px}.finder-admin-sidebar{position:fixed;z-index:60;top:0;bottom:0;left:0;width:min(270px,85vw);transform:translateX(-105%);transition:transform .2s;box-shadow:10px 0 35px rgba(35,25,55,.12);padding-top:30px}.finder-admin-sidebar.open{transform:translateX(0)}
+.finder-admin-scrim{display:block;position:fixed;inset:0;z-index:59;background:rgba(28,23,42,.35);border:0}
+.finder-admin-workspace{padding:0 14px 28px}.finder-admin-mobile-toggle{display:flex;align-items:center;gap:8px;background:#f2edf8;border:1px solid #eae2f4;color:#7858af;font-size:11px;font-weight:800;border-radius:9px;min-height:37px;padding:0 12px;margin-top:15px;cursor:pointer}
+.finder-admin-shell .p5-dashboard,.finder-admin-shell .p5-detail-head{padding:22px 0}.finder-admin-shell .p5-dashboard h1,.finder-admin-shell .p5-detail-head h1{font-size:clamp(31px,7vw,42px)}
+.finder-admin-shell .p5-summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.finder-admin-shell .p5-summary>div{padding:13px}.finder-admin-shell .p5-summary b{font-size:23px}.finder-admin-shell .p5-summary span{font-size:8px}
+.finder-admin-shell .p5-project-tools{flex-wrap:wrap;padding:11px}.finder-admin-shell .p5-project-tools label{flex:1 1 100%;max-width:none}.finder-admin-shell .p5-project-tools select{flex:1}.finder-admin-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:0 11px 14px}.finder-project-card{padding:12px}.finder-project-card-top{margin-bottom:13px}.finder-project-card-meta{margin-top:12px}.finder-admin-shell .p5-grid{grid-template-columns:1fr}.finder-admin-shell .p5-activity{grid-column:auto}
+.finder-admin-shell .p5-list-head{display:none}.finder-admin-shell .p5-row{grid-template-columns:minmax(0,1fr) 100px}.finder-admin-shell .p5-row span:nth-child(2),.finder-admin-shell .p5-row span:nth-child(3),.finder-admin-shell .p5-row span:nth-child(4){display:none}
+}
+@media(max-width:460px){.finder-admin-card-grid{grid-template-columns:1fr}.finder-project-card{padding:15px}.finder-admin-shell .p5-summary>div{padding:12px 9px}.finder-admin-shell .p5-dashboard>button{width:100%;justify-content:center}.finder-admin-shell .p5-dashboard{display:block}.finder-admin-shell .p5-dashboard>button{margin-top:16px}
+.finder-admin-shell .p5-modal-bg{padding:10px}.finder-admin-shell .p5-modal{padding:17px}.finder-admin-shell .p5-modal-actions button{flex:1}.finder-admin-shell .p5-detail-head>strong{margin-top:7px}.finder-admin-shell .p5-fields{grid-template-columns:1fr}.finder-admin-shell .p5-actions{gap:8px;flex-wrap:wrap}
+}
+/* Consistent entry screen before the admin session is established. */
+.p5-admin.p5-login{color-scheme:light;background:radial-gradient(ellipse at 8% 0,#e7dcf6,transparent 45%),#f0f0f5;color:#302b41;min-height:100dvh}
+.p5-admin.p5-login .p5-brand{color:#333047}.p5-admin.p5-login .p5-brand span{color:#8c6fbe}.p5-admin.p5-login .p5-login-copy h1{color:#2e2a3e;font:760 clamp(42px,6vw,75px) var(--font-display),system-ui;letter-spacing:-.055em}.p5-admin.p5-login .p5-login-copy p{color:#908a9e;font-size:14px;line-height:1.7}
+.p5-admin.p5-login .p5-login-form{background:#fff;border:1px solid #e7e2ef;border-radius:17px;padding:30px;box-shadow:0 27px 65px rgba(53,45,74,.10);max-width:410px}
+.p5-admin.p5-login .p5-login-form label{color:#80788b;font-weight:750}.p5-admin.p5-login .p5-login-form input{background:#f8f7fb;border:1px solid #e7e2ee;color:#433c50;border-radius:9px}
+.p5-admin.p5-login .p5-login-form>button{background:#7855b0;border:1px solid #7855b0;color:#fff;border-radius:9px;font-weight:800;min-height:44px}
+.p5-admin.p5-login .p5-error{background:#ffeff0;border:1px solid #f3d4db;color:#aa5166;border-radius:8px}
+@media(max-width:760px){.p5-admin.p5-login{padding:88px 20px 40px}.p5-admin.p5-login .p5-login-form{padding:22px;margin-top:28px}}
+@media(prefers-reduced-motion:reduce){.finder-admin-shell *, .finder-admin-shell *::before,.finder-admin-shell *::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
