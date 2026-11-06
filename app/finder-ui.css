@@ -353,3 +353,19 @@ body:has(.p5-admin.p5-login){background:#f2f1f7!important;color:#353148!importan
 @media(prefers-reduced-motion:reduce){
   .p5-admin.p5-login::before,.p5-admin.p5-login .p5-login-form{animation:none!important}
 }
+
+
+/* Robust admin data-connection states. Never display zero projects when the
+   database has not yet returned a successful response. */
+.finder-admin-shell .finder-admin-error{display:flex;align-items:center;gap:11px;flex-wrap:wrap;min-height:54px}
+.finder-admin-error>svg{flex:none;color:#b66579}
+.finder-admin-error>span{flex:1;min-width:200px;line-height:1.5}
+.finder-admin-error>button,.finder-admin-data-unavailable>button{border:1px solid #e7c5d2;border-radius:9px;background:#fff;color:#a54f69;min-height:36px;padding:8px 13px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font:750 11px var(--font-body),system-ui;cursor:pointer}
+.finder-admin-error>button:disabled,.finder-admin-data-unavailable>button:disabled{opacity:.55;cursor:wait}
+.finder-admin-shell .p5-dashboard>button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.finder-admin-data-unavailable{min-height:290px;padding:38px 22px;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center}
+.finder-admin-data-unavailable>div{width:60px;height:60px;display:grid;place-items:center;border-radius:19px;background:#fff0f3;color:#b06b83;margin-bottom:14px}
+.finder-admin-data-unavailable>strong{color:#51475c;font-size:15px;font-weight:800}
+.finder-admin-data-unavailable>p{color:#9791a2;font-size:12px;line-height:1.65;max-width:350px;margin:8px auto 18px}
+.finder-admin-data-unavailable>button{border-color:#e5d9f3;color:#7657af;background:#f7f3fc}
+@media(max-width:700px){.finder-admin-error>span{min-width:100%}.finder-admin-error>button{width:100%}.finder-admin-data-unavailable{min-height:245px;padding:25px 14px}}
