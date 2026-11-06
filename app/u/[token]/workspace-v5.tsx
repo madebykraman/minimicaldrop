@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { AlertCircle, Check, ChevronLeft, ChevronRight, Download, File, FileAudio, FileImage, FileText, FileVideo, Folder, FolderPlus, Grid2X2, HardDrive, LayoutList, Loader2, Menu, MoreHorizontal, Pencil, RefreshCw, Search, Trash2, Upload, X } from 'lucide-react'
+import { AlertCircle, Check, ChevronLeft, ChevronRight, Download, File, FileAudio, FileImage, FileText, FileVideo, Folder, FolderPlus, Grid2X2, HardDrive, LayoutList, Loader2, LockKeyhole, Menu, MoreHorizontal, Pencil, RefreshCw, Search, Trash2, Upload, X } from 'lucide-react'
 import { isSafeInlineMime } from '@/lib/preview-types'
 
 type Item = { id: string; name: string; mimeType: string; sizeBytes: number; modifiedTime: string | null }
@@ -135,7 +135,7 @@ export default function WorkspaceV5({ token }: { token: string }) {
         <div className="finder-window-bar">
           <div className="finder-traffic" aria-hidden="true"><span/><span/><span/></div>
           <div className="finder-window-title"><Folder size={15}/><strong>Minimical Drop</strong><span>/</span><span>Files</span></div>
-          <span className="finder-window-secure"><ShieldIcon/> Secure workspace</span>
+          <span className="finder-window-secure"><LockKeyhole size={15}/> Secure workspace</span>
         </div>
         <div className="finder-window-body">
           {sidebarOpen && <button className="finder-sidebar-scrim" aria-label="Close navigation" onClick={() => setSidebarOpen(false)}/>}
@@ -161,8 +161,8 @@ export default function WorkspaceV5({ token }: { token: string }) {
               <span className="finder-private-label"><span/> Private link</span>
             </div>
             <div className="finder-stage-scroll">
-              <div className="finder-intro"><div><span>YOUR FILES, BEAUTIFULLY ORGANISED</span><h1>{project.name}</h1><p>Shared with <strong>{project.clientName}</strong> <span className="finder-intro-divider">·</span> Available until {new Date(project.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p></div><div className="finder-intro-chip"><ShieldIcon/><span>A private place for your project files.</span></div></div>
-              <section className="v5-workspace finder-workspace" aria-label="File manager">
+              <div className="finder-intro"><div><span>YOUR FILES, BEAUTIFULLY ORGANISED</span><h1>{project.name}</h1><p>Shared with <strong>{project.clientName}</strong> <span className="finder-intro-divider">·</span> Available until {new Date(project.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p></div><div className="finder-intro-chip"><LockKeyhole size={15}/><span>A private place for your project files.</span></div></div>
+              <section className="v5-workspace">
                 <div className="finder-toolbar">
                   <div className="finder-navigation-controls"><button className="finder-icon-button" onClick={() => void goTrail(Math.max(0,trail.length-2))} disabled={trail.length<2} aria-label="Go back"><ChevronLeft size={18}/></button><div className="v5-crumbs" aria-label="Current folder">{trail.map((item,i) => <span key={item.id}>{i > 0 && <ChevronRight size={14}/>}<button className={i === trail.length-1 ? 'active' : ''} onClick={() => void goTrail(i)}>{item.name}</button></span>)}</div></div>
                   <div className="v5-actions"><button className="v5-btn ghost" onClick={refreshFolder} aria-label="Refresh files"><RefreshCw size={16}/><span>Refresh</span></button><button className="v5-btn ghost" onClick={() => setShowFolder(true)}><FolderPlus size={17}/> New folder</button><button className="v5-btn primary" onClick={() => input.current?.click()}><Upload size={17}/> Upload files</button></div>
@@ -189,7 +189,7 @@ export default function WorkspaceV5({ token }: { token: string }) {
               </section>
               <section id="finder-storage" className="v5-storage finder-storage-card"><div className="finder-storage-icon"><HardDrive size={20}/></div><div className="finder-storage-copy"><span>SPACE USED</span><strong>{formatBytes(used)} <small>{project.storageLimitBytes ? `of ${formatBytes(project.storageLimitBytes)}` : 'used · Unlimited'}</small></strong><div className="v5-track"><i style={{width:`${usage}%`}}/></div></div><span className="finder-storage-status">{pending ? `${formatBytes(pending)} uploading` : 'Everything is up to date'}</span></section>
       {recoveries.length > 0 && <div className="v5-recovery"><RefreshCw size={15}/><div><strong>Uploads ready to resume</strong><span>{recoveries.length} interrupted upload{recoveries.length === 1 ? '' : 's'} can continue when you select the same file again.</span></div></div>}
-      {queue.length > 0 && showQueue && <section className="v5-queue"><div className="v5-queue-head"><div><span>TRANSFERS</span><strong>{queue.filter(q => q.status === 'uploading').length ? `${queue.filter(q => q.status === 'uploading').length} uploading` : 'Transfer history'}</strong></div><div><button onClick={() => setShowQueue(false)} aria-label="Hide transfer queue"><X size={15}/></button><button onClick={clearCompleted}>Clear completed</button></div></div>{queue.map(q => <div className="v5-transfer" key={q.id}><div className="v5-file-icon"><File size={16}/></div><div className="v5-transfer-main"><div><strong>{q.name}</strong><span>{formatBytes(q.size)}</span></div>{q.status === 'error' ? <p className="v5-transfer-error">{q.error || 'Upload failed'} {q.file && <button onClick={() => retryUpload(q)}>Retry</button>}</p> : <div className="v5-progress"><i style={{ width: `${q.progress * 100}%` }}/><span>{q.status === 'complete' ? 'Complete' : `${Math.round(q.progress * 100)}%`}</span></div>}</div>{q.status === 'complete' && <Check size={16}/>}</div>)}</section>}
+      {queue.length > 0 && showQueue && <section className="v5-queue" id="finder-transfers"><div className="v5-queue-head"><div><span>TRANSFERS</span><strong>{queue.filter(q => q.status === 'uploading').length ? `${queue.filter(q => q.status === 'uploading').length} uploading` : 'Transfer history'}</strong></div><div><button onClick={() => setShowQueue(false)} aria-label="Hide transfer queue"><X size={15}/></button><button onClick={clearCompleted}>Clear completed</button></div></div>{queue.map(q => <div className="v5-transfer" key={q.id}><div className="v5-file-icon"><File size={16}/></div><div className="v5-transfer-main"><div><strong>{q.name}</strong><span>{formatBytes(q.size)}</span></div>{q.status === 'error' ? <p className="v5-transfer-error">{q.error || 'Upload failed'} {q.file && <button onClick={() => retryUpload(q)}>Retry</button>}</p> : <div className="v5-progress"><i style={{ width: `${q.progress * 100}%` }}/><span>{q.status === 'complete' ? 'Complete' : `${Math.round(q.progress * 100)}%`}</span></div>}</div>{q.status === 'complete' && <Check size={16}/>}</div>)}</section>}
             </div>
           </div>
         </div>
@@ -202,6 +202,24 @@ export default function WorkspaceV5({ token }: { token: string }) {
     {preview && <div className="v5-preview" role="dialog" aria-modal="true" aria-label={preview.name}><button className="v5-preview-close" onClick={() => setPreview(null)} aria-label="Close preview"><X size={18}/></button>{preview.mimeType.startsWith('image/') && <img src={`/api/projects/${token}/files/${encodeURIComponent(preview.id)}?inline=1`} alt={preview.name}/>} {preview.mimeType.startsWith('video/') && <video src={`/api/projects/${token}/files/${encodeURIComponent(preview.id)}?inline=1`} controls autoPlay/>} {preview.mimeType.startsWith('audio/') && <audio src={`/api/projects/${token}/files/${encodeURIComponent(preview.id)}?inline=1`} controls autoPlay/>} {preview.mimeType === 'application/pdf' && <iframe src={`/api/projects/${token}/files/${encodeURIComponent(preview.id)}?inline=1`} title={preview.name}/>}<div className="v5-preview-name">{preview.name}</div></div>}
     <style>{STYLES}</style>
   </Shell>
+}
+
+function FinderCard({ item, selected, toggle, open, rename, remove, download, previewable: canPreview }: { item: Item; selected: boolean; toggle: (id: string) => void; open: () => void; rename: () => void; remove: () => void; download?: () => void; previewable?: boolean }) {
+  const isFolder = item.mimeType === FOLDER_MIME
+  const Icon = iconFor(item.mimeType)
+  return <article className={`finder-card ${selected ? 'selected' : ''}`}>
+    <div className="finder-card-top">
+      <div className={`finder-card-art ${isFolder ? 'is-folder' : item.mimeType.startsWith('image/') ? 'is-image' : item.mimeType.startsWith('video/') ? 'is-video' : item.mimeType.startsWith('audio/') ? 'is-audio' : ''}`}><Icon size={31} strokeWidth={1.55}/></div>
+      <input type="checkbox" checked={selected} onChange={() => toggle(item.id)} aria-label={`Select ${item.name}`}/>
+    </div>
+    <button className="finder-card-label" onClick={open} title={item.name}><strong>{item.name}</strong><span>{isFolder ? 'Folder' : formatBytes(item.sizeBytes)} {item.modifiedTime ? `· ${formatDate(item.modifiedTime)}` : ''}</span></button>
+    <div className="finder-card-actions">
+      <button onClick={open} aria-label={isFolder ? `Open ${item.name}` : canPreview ? `Preview ${item.name}` : `Open ${item.name}`} title={isFolder ? 'Open folder' : 'Open file'}><ChevronRight size={17}/></button>
+      {!isFolder && <button onClick={download || open} aria-label={`Download ${item.name}`} title="Download"><Download size={16}/></button>}
+      <button onClick={rename} aria-label={`Rename ${item.name}`} title="Rename"><Pencil size={16}/></button>
+      <button onClick={remove} aria-label={`Delete ${item.name}`} title="Delete"><Trash2 size={16}/></button>
+    </div>
+  </article>
 }
 
 function Row({ item, selected, toggle, open, rename, remove, download, previewable: canPreview }: { item: Item; selected: boolean; toggle: (id: string) => void; open: () => void; rename: () => void; remove: () => void; download?: () => void; previewable?: boolean }) { const Icon = iconFor(item.mimeType); return <div className="v5-row" role="row"><span><input type="checkbox" checked={selected} onChange={() => toggle(item.id)} aria-label={`Select ${item.name}`}/></span><button className="v5-name" onClick={open}><span className={`v5-icon ${item.mimeType === FOLDER_MIME ? 'folder' : ''}`}><Icon size={17}/></span><strong>{item.name}</strong></button><span>{item.mimeType === FOLDER_MIME ? 'Folder' : formatBytes(item.sizeBytes)}</span><span>{formatDate(item.modifiedTime)}</span><div className="v5-row-actions">{item.mimeType !== FOLDER_MIME && <button onClick={download || open} aria-label={`Download ${item.name}`}><Download size={14}/></button>}{canPreview && <button onClick={open} aria-label={`Preview ${item.name}`}>Preview</button>}<button onClick={rename} aria-label={`Rename ${item.name}`}><Pencil size={14}/></button><button onClick={remove} aria-label={`Delete ${item.name}`}><Trash2 size={14}/></button></div></div> }
