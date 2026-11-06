@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { isSafeInlineMime, normalizedPreviewMime } from '@/lib/preview-types'
 import { accessTokenFromRefreshToken, deleteDriveFile, downloadDriveFile, getDriveFile, renameDriveFile } from '@/lib/google-drive'
 import { getProjectByToken } from '@/lib/project-access'
 import { rateLimit } from '@/lib/rate-limit'
@@ -65,6 +66,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
     const uploads = await supabase<Array<{ id: string; name: string; mime_type: string | null; size_bytes: number; folder_id: string | null }>>(`uploads?project_id=eq.${project.id}&drive_file_id=eq.${encodeURIComponent(fileId)}&status=eq.complete&select=id,name,mime_type,size_bytes,folder_id&limit=1`)
     const upload = uploads[0]
     if (!upload) return NextResponse.json({ error: 'File not found.' }, { status: 404 })
+    // A client-supplied MIME type must never result in executable same-origin HTML or SVG.
+    if (!isSafeInlineMime(upload.mime_type)) return NextResponse.json({ error: 'This file type must be downloaded instead of previewed.' }, { status: 415 })
     if (upload.folder_id) {
       const folders = await supabase<Array<{ id: string }>>(`folders?project_id=eq.${project.id}&id=eq.${encodeURIComponent(upload.folder_id)}&select=id&limit=1`)
       if (!folders[0]) return NextResponse.json({ error: 'File is not part of this project.' }, { status: 403 })
@@ -77,10 +80,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
     const range = request.headers.get('range') || undefined
     const response = await downloadDriveFile(access.access_token, fileId, range)
     const headers = new Headers()
-    headers.set('Content-Type', upload.mime_type || 'application/octet-stream')
+    headers.set('Content-Type', normalizedPreviewMime(upload.mime_type))
     headers.set('Content-Disposition', `inline; filename="${safeFilename(upload.name)}"`)
     headers.set('Accept-Ranges', 'bytes')
-    headers.set('Cache-Control', 'private, max-age=3600, stale-while-revalidate=60')
+    headers.set('Cache-Control', 'private, no-store, max-age=0')
     headers.set('X-Content-Type-Options', 'nosniff')
     const contentLength = response.headers.get('Content-Length')
     if (contentLength) headers.set('Content-Length', contentLength)
