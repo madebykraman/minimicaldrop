@@ -1,0 +1,128 @@
+/* Minimical Drop — Finder-inspired UI layer
+   Scoped to the client workspace and admin control room. No global color resets. */
+.finder-app-shell {
+  --fd-bg:#f4f5f8; --fd-panel:#fff; --fd-line:#e7e8ee; --fd-ink:#242638;
+  --fd-sub:#8a8d9b; --fd-violet:#7456b1; --fd-violet-soft:#f0ebfa;
+  color:var(--fd-ink); color-scheme:light; min-height:100dvh;
+  padding:clamp(12px,2.7vw,36px); box-sizing:border-box;
+  background:radial-gradient(ellipse 55% 45% at 3% 2%,#e4dff3,transparent 80%),
+             radial-gradient(ellipse 48% 50% at 96% 90%,#dfe6f5,transparent 80%),#eff0f5;
+  font-family:var(--font-body),ui-sans-serif,system-ui,sans-serif;
+}
+.finder-app-shell *, .finder-app-shell *::before,.finder-app-shell *::after{box-sizing:border-box}
+.finder-app-shell button,.finder-app-shell select,.finder-app-shell input{font:inherit}
+.finder-app-shell button:focus-visible,.finder-app-shell a:focus-visible,.finder-app-shell input:focus-visible,.finder-app-shell select:focus-visible{outline:3px solid #ae97de;outline-offset:3px}
+.finder-window{max-width:1536px;min-height:calc(100dvh - clamp(24px,5.4vw,72px));margin:0 auto;border-radius:21px;overflow:hidden;background:var(--fd-panel);border:1px solid #fff;box-shadow:0 24px 60px rgba(47,44,72,.10),0 65px 130px rgba(39,36,60,.08),0 2px 10px rgba(39,36,60,.05)}
+.finder-window-bar{height:51px;display:flex;align-items:center;padding:0 22px;border-bottom:1px solid var(--fd-line);background:linear-gradient(180deg,#fdfdff,#f7f7fb);position:relative}
+.finder-traffic{display:flex;align-items:center;gap:8px;min-width:76px}.finder-traffic span{width:12px;height:12px;display:block;border-radius:50%;border:1px solid rgba(0,0,0,.06);box-shadow:inset 0 1px 2px rgba(255,255,255,.35)}.finder-traffic span:nth-child(1){background:#ff5f58}.finder-traffic span:nth-child(2){background:#ffbd2e}.finder-traffic span:nth-child(3){background:#29c840}
+.finder-window-title{display:flex;align-items:center;justify-content:center;gap:9px;position:absolute;left:50%;transform:translateX(-50%);color:#515366;font-size:12px;white-space:nowrap}.finder-window-title svg{color:#8b72bf}.finder-window-title strong{font-weight:750;letter-spacing:-.02em}.finder-window-title span{color:#a8a8b6}
+.finder-window-secure{margin-left:auto;display:flex;align-items:center;gap:6px;color:#858995;font-size:10px;font-weight:650;letter-spacing:.02em}.finder-window-secure svg{color:#8b75bf}
+.finder-window-body{display:flex;min-height:calc(100dvh - 130px);align-items:stretch}
+.finder-sidebar{width:236px;flex:none;background:linear-gradient(150deg,#f7f7fb 0%,#f2f1f7 100%);border-right:1px solid #e8e6ef;padding:26px 15px 22px;display:flex;flex-direction:column;gap:27px}
+.finder-sidebar-brand{display:flex;gap:10px;align-items:center;padding:0 12px 5px}.finder-sidebar-logo{width:36px;height:36px;background:linear-gradient(145deg,#9273c8,#7655b2);box-shadow:0 6px 16px rgba(118,85,178,.22);border-radius:11px;display:grid;place-items:center;color:#fff}
+.finder-sidebar-brand strong{display:block;color:#28263a;font:750 17px var(--font-display),system-ui;letter-spacing:-.045em}.finder-sidebar-brand span{display:block;font-size:8px;color:#9895a4;font-weight:800;letter-spacing:.11em;margin-top:2px}
+.finder-sidebar-group{display:flex;flex-direction:column;gap:5px}
+.finder-sidebar-group>span{font-size:10px;font-weight:800;letter-spacing:.09em;color:#a2a0ae;padding:0 13px;margin-bottom:7px}
+.finder-sidebar-group button{width:100%;display:flex;align-items:center;gap:12px;min-height:41px;padding:0 13px;text-align:left;border:0;border-radius:10px;background:transparent;color:#696a7a;font-size:12px;font-weight:650;cursor:pointer;transition:background .18s,color .18s,transform .18s}
+.finder-sidebar-group button svg{color:#9996ab;flex:none}.finder-sidebar-group button em{margin-left:auto;font-style:normal;font-size:10px;color:#a2a1ac;font-weight:600}.finder-sidebar-group button:hover{background:#e9e7f2;color:#383249}.finder-sidebar-group button.active{background:#e6ddf7;color:#6745a4;box-shadow:inset 0 0 0 1px rgba(133,99,191,.06)}.finder-sidebar-group button.active svg,.finder-sidebar-group button.active em{color:#7955b5}
+.finder-sidebar-spacer{flex:1;min-height:40px}
+.finder-sidebar-storage{background:rgba(255,255,255,.76);border:1px solid #e8e5ef;border-radius:14px;padding:15px}
+.finder-sidebar-storage>span{display:block;color:#9995a4;font-size:9px;font-weight:800;letter-spacing:.10em}.finder-sidebar-storage strong{display:block;color:#343043;font-size:17px;margin-top:8px;letter-spacing:-.045em}.finder-sidebar-storage small{font-size:10px;font-weight:500;color:#9996a6}.finder-sidebar-storage p{font-size:10px;color:#9e9aaa;margin:8px 0 0}
+.finder-meter{height:6px;border-radius:6px;background:#e7e2f1;margin-top:13px;overflow:hidden}.finder-meter i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#9c81d0,#6e4aa9)}
+.finder-sidebar-foot{display:flex;align-items:center;gap:7px;padding:0 5px;font-size:8px;color:#aaa8b4;letter-spacing:.06em;font-weight:700}.finder-status-dot{width:7px;height:7px;border-radius:50%;background:#4ab895;box-shadow:0 0 0 4px rgba(74,184,149,.1)}
+.finder-stage{min-width:0;flex:1;background:#fff}
+.finder-stage-top{height:64px;border-bottom:1px solid var(--fd-line);display:flex;justify-content:space-between;align-items:center;padding:0 clamp(20px,3.1vw,40px);background:rgba(255,255,255,.98)}
+.finder-stage-title{display:flex;align-items:center;gap:12px;min-width:0}.finder-stage-title span{font-size:10px;font-weight:800;letter-spacing:.12em;color:#b3b0bd}.finder-stage-title strong{font-size:13px;font-weight:750;color:#424256;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:380px}
+.finder-private-label{font-size:10px;letter-spacing:.01em;font-weight:700;display:flex;align-items:center;gap:7px;padding:8px 12px;background:#f5f7f5;border:1px solid #e6efe9;border-radius:999px;color:#648b77}.finder-private-label>span{width:6px;height:6px;border-radius:50%;background:#58bc8f}
+.finder-mobile-menu{display:none}
+.finder-stage-scroll{max-width:1320px;margin:0 auto;padding:clamp(24px,3vw,44px) clamp(18px,3vw,42px) 44px}
+.finder-intro{display:flex;gap:28px;justify-content:space-between;align-items:flex-end;margin-bottom:26px}
+.finder-intro>div:first-child>span{color:#9679c4;letter-spacing:.13em;font-size:9px;font-weight:800}
+.finder-intro h1{font-family:var(--font-display),system-ui;font-size:clamp(28px,3.4vw,44px);font-weight:750;letter-spacing:-.055em;line-height:1.18;color:#27283b;margin:8px 0 9px;overflow-wrap:anywhere}
+.finder-intro p{font-size:12px;color:#9596a4;margin:0;line-height:1.6}.finder-intro p strong{color:#505165;font-weight:700}.finder-intro-divider{margin:0 5px;color:#b2b0b9}
+.finder-intro-chip{display:flex;align-items:center;gap:10px;min-width:206px;padding:13px 15px;border:1px solid #e9e8ef;background:#fafafe;border-radius:11px;color:#89899a;font-size:11px;line-height:1.4}.finder-intro-chip svg{flex:none;color:#9a7dc7}
+.finder-app-shell .v5-workspace{border:1px solid #e9e9ef;background:#fff;border-radius:15px;overflow:hidden;box-shadow:0 12px 32px rgba(25,30,54,.035)}
+.finder-toolbar{min-height:68px;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:11px 20px;border-bottom:1px solid #eeeef3;background:#fcfcfe}
+.finder-navigation-controls{display:flex;align-items:center;gap:10px;min-width:0}
+.finder-icon-button{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:8px;border:1px solid #e7e7ee;background:#fff;color:#858399;cursor:pointer}
+.finder-icon-button:disabled{opacity:.34;cursor:default}
+.finder-app-shell .v5-crumbs{display:flex;align-items:center;max-width:600px;min-width:0;overflow-x:auto;white-space:nowrap;gap:0}.finder-app-shell .v5-crumbs>span{color:#c0bbc9}.finder-app-shell .v5-crumbs button{border:0;background:none;color:#9c9caa;padding:8px 7px;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer}.finder-app-shell .v5-crumbs button.active{color:#453e60;font-weight:800}
+.finder-app-shell .v5-actions{display:flex;gap:8px;flex:none;align-items:center}
+.finder-app-shell .v5-btn{display:flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:0 13px;border:1px solid #e5e5ee;border-radius:9px;background:#fff;color:#656477;font-size:11px;font-weight:750;white-space:nowrap;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.025)}
+.finder-app-shell .v5-btn:hover{border-color:#b9acd5;color:#674fa1;background:#faf8ff}
+.finder-app-shell .v5-btn.primary{background:#7959b3;color:#fff;border-color:#7959b3;box-shadow:0 4px 10px rgba(111,76,171,.13)}
+.finder-app-shell .v5-btn.primary:hover{background:#66449f;border-color:#66449f;color:#fff}
+.finder-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px 10px}
+.finder-app-shell .v5-search{height:41px;display:flex;align-items:center;gap:9px;flex:1;max-width:415px;border-radius:10px;background:#f7f7fa;border:1px solid #ededf2;padding:0 13px;color:#a1a0af}
+.finder-app-shell .v5-search:focus-within{border-color:#c7b4e5;box-shadow:0 0 0 3px rgba(129,92,187,.08)}
+.finder-app-shell .v5-search input{flex:1;min-width:0;background:transparent;color:#34334c;font-size:12px;outline:none;border:0}.finder-app-shell .v5-search input::placeholder{color:#a2a1ae}.finder-app-shell .v5-search button{border:0;background:none;color:#9492a4;padding:5px;cursor:pointer}
+.finder-tools-right{display:flex;align-items:center;gap:11px}
+.finder-app-shell .v5-sort{height:40px;border:1px solid #eaeaf0;border-radius:9px;background:#fff;display:flex;align-items:center;padding:0 8px 0 10px;gap:9px}
+.finder-app-shell .v5-sort span{font-size:10px;color:#a4a3af;white-space:nowrap;font-weight:700}.finder-app-shell .v5-sort select{background:transparent;border:0;outline:0;color:#575369;font-size:11px;font-weight:750;min-width:100px;max-width:150px}
+.finder-view-toggle{display:flex;align-items:center;border:1px solid #e6e6ed;background:#f6f5f9;border-radius:10px;padding:3px;gap:2px}
+.finder-view-toggle button{height:32px;width:35px;display:grid;place-items:center;border:0;background:none;border-radius:7px;color:#aaa7b7;cursor:pointer}
+.finder-view-toggle button.active{background:#fff;color:#7651aa;box-shadow:0 1px 5px rgba(37,37,51,.11)}
+.finder-app-shell .v5-dropzone.finder-dropzone{margin:8px 20px 0;min-height:83px;display:flex;align-items:center;justify-content:flex-start;gap:14px;padding:14px 17px;border:1px dashed #cabbe5;background:linear-gradient(110deg,#fcfaff,#f9f7fd);border-radius:11px;color:#635082;cursor:default}
+.finder-app-shell .v5-dropzone.dragging{background:#eae0fa;border-color:#825fba}
+.finder-drop-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:#eee7f8;color:#855fb6;flex:none}
+.finder-dropzone strong{display:block;color:#625479;font-size:12px;font-weight:800}.finder-dropzone span{display:block;margin:4px 0 0;font-size:10px;color:#9a8dab}.finder-drop-hint{margin-left:auto!important;font-size:10px!important;color:#a7a0b1!important;white-space:nowrap}
+.finder-files-head{display:flex;align-items:center;justify-content:space-between;padding:23px 22px 14px;gap:12px}
+.finder-files-head>div{display:flex;align-items:baseline;gap:11px;min-width:0}.finder-files-head strong{font:750 16px var(--font-display),system-ui;color:#35344a;letter-spacing:-.035em}.finder-files-head span{font-size:10px;color:#a5a4b0}
+.finder-files-head>button{border:0;background:transparent;color:#8060b4;font-size:11px;font-weight:750;cursor:pointer}
+.finder-file-content{padding-bottom:24px;min-height:285px}
+.finder-file-group{padding:0 21px 24px}.finder-file-group>header{display:flex;gap:9px;align-items:center;margin:6px 2px 15px;color:#777687}.finder-file-group>header svg{color:#9477c3}.finder-file-group>header strong{font-size:12px;color:#676477;font-weight:800}.finder-file-group>header span{margin-left:auto;color:#aeaeb8;font-size:10px}
+.finder-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(166px,1fr));gap:13px}
+.finder-card{min-width:0;border:1px solid #e9e8ef;border-radius:13px;background:#fff;padding:11px 11px 9px;box-shadow:0 2px 7px rgba(49,47,65,.025);transition:transform .18s,border-color .18s,box-shadow .18s}
+.finder-card:hover,.finder-card:focus-within{border-color:#cfbfeb;box-shadow:0 9px 22px rgba(78,65,105,.09);transform:translateY(-2px)}.finder-card.selected{border-color:#9d81ce;background:#fbf8ff;box-shadow:0 0 0 2px rgba(145,113,201,.13)}
+.finder-card-top{height:106px;position:relative;display:grid;place-items:center;background:linear-gradient(145deg,#f5f2fa,#faf9fd);border-radius:9px;overflow:hidden}
+.finder-card-art{width:69px;height:69px;display:grid;place-items:center;border-radius:18px;background:#ebe5f7;color:#9174be}
+.finder-card-art.is-folder{background:linear-gradient(145deg,#e6d8fa,#d8c9f2);color:#7450ac;box-shadow:0 6px 14px rgba(110,76,173,.13)}
+.finder-card-art.is-image{background:#e3eef9;color:#7297c8}.finder-card-art.is-video{background:#fbe8ef;color:#ca839d}.finder-card-art.is-audio{background:#e4f3ef;color:#69a994}
+.finder-card-top input{position:absolute;top:9px;left:9px;width:16px;height:16px;accent-color:#7955b5;cursor:pointer;opacity:.35}
+.finder-card:hover .finder-card-top input,.finder-card.selected .finder-card-top input,.finder-card-top input:focus-visible{opacity:1}
+.finder-card-label{padding:11px 1px 8px;display:block;width:100%;text-align:left;border:0;background:none;cursor:pointer;min-height:54px}
+.finder-card-label strong{font-size:11px;color:#3a394c;font-weight:800;line-height:1.4;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.finder-card-label span{display:block;font-size:10px;color:#a2a0ab;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.finder-card-actions{display:flex;justify-content:space-between;gap:3px;border-top:1px solid #f0eef4;padding:7px 0 0}
+.finder-card-actions button{flex:1;display:grid;place-items:center;height:31px;border:0;border-radius:7px;background:none;color:#a4a0b1;cursor:pointer}
+.finder-card-actions button:hover{background:#f0ebf8;color:#7653af}
+.finder-app-shell .v5-list-head,.finder-app-shell .v5-row{grid-template-columns:42px minmax(180px,1fr) 104px 132px 158px}
+.finder-app-shell .v5-list-head{height:40px;border-color:#f0edf3;background:#fbfafd;color:#9c9aaa}
+.finder-app-shell .v5-row{color:#8b8999;border-color:#f0edf3;background:#fff;min-height:64px}
+.finder-app-shell .v5-row:hover{background:#faf8fe}.finder-app-shell .v5-name{color:#34334a}.finder-app-shell .v5-icon{background:#f0eaf9;color:#9577bd}.finder-app-shell .v5-row-actions button{color:#a3a0b0}.finder-app-shell .v5-row-actions button:hover{background:#ede7f7;color:#7853b4}
+.finder-app-shell input[type=checkbox]{accent-color:#7655b2}
+.finder-app-shell .v5-selection{margin:13px 20px 0;min-height:49px;padding:10px 14px;background:#f4effa;border:1px solid #e6dcf3;border-radius:9px;color:#664b8c}
+.finder-app-shell .v5-selection button{background:#fff;color:#74549e;border:1px solid #e3d7f0;border-radius:7px;height:33px;padding:0 11px;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;cursor:pointer}
+.finder-app-shell .v5-selection button.danger{color:#b25d70}
+.finder-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:230px;padding:25px;text-align:center;color:#9995a7}
+.finder-empty>div{display:grid;place-items:center;width:65px;height:65px;border-radius:20px;background:#f1edf9;color:#9a82c2;margin-bottom:14px}.finder-empty strong{font-size:14px;color:#494459}.finder-empty p{font-size:11px;margin:8px 0 16px}.finder-empty button{display:flex;gap:7px;align-items:center;border:0;background:#7b59b2;color:#fff;border-radius:8px;padding:9px 13px;cursor:pointer;font-size:11px}
+.finder-app-shell .v5-storage.finder-storage-card{display:flex;align-items:center;gap:14px;border:1px solid #e9e9f0;border-radius:12px;background:#fff;margin-top:15px;padding:16px 18px;color:#656477}
+.finder-storage-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#f1ecfa;color:#8461bb;flex:none}.finder-storage-copy{flex:1;min-width:0}.finder-storage-copy>span{font-size:9px;letter-spacing:.1em;color:#9b96aa;font-weight:800}.finder-storage-copy strong{font-size:15px;color:#454057;font-weight:800;margin-top:3px}.finder-storage-copy small{font-size:11px;color:#9993a3;font-weight:550}.finder-storage-copy .v5-track{height:6px;border-radius:5px;margin-top:10px;background:#ede8f6}.finder-storage-copy .v5-track i{border-radius:5px;background:#8d69c2}
+.finder-storage-status{font-size:10px;color:#8c8798;white-space:nowrap}
+.finder-app-shell .v5-recovery,.finder-app-shell .v5-queue{border:1px solid #e6e2ee;border-radius:12px;background:#fff;color:#8d6cb5;margin-top:15px}
+.finder-app-shell .v5-recovery strong,.finder-app-shell .v5-queue-head strong,.finder-app-shell .v5-transfer-main strong{color:#444057}
+.finder-app-shell .v5-recovery span,.finder-app-shell .v5-queue-head span,.finder-app-shell .v5-transfer-main span{color:#9b97a4}.finder-app-shell .v5-queue-head{border-color:#eeeaf3}
+.finder-app-shell .v5-transfer{border-color:#eeeaf3}.finder-app-shell .v5-file-icon{background:#f2eef9;color:#8b6abc}.finder-app-shell .v5-progress{background:#efeaf6}.finder-app-shell .v5-progress i{background:#8665bc}
+.finder-app-shell .v5-recovery-resume{background:#805fb6!important;color:#fff!important;border-color:#805fb6!important}
+.finder-app-shell .v5-recovery-head{border-color:#eeeaf2}
+.finder-app-shell .v5-recovery-file strong{color:#514c65}.finder-app-shell .v5-recovery-file span,.finder-app-shell .v5-recovery-file em{color:#9791a1}
+.v5-shell .v5-show-queue{background:#fff;color:#624a84;border-color:#ddd2ee;border-radius:12px}
+.v5-shell .v5-modal{background:#fff;color:#34334a;border-color:#e9e3f0;box-shadow:0 40px 100px rgba(19,15,40,.18)}
+.v5-shell .v5-modal h2{color:#323144}.v5-shell .v5-modal-field{color:#827b91}.v5-shell .v5-modal-field input{background:#f7f6fa;color:#343245;border-color:#ddd6e9}
+.v5-shell .v5-modal-actions button{background:#f5f2fa;color:#584b69;border-color:#e8e1f1}
+.v5-shell .v5-modal-actions button.primary{background:#7957b3;color:#fff;border-color:#7957b3}.v5-shell .v5-modal-actions button.danger{background:#ad5774;color:#fff;border-color:#ad5774}
+.v5-shell .v5-delete-copy{color:#706c7c}.v5-shell .v5-delete-copy strong{color:#363246}
+.v5-shell .v5-preview{background:rgba(24,20,38,.98)}
+.finder-sidebar-scrim{display:none}
+@media(max-width:1160px){.finder-sidebar{width:206px}.finder-intro-chip{display:none}.finder-toolbar{flex-wrap:wrap}.finder-app-shell .v5-crumbs{max-width:420px}.finder-file-group{padding:0 15px 22px}.finder-card-grid{grid-template-columns:repeat(auto-fill,minmax(158px,1fr))}}
+@media(max-width:860px){.finder-app-shell{padding:10px}.finder-window{min-height:calc(100dvh - 20px);border-radius:15px}.finder-window-title{position:static;transform:none}.finder-window-bar{justify-content:space-between}.finder-window-secure{display:none}.finder-sidebar{width:202px}.finder-stage-scroll{padding:24px 16px}.finder-stage-top{padding:0 17px}.finder-intro h1{font-size:30px}.finder-app-shell .v5-actions .ghost>span{display:none}.finder-app-shell .v5-crumbs{max-width:320px}.finder-files-head{padding:20px 16px 13px}.finder-tools{padding:12px 15px}}
+@media(max-width:700px){.finder-app-shell{padding:0;background:#fff}.finder-window{border-radius:0;min-height:100dvh;border:0;box-shadow:none}.finder-window-bar{height:43px;padding:0 15px}.finder-window-title{font-size:11px}.finder-traffic{min-width:68px;gap:6px}.finder-traffic span{width:10px;height:10px}
+.finder-sidebar{position:fixed;z-index:60;left:0;top:0;bottom:0;width:min(275px,86vw);box-shadow:10px 0 36px rgba(42,35,63,.1);transform:translateX(-105%);transition:transform .22s;padding-top:32px}.finder-sidebar.is-open{transform:translateX(0)}.finder-sidebar-scrim{display:block;position:fixed;inset:0;z-index:59;background:rgba(31,24,49,.35);border:0;width:100%;height:100%}
+.finder-mobile-menu{display:grid;place-items:center;width:37px;height:37px;border:0;border-radius:8px;background:#f3f1f7;color:#726390;cursor:pointer}.finder-stage-top{height:60px;justify-content:flex-start;gap:13px}.finder-stage-title{flex:1}.finder-stage-title span{display:none}.finder-stage-title strong{font-size:13px;max-width:45vw}.finder-private-label{font-size:9px;padding:6px 9px}
+.finder-stage-scroll{padding:22px 11px 48px}.finder-intro{margin:0 4px 18px}.finder-intro h1{font-size:clamp(26px,7vw,34px)}.finder-intro p{font-size:11px}
+.finder-toolbar{padding:12px;gap:12px;align-items:stretch}.finder-navigation-controls{width:100%}.finder-app-shell .v5-crumbs{max-width:calc(100vw - 82px)}.finder-app-shell .v5-actions{width:100%}.finder-app-shell .v5-actions .v5-btn{flex:1;min-width:0;padding:0 8px}.finder-app-shell .v5-actions .ghost>span{display:inline}.finder-tools{flex-direction:column;align-items:stretch;padding:11px}.finder-app-shell .v5-search{max-width:none;width:100%;flex:none}.finder-tools-right{justify-content:space-between}.finder-app-shell .v5-sort{flex:1}.finder-app-shell .v5-sort select{flex:1}
+.finder-app-shell .v5-dropzone.finder-dropzone{margin:5px 11px 0;min-height:72px;padding:11px}.finder-drop-hint{display:none!important}.finder-files-head{padding:19px 13px 12px}.finder-file-group{padding:0 12px 20px}.finder-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.finder-card{padding:9px}.finder-card-top{height:95px}.finder-card-art{height:59px;width:59px}.finder-card-actions button{min-height:34px}.finder-app-shell .v5-list-head{display:none}.finder-app-shell .v5-row{grid-template-columns:28px minmax(0,1fr);padding:10px}.finder-app-shell .v5-row-actions{grid-column:2/-1;margin-left:0}.finder-app-shell .v5-row-actions button{min-height:39px;min-width:39px}
+.finder-app-shell .v5-storage.finder-storage-card{margin-top:12px;padding:13px;flex-wrap:wrap}.finder-storage-status{width:100%;padding-left:54px}.finder-app-shell .v5-selection{margin:10px 11px 0}.finder-app-shell .v5-selection>div{flex-wrap:wrap}
+}
+@media(max-width:390px){.finder-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.finder-window-title span{display:none}.finder-app-shell .v5-actions .v5-btn{font-size:10px;gap:5px}.finder-app-shell .v5-actions .ghost>span{display:none}.finder-card-label strong{font-size:10px}.finder-view-toggle button{width:32px}.finder-stage-title strong{max-width:120px}}
+@media(prefers-reduced-motion:reduce){.finder-app-shell *, .finder-app-shell *::before,.finder-app-shell *::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
