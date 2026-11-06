@@ -26,6 +26,10 @@ const checks = [
   ['Studio project card and list controls', adminPage.includes('finder-project-card') && adminPage.includes('changeProjectView')],
   ['Responsive Finder breakpoints and accessible focus', finderCss.includes('@media(max-width:700px)') && finderCss.includes(':focus-visible')],
   ['Finder styles imported for all surfaces', layout.includes("import './finder-ui.css'")],
+  ['Minimal client shell and on-demand details', workspace.includes('finder-project-details') && workspace.includes('finder-mobile-menu')],
+  ['Card actions stay available in a menu', workspace.includes('finder-card-more') && workspace.includes('finder-card-actions')],
+  ['Delivery updates are collapsible', fs.readFileSync('app/u/[token]/delivery-panel.tsx','utf8').includes('drop-delivery-more')],
+  ['Client and admin skeletons are present', workspace.includes('finder-loading-window') && adminPage.includes('finder-admin-loading')],
   ['Dashboard distinguishes unavailable data from an empty list', adminPage.includes('projectsLoaded') && adminPage.includes('finder-admin-data-unavailable')],
   ['Project listing is read-only and never fetches refresh tokens', projectRead.length > 0 && !/method:\s*['"](?:PATCH|DELETE|POST)/.test(projectRead) && !projectRead.includes('refresh_token')],
 ]

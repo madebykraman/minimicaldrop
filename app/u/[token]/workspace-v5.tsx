@@ -95,7 +95,7 @@ export default function WorkspaceV5({ token, deliveryPanel }: { token: string; d
   const folders = visible.filter(item => item.mimeType === FOLDER_MIME); const files = visible.filter(item => item.mimeType !== FOLDER_MIME); const selectedItems = items.filter(item => selected.includes(item.id)); const selectedFiles = selectedItems.filter(item => item.mimeType !== FOLDER_MIME)
   const reserved = used + pending; const usage = project?.storageLimitBytes ? Math.min(100, reserved / project.storageLimitBytes * 100) : 0; const isRoot = folderId === rootId
 
-  async function openFolder(item: Item) { await load(item.id); setTrail(prev => [...prev, { id: item.id, name: item.name }]); setSelected([]) }
+  async function openFolder(item: Item) { await load(item.id); setNavScope('all'); setTrail(prev => [...prev, { id: item.id, name: item.name }]); setSelected([]) }
   async function goTrail(index: number) { const target = trail[index]; if (!target) return; await load(target.id === rootId ? undefined : target.id); setTrail(prev => prev.slice(0, index + 1)); setSelected([]) }
   async function createFolder() { const name = folderName.trim(); if (!name) return; setBusy(true); try { await jsonFetch(`/api/projects/${token}/folders`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, parentId: folderId || undefined }) }); setFolderName(''); setShowFolder(false); await load(folderId || undefined) } catch (e) { setError(e instanceof Error ? e.message : 'Unable to create folder') } finally { setBusy(false) } }
 
@@ -125,8 +125,8 @@ export default function WorkspaceV5({ token, deliveryPanel }: { token: string; d
 
   useEffect(() => { const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setDialog(null); setPreview(null); setShowFolder(false); setSidebarOpen(false) } if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); document.getElementById('drop-search')?.focus() } }; window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey) }, [])
 
-  if (loading && !project) return <Shell><div className="v5-loading"><Loader2 className="v5-spin" size={20}/><span>Opening your private project space</span></div></Shell>
-  if (error && !project) return <Shell><div className="v5-error"><AlertCircle size={28}/><h2>Upload space unavailable</h2><p>{error}</p></div></Shell>
+  if (loading && !project) return <Shell><div className="finder-app-shell"><div className="finder-loading-window" role="status" aria-live="polite" aria-label="Loading files"><div className="finder-loading-bar"/><div className="finder-loading-content"><span className="finder-loading-line short"/><span className="finder-loading-line title"/><span className="finder-loading-line medium"/><div className="finder-loading-grid"><i/><i/><i/><i/></div><p>Opening your files…</p></div></div></div></Shell>
+  if (error && !project) return <Shell><div className="finder-app-shell"><section className="finder-unavailable" role="alert"><AlertCircle size={28}/><h2>Files unavailable</h2><p>{error}</p><button type="button" onClick={() => void load()}>Try again</button></section></div></Shell>
   if (!project) return null
 
 
@@ -136,7 +136,7 @@ export default function WorkspaceV5({ token, deliveryPanel }: { token: string; d
         <div className="finder-window-bar">
           <div className="finder-traffic" aria-hidden="true"><span/><span/><span/></div>
           <div className="finder-window-title"><Folder size={15}/><strong>Minimical Drop</strong><span>/</span><span>Files</span></div>
-          <span className="finder-window-secure"><LockKeyhole size={15}/> Secure workspace</span>
+          <span className="finder-window-secure"><LockKeyhole size={15}/> Private</span>
         </div>
         <div className="finder-window-body">
           {sidebarOpen && <button className="finder-sidebar-scrim" aria-label="Close navigation" onClick={() => setSidebarOpen(false)}/>}
@@ -157,24 +157,24 @@ export default function WorkspaceV5({ token, deliveryPanel }: { token: string; d
           </aside>
           <div className="finder-stage">
             <div className="finder-stage-top">
-              <button className="finder-mobile-menu" onClick={() => setSidebarOpen(true)} aria-label="Open navigation" aria-expanded={sidebarOpen} aria-controls="finder-navigation"><Menu size={20}/></button>
-              <div className="finder-stage-title"><span>CLIENT SPACE</span><strong>{project.name}</strong></div>
-              <span className="finder-private-label"><span/> Private link</span>
+              <button className="finder-mobile-menu" onClick={() => setSidebarOpen(open => !open)} aria-label={sidebarOpen ? 'Close navigation' : 'Open navigation'} aria-expanded={sidebarOpen} aria-controls="finder-navigation"><Menu size={20}/></button>
+              <div className="finder-stage-title"><strong>Files</strong></div>
+              <span className="finder-private-label"><LockKeyhole size={13}/> Private space</span>
             </div>
             <div className="finder-stage-scroll">
-              <div className="finder-intro"><div><span>YOUR FILES, BEAUTIFULLY ORGANISED</span><h1>{project.name}</h1><p>Shared with <strong>{project.clientName}</strong> <span className="finder-intro-divider">·</span> Available until {new Date(project.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p></div><div className="finder-intro-chip"><LockKeyhole size={15}/><span>A private place for your project files.</span></div></div>
+              <div className="finder-intro"><div><h1>{project.name}</h1><p>Files shared with {project.clientName}</p></div></div>
               {deliveryPanel}
               <section className="v5-workspace">
                 <div className="finder-toolbar">
                   <div className="finder-navigation-controls"><button className="finder-icon-button" onClick={() => void goTrail(Math.max(0,trail.length-2))} disabled={trail.length<2} aria-label="Go back"><ChevronLeft size={18}/></button><div className="v5-crumbs" aria-label="Current folder">{trail.map((item,i) => <span key={item.id}>{i > 0 && <ChevronRight size={14}/>}<button className={i === trail.length-1 ? 'active' : ''} onClick={() => void goTrail(i)}>{item.name}</button></span>)}</div></div>
-                  <div className="v5-actions"><button className="v5-btn ghost" onClick={refreshFolder} aria-label="Refresh files"><RefreshCw size={16}/><span>Refresh</span></button><button className="v5-btn ghost" onClick={() => setShowFolder(true)}><FolderPlus size={17}/> New folder</button><button className="v5-btn primary" onClick={() => input.current?.click()}><Upload size={17}/> Upload files</button></div>
+                  <div className="v5-actions"><button className="v5-btn ghost" onClick={refreshFolder} aria-label="Refresh files" title="Refresh files"><RefreshCw size={16}/></button><button className="v5-btn ghost" onClick={() => setShowFolder(true)}><FolderPlus size={17}/> New folder</button><button className="v5-btn primary" onClick={() => input.current?.click()}><Upload size={17}/> Upload files</button></div>
                 </div>
                 <div className="finder-tools">
                   <label className="v5-search"><Search size={18}/><input id="drop-search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search files and folders…" aria-label="Search files and folders"/>{search && <button aria-label="Clear search" onClick={() => setSearch('')}><X size={15}/></button>}</label>
                   <div className="finder-tools-right"><label className="v5-sort"><span>Sort by</span><select value={sort} onChange={e => { setSort(e.target.value as typeof sort); if(navScope==='recent') setNavScope('all') }} aria-label="Sort items"><option value="name">Name</option><option value="newest">Recently modified</option><option value="size">File size</option></select></label><div className="finder-view-toggle" role="group" aria-label="Display mode"><button className={viewMode==='grid'?'active':''} onClick={()=>changeView('grid')} aria-label="Grid view" aria-pressed={viewMode==='grid'} title="Grid view"><Grid2X2 size={17}/></button><button className={viewMode==='list'?'active':''} onClick={()=>changeView('list')} aria-label="List view" aria-pressed={viewMode==='list'} title="List view"><LayoutList size={17}/></button></div></div>
                 </div>
                 <input ref={input} hidden type="file" multiple onChange={e => addFiles(e.target.files)}/>
-                <div className={`v5-dropzone finder-dropzone ${dragging ? 'dragging' : ''}`} onDragOver={e => {e.preventDefault();setDragging(true)}} onDragLeave={() => setDragging(false)} onDrop={e => {e.preventDefault();setDragging(false);addFiles(e.dataTransfer.files)}}><div className="finder-drop-icon"><Upload size={20}/></div><div><strong>{dragging ? 'Release to upload your files' : 'Drop files to upload'}</strong><span>Drag and drop here, or use Upload files above</span></div><span className="finder-drop-hint">Supports multiple files</span></div>
+                <div className={`v5-dropzone finder-dropzone ${dragging ? 'dragging' : ''}`} onDragOver={e => {e.preventDefault();setDragging(true)}} onDragLeave={() => setDragging(false)} onDrop={e => {e.preventDefault();setDragging(false);addFiles(e.dataTransfer.files)}}><div className="finder-drop-icon"><Upload size={18}/></div><div><strong>{dragging ? 'Release to upload' : 'Drop files here to upload'}</strong></div></div>
                 {selected.length > 0 && <div className="v5-selection"><span><strong>{selected.length}</strong> selected</span><div>{selectedFiles.length > 0 && <button onClick={bulkDownload}><Download size={15}/> Download {selectedFiles.length > 1 ? 'files' : 'file'}</button>}<button className="danger" onClick={() => void bulkDelete()} disabled={busy}><Trash2 size={15}/> Delete</button><button onClick={() => setSelected([])}>Clear</button></div></div>}
                 {error && <div className="finder-inline-error" role="alert"><AlertCircle size={16}/><span>{error}</span><button onClick={() => setError('')} aria-label="Dismiss error"><X size={16}/></button></div>}
                 <div className="finder-files-head"><div><strong>{navScope==='folders'?'Folders':navScope==='recent'?'Recently modified':'All files'}</strong><span>{visible.length} {visible.length===1?'item':'items'} {loading ? '· Refreshing…' : ''}</span></div>{visible.length > 0 && <button onClick={toggleAll}>{selected.length===visible.length?'Clear selection':'Select all'}</button>}</div>
@@ -190,7 +190,7 @@ export default function WorkspaceV5({ token, deliveryPanel }: { token: string; d
                   {!visible.length && <div className="finder-empty"><div><Folder size={32}/></div><strong>{search?'No matching files':navScope==='folders'?'No folders here':'This folder is empty'}</strong><p>{search?'Try a different search term.':'Create a folder or upload files to get started.'}</p><button onClick={()=>input.current?.click()}><Upload size={16}/> Upload files</button></div>}
                 </div>
               </section>
-              <section id="finder-storage" className="v5-storage finder-storage-card"><div className="finder-storage-icon"><HardDrive size={20}/></div><div className="finder-storage-copy"><span>SPACE USED</span><strong>{formatBytes(used)} <small>{project.storageLimitBytes ? `of ${formatBytes(project.storageLimitBytes)}` : 'used · Unlimited'}</small></strong><div className="v5-track"><i style={{width:`${usage}%`}}/></div></div><span className="finder-storage-status">{pending ? `${formatBytes(pending)} uploading` : 'Everything is up to date'}</span></section>
+              <details id="finder-storage" className="finder-project-details"><summary><HardDrive size={16}/> Project details <ChevronRight size={15} className="finder-details-arrow"/></summary><div className="finder-project-details-content"><p>Available until {new Date(project.expiresAt).toLocaleDateString('en-IN', { day:'numeric',month:'long',year:'numeric' })}</p><div><span>Storage</span><strong>{formatBytes(used)} {project.storageLimitBytes ? `/ ${formatBytes(project.storageLimitBytes)}` : 'used'}</strong></div><div className="finder-project-meter"><i style={{width:`${usage}%`}}/></div>{pending > 0 && <p>{formatBytes(pending)} uploading</p>}</div></details>
       {recoveries.length > 0 && <div className="v5-recovery"><RefreshCw size={15}/><div><strong>Uploads ready to resume</strong><span>{recoveries.length} interrupted upload{recoveries.length === 1 ? '' : 's'} can continue when you select the same file again.</span></div></div>}
       {showQueue && <section className="v5-queue" id="finder-transfers"><div className="v5-queue-head"><div><span>TRANSFERS</span><strong>{queue.filter(q => q.status === 'uploading').length ? `${queue.filter(q => q.status === 'uploading').length} uploading` : 'Transfer history'}</strong></div><div><button onClick={() => setShowQueue(false)} aria-label="Hide transfer queue"><X size={15}/></button><button onClick={clearCompleted}>Clear completed</button></div></div>{queue.length === 0 && <div className="finder-empty-transfers">No transfers yet. Uploaded files will appear here.</div>}{queue.map(q => <div className="v5-transfer" key={q.id}><div className="v5-file-icon"><File size={16}/></div><div className="v5-transfer-main"><div><strong>{q.name}</strong><span>{formatBytes(q.size)}</span></div>{q.status === 'error' ? <p className="v5-transfer-error">{q.error || 'Upload failed'} {q.file && <button onClick={() => retryUpload(q)}>Retry</button>}</p> : <div className="v5-progress"><i style={{ width: `${q.progress * 100}%` }}/><span>{q.status === 'complete' ? 'Complete' : `${Math.round(q.progress * 100)}%`}</span></div>}</div>{q.status === 'complete' && <Check size={16}/>}</div>)}</section>}
             </div>
@@ -216,12 +216,12 @@ function FinderCard({ item, selected, toggle, open, rename, remove, download, pr
       <input type="checkbox" checked={selected} onChange={() => toggle(item.id)} aria-label={`Select ${item.name}`}/>
     </div>
     <button className="finder-card-label" onClick={open} title={item.name}><strong>{item.name}</strong><span>{isFolder ? 'Folder' : formatBytes(item.sizeBytes)} {item.modifiedTime ? `· ${formatDate(item.modifiedTime)}` : ''}</span></button>
-    <div className="finder-card-actions">
-      <button onClick={open} aria-label={isFolder ? `Open ${item.name}` : canPreview ? `Preview ${item.name}` : `Open ${item.name}`} title={isFolder ? 'Open folder' : 'Open file'}><ChevronRight size={17}/></button>
-      {!isFolder && <button onClick={download || open} aria-label={`Download ${item.name}`} title="Download"><Download size={16}/></button>}
-      <button onClick={rename} aria-label={`Rename ${item.name}`} title="Rename"><Pencil size={16}/></button>
-      <button onClick={remove} aria-label={`Delete ${item.name}`} title="Delete"><Trash2 size={16}/></button>
-    </div>
+    <details className="finder-card-more"><summary title={`More actions for ${item.name}`} aria-label={`More actions for ${item.name}`}><MoreHorizontal size={17}/></summary><div className="finder-card-actions">
+      <button type="button" onClick={open}><ChevronRight size={15}/>{isFolder ? 'Open folder' : canPreview ? 'Preview' : 'Open'}</button>
+      {!isFolder && <button type="button" onClick={download || open}><Download size={15}/> Download</button>}
+      <button type="button" onClick={rename}><Pencil size={15}/> Rename</button>
+      <button type="button" onClick={remove} className="danger"><Trash2 size={15}/> Delete</button>
+    </div></details>
   </article>
 }
 

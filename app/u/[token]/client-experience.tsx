@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useState } from 'react'
+import { FormEvent, useEffect, useState } from 'react'
 import { Check, CircleHelp, Mail, MessageSquare, X } from 'lucide-react'
 import DropIcon from '@/components/drop-icon'
 
@@ -9,6 +9,12 @@ const SUPPORT_EMAIL = 'contact@minimical.online'
 export default function ClientExperience({ children }: { children: React.ReactNode }) {
   const [support, setSupport] = useState(false)
   const [sent, setSent] = useState(false)
+  useEffect(() => {
+    if (!support) return
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setSupport(false) }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [support])
 
   function submitSupport(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -55,6 +61,6 @@ export default function ClientExperience({ children }: { children: React.ReactNo
         </form>}
       </section>
     </div>}
-    <button className="drop-support" onClick={() => { setSupport(true); setSent(false) }}><CircleHelp size={15}/><span>Contact support</span></button>
+    <button className="drop-support" title="Contact support" aria-label="Contact support" onClick={() => { setSupport(true); setSent(false) }}><CircleHelp size={15}/><span>Contact support</span></button>
   </>
 }
