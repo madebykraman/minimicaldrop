@@ -36,6 +36,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
 
   const now = new Date().toISOString()
   await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}&project_id=eq.${project.id}&status=in.(initiated,uploading)`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'failed', session_url: null, last_activity_at: now }) })
-  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'upload.failed', file_name: upload.name, metadata: { uploadId: upload.id } }) })
+  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'upload.failed', file_name: upload.name, metadata: { uploadId: upload.id } }) }).catch(() => console.warn('Audit event write failed'))
   return NextResponse.json({ ok: true })
 }
