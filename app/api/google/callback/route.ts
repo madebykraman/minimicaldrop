@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'node:crypto'
+import { isAdmin } from '@/lib/admin-auth'
+import { ADMIN_SESSION_COOKIE, verifyGoogleOAuthState } from '@/lib/google-oauth-state'
 import { exchangeGoogleCode, getGoogleAccountEmail } from '@/lib/google-drive'
 import { supabase } from '@/lib/supabase'
 
@@ -34,14 +35,15 @@ async function consolidateDriveAccounts(email: string, refreshToken: string) {
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get('code')
   const state = request.nextUrl.searchParams.get('state') || ''
-  const stored = request.cookies.get('google_oauth_state')?.value
   const secret = process.env.SESSION_SECRET
-  if (!code || !stored || !secret) return NextResponse.json({ error: 'Invalid OAuth callback' }, { status: 400 })
+  const adminSession = request.cookies.get(ADMIN_SESSION_COOKIE)?.value || ''
 
-  const [value, signature] = state.split('.')
-  const expected = crypto.createHmac('sha256', secret).update(value || '').digest('hex')
-  const validSignature = Boolean(signature) && signature.length === expected.length && crypto.timingSafeEqual(Buffer.from(signature || ''), Buffer.from(expected))
-  if (value !== stored || !validSignature) return NextResponse.json({ error: 'OAuth state validation failed' }, { status: 400 })
+  if (!code || !secret || !adminSession || !(await isAdmin())) {
+    return NextResponse.json({ error: 'Google connection session expired. Sign in on the custom domain and try Connect Drive again.' }, { status: 400 })
+  }
+  if (!verifyGoogleOAuthState(state, adminSession, secret)) {
+    return NextResponse.json({ error: 'Google connection state expired or invalid. Start a new connection from the admin dashboard.' }, { status: 400 })
+  }
 
   const tokens = await exchangeGoogleCode(code)
   if (!tokens.refresh_token) return NextResponse.json({ error: 'Google did not return a refresh token. Reconnect with consent.' }, { status: 400 })
@@ -50,6 +52,5 @@ export async function GET(request: NextRequest) {
   await consolidateDriveAccounts(email, tokens.refresh_token)
 
   const response = NextResponse.redirect(new URL('/admin?drive=connected', request.url))
-  response.cookies.delete('google_oauth_state')
   return response
 }
