@@ -116,7 +116,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
   if (contentLength) headers.set('Content-Length', contentLength)
   const contentRange = response.headers.get('Content-Range')
   if (contentRange) headers.set('Content-Range', contentRange)
-  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'file.downloaded', file_name: file.name, metadata: { driveFileId: file.id, range: range || null } }) })
+  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'file.downloaded', file_name: file.name, metadata: { driveFileId: file.id, range: range || null } }) }).catch(() => console.warn('Audit event write failed'))
   return new Response(response.body, { status: response.status, headers })
 }
 
@@ -134,7 +134,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ to
 
   const file = await renameDriveFile(accessToken, fileId, name)
   await supabase(`uploads?id=eq.${encodeURIComponent(uploads[0].id)}&project_id=eq.${project.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ name: file.name }) })
-  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'file.renamed', file_name: file.name, metadata: { driveFileId: fileId } }) })
+  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'file.renamed', file_name: file.name, metadata: { driveFileId: fileId } }) }).catch(() => console.warn('Audit event write failed'))
   return NextResponse.json({ id: file.id, name: file.name })
 }
 
@@ -146,6 +146,6 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ t
 
   await deleteDriveFile(accessToken, fileId)
   await supabase(`uploads?id=eq.${encodeURIComponent(upload.id)}&project_id=eq.${project.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'deleted' }) })
-  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'file.deleted', file_name: upload.name, metadata: { driveFileId: fileId, deletedBytes: Number(upload.size_bytes) || 0 } }) })
+  await supabase('audit_events', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ project_id: project.id, event_type: 'file.deleted', file_name: upload.name, metadata: { driveFileId: fileId, deletedBytes: Number(upload.size_bytes) || 0 } }) }).catch(() => console.warn('Audit event write failed'))
   return NextResponse.json({ ok: true, deletedBytes: Number(upload.size_bytes) || 0 })
 }
