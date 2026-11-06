@@ -32,7 +32,7 @@ export async function POST(request:Request,{params}:{params:Promise<{projectId:s
   const token=crypto.randomBytes(32).toString('base64url')
   const rows=await supabase<Array<{id:string}>>('projects',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({name,client_name:clientName,client_email:clientEmail,access_token_hash:hashToken(token),drive_account_id:account.id,drive_folder_id:folder.id,storage_limit_bytes:source.storage_limit_bytes,expires_at:expires.toISOString(),delivery_status:'in_progress'})})
   const id=rows[0]?.id;if(!id)return NextResponse.json({error:'Duplicate project could not be created.'},{status:500})
-  await supabase('audit_events',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({project_id:id,event_type:'project.duplicated',metadata:{sourceProjectId:source.id,sourceProjectName:source.name}})})
+  await supabase('audit_events',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({project_id:id,event_type:'project.duplicated',metadata:{sourceProjectId:source.id,sourceProjectName:source.name}})}).catch(() => console.warn('Audit event write failed'))
   await supabase('audit_events',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({project_id:source.id,event_type:'project.duplicated_from',metadata:{newProjectId:id,newProjectName:name}})}).catch(()=>undefined)
   return NextResponse.json({id,token,url:`${process.env.NEXT_PUBLIC_APP_URL||''}/u/${token}`},{status:201})
 }
