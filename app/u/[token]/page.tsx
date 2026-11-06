@@ -4,5 +4,5 @@ import ClientExperience from './client-experience'
 
 export default async function ClientProjectPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
-  return <ClientExperience><DeliveryPanel token={token} /><WorkspaceV5 token={token} /></ClientExperience>
+  return <ClientExperience><WorkspaceV5 token={token} deliveryPanel={<DeliveryPanel token={token} />} /></ClientExperience>
 }
