@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AlertCircle, Check, ChevronRight, Download, File, FileAudio, FileImage, FileText, FileVideo, Folder, FolderPlus, HardDrive, Loader2, MoreHorizontal, Pencil, RefreshCw, Search, Trash2, Upload, X } from 'lucide-react'
+import { isSafeInlineMime } from '@/lib/preview-types'
 
 type Item = { id: string; name: string; mimeType: string; sizeBytes: number; modifiedTime: string | null }
 type Project = { id: string; name: string; clientName: string; expiresAt: string; storageLimitBytes: number | null }
@@ -15,7 +16,7 @@ const CHUNK = 1024 * 1024
 function formatBytes(bytes: number) { if (!bytes) return '0 B'; const units = ['B', 'KB', 'MB', 'GB', 'TB']; const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1); return `${(bytes / 1024 ** i).toFixed(i ? 1 : 0)} ${units[i]}` }
 function formatDate(value: string | null) { return value ? new Date(value).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '' }
 function iconFor(mime: string) { if (mime.startsWith('image/')) return FileImage; if (mime.startsWith('video/')) return FileVideo; if (mime.startsWith('audio/')) return FileAudio; if (mime === 'application/pdf' || mime.startsWith('text/')) return FileText; return File }
-function previewable(mime: string) { return mime.startsWith('image/') || mime.startsWith('video/') || mime.startsWith('audio/') || mime === 'application/pdf' }
+function previewable(mime: string) { return isSafeInlineMime(mime) }
 
 async function jsonFetch(url: string, init?: RequestInit) { const response = await fetch(url, init); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || 'Request failed'); return data }
 
