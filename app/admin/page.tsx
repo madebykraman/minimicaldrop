@@ -1,7 +1,7 @@
 'use client'
 
 import { FormEvent, useEffect, useMemo, useState } from 'react'
-import { Archive, Check, ChevronLeft, Copy, ExternalLink, Folder, Grid2X2, HardDrive, LayoutList, Link2, LogOut, Menu, Plus, RefreshCw, Search, Shield, X } from 'lucide-react'
+import { AlertCircle, Archive, Check, ChevronLeft, Copy, ExternalLink, Folder, Grid2X2, HardDrive, LayoutList, Link2, LogOut, Menu, Plus, RefreshCw, Search, Shield, X } from 'lucide-react'
 
 const GB = 1024 ** 3
 type Account = { id: string; label: string; google_email: string; root_folder_id: string | null }
@@ -15,10 +15,11 @@ function dateInput(v: string) { const d=new Date(v); return `${d.getFullYear()}-
 function eventLabel(v: string) { return v.replaceAll('.',' ').replace(/(^|\s)\S/g,c=>c.toUpperCase()) }
 
 export default function AdminPage() {
-  const [loggedIn,setLoggedIn]=useState(false),[checking,setChecking]=useState(true),[accounts,setAccounts]=useState<Account[]>([]),[projects,setProjects]=useState<Project[]>([]),[selectedId,setSelectedId]=useState<string|null>(null),[detail,setDetail]=useState<Detail|null>(null),[showCreate,setShowCreate]=useState(false),[loadingDetail,setLoadingDetail]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[error,setError]=useState(''),[loadError,setLoadError]=useState(false),[freshLink,setFreshLink]=useState(''),[query,setQuery]=useState(''),[status,setStatus]=useState<'all'|'active'|'inactive'>('all')
+  const [loggedIn,setLoggedIn]=useState(false),[checking,setChecking]=useState(true),[reloading,setReloading]=useState(false),[projectsLoaded,setProjectsLoaded]=useState(false),[accounts,setAccounts]=useState<Account[]>([]),[projects,setProjects]=useState<Project[]>([]),[selectedId,setSelectedId]=useState<string|null>(null),[detail,setDetail]=useState<Detail|null>(null),[showCreate,setShowCreate]=useState(false),[loadingDetail,setLoadingDetail]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[error,setError]=useState(''),[loadError,setLoadError]=useState(false),[freshLink,setFreshLink]=useState(''),[query,setQuery]=useState(''),[status,setStatus]=useState<'all'|'active'|'inactive'>('all')
   const [projectView,setProjectView]=useState<'grid'|'list'>('grid'),[adminSidebarOpen,setAdminSidebarOpen]=useState(false)
   const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[form,setForm]=useState({name:'',clientName:'',clientEmail:'',expiresAt:'',storageGb:'10'})
   async function load(){
+    setReloading(true)
     if (new URLSearchParams(window.location.search).get('drive') === 'connected') {
       setMessage('Google Drive connected successfully.')
       window.history.replaceState(null, '', '/admin')
@@ -27,6 +28,7 @@ export default function AdminPage() {
       const d = await request('/api/admin/projects')
       setLoggedIn(true)
       setLoadError(false)
+      setProjectsLoaded(true)
       setError('')
       setAccounts(d.accounts || [])
       setProjects(d.projects || [])
@@ -34,16 +36,18 @@ export default function AdminPage() {
       if (e instanceof Error && e.message === 'Unauthorized.') {
         setLoggedIn(false)
         setLoadError(false)
+        setProjectsLoaded(false)
       } else {
         setLoggedIn(true)
         setLoadError(true)
-        setError('Unable to load projects right now. The database connection may be temporarily unavailable.')
+        setError('Unable to refresh project data. Your projects have not been deleted. Check the connection and retry.')
       }
     } finally {
       setChecking(false)
+      setReloading(false)
     }
   }
-  async function loadDetail(id:string){setSelectedId(id);setLoadingDetail(true);setError('');setMessage('');try{setDetail(await request(`/api/admin/projects/${id}`))}catch(e){setError(e instanceof Error?e.message:'Unable to load project')}finally{setLoadingDetail(false)}}
+  async function loadDetail(id:string){setSelectedId(id);setLoadingDetail(true);setError('');setMessage('');try{setDetail(await request(`/api/admin/projects/${id}`))}catch(e){setError(e instanceof Error?e.message:'Unable to load project');setSelectedId(null)}finally{setLoadingDetail(false)}}
   useEffect(()=>{void load()},[])
   useEffect(()=>{try{const saved=localStorage.getItem('drop-admin-view');if(saved==='grid'||saved==='list')setProjectView(saved)}catch{}},[])
   function changeProjectView(mode:'grid'|'list'){setProjectView(mode);try{localStorage.setItem('drop-admin-view',mode)}catch{}}
@@ -66,19 +70,19 @@ export default function AdminPage() {
   function copy(v:string){void navigator.clipboard?.writeText(v);setMessage('Copied to clipboard')}
   if(checking)return <main className="p5-admin"><div className="p5-center">MINIMICAL DROP</div></main>
   if(!loggedIn)return <main className="p5-admin p5-login"><div className="p5-brand">MINIMICAL<span>DROP</span></div><div className="p5-login-copy"><span>PRIVATE INFRASTRUCTURE</span><h1>Control room.</h1><p>Manage client delivery spaces, storage and access.</p></div><form onSubmit={login} className="p5-login-form"><label>Email<input type="email" value={email} onChange={e=>setEmail(e.target.value)} autoComplete="username" required/></label><label>Password<input type="password" value={password} onChange={e=>setPassword(e.target.value)} autoComplete="current-password" required/></label>{error&&<div className="p5-error">{error}</div>}<button disabled={busy}>{busy?'Signing in…':'Enter control room'}</button></form><AdminStyles/></main>
-  return <main className="p5-admin finder-admin-shell"><div className="finder-admin-window-bar"><div className="finder-traffic" aria-hidden="true"><span/><span/><span/></div><div className="finder-admin-window-title"><Folder size={15}/> Minimical Drop <b>/</b> Studio</div><span className="finder-admin-live"><i/> Secure control room</span></div><header className="p5-head"><div className="p5-brand">MINIMICAL<span>DROP</span></div><div className="p5-head-right"><span><i/>{activeCount} active</span><button onClick={()=>void logout()} aria-label="Sign out"><LogOut size={15}/></button></div></header>
+  return <main className="p5-admin finder-admin-shell"><div className="finder-admin-window-bar"><div className="finder-traffic" aria-hidden="true"><span/><span/><span/></div><div className="finder-admin-window-title"><Folder size={15}/> Minimical Drop <b>/</b> Studio</div><span className="finder-admin-live"><i/> Secure control room</span></div><header className="p5-head"><div className="p5-brand">MINIMICAL<span>DROP</span></div><div className="p5-head-right"><span><i/>{projectsLoaded?activeCount:'—'} active</span><button onClick={()=>void logout()} aria-label="Sign out"><LogOut size={15}/></button></div></header>
     <div className="finder-admin-layout">
       {adminSidebarOpen && <button className="finder-admin-scrim" onClick={()=>setAdminSidebarOpen(false)} aria-label="Close navigation"/>}
       <aside className={`finder-admin-sidebar ${adminSidebarOpen?'open':''}`} id="finder-admin-navigation" aria-label="Admin navigation">
         <div className="finder-admin-sidebar-brand"><div><HardDrive size={19}/></div><strong>Control Room</strong><span>STUDIO WORKSPACE</span></div>
         <p>WORKSPACE</p>
-        <button className={status==='all'&&!selectedId?'active':''} onClick={()=>navigateProjects('all')}><Grid2X2 size={17}/> All projects <em>{projects.length}</em></button>
-        <button className={status==='active'&&!selectedId?'active':''} onClick={()=>navigateProjects('active')}><Folder size={17}/> Active <em>{activeCount}</em></button>
+        <button className={status==='all'&&!selectedId?'active':''} onClick={()=>navigateProjects('all')}><Grid2X2 size={17}/> All projects <em>{projectsLoaded?projects.length:'—'}</em></button>
+        <button className={status==='active'&&!selectedId?'active':''} onClick={()=>navigateProjects('active')}><Folder size={17}/> Active <em>{projectsLoaded?activeCount:'—'}</em></button>
         <button className={status==='inactive'&&!selectedId?'active':''} onClick={()=>navigateProjects('inactive')}><Archive size={17}/> Archived & inactive</button>
         <p>TOOLS</p>
         <a href="/api/google/connect"><HardDrive size={17}/> Connect Drive</a>
         <button onClick={()=>{void load();setAdminSidebarOpen(false)}}><RefreshCw size={17}/> Refresh projects</button>
-        <div className="finder-admin-sidebar-bottom"><div><span>DRIVE ACCOUNTS</span><strong>{accounts.length} connected</strong></div><span><i/> Secure workspace</span></div>
+        <div className="finder-admin-sidebar-bottom"><div><span>DRIVE ACCOUNTS</span><strong>{projectsLoaded?accounts.length:'—'} connected</strong></div><span><i/> Secure workspace</span></div>
       </aside>
       <div className="finder-admin-workspace">
         <button className="finder-admin-mobile-toggle" onClick={()=>setAdminSidebarOpen(true)} aria-expanded={adminSidebarOpen} aria-controls="finder-admin-navigation"><Menu size={19}/> Menu</button>
@@ -90,7 +94,7 @@ export default function AdminPage() {
         <div className="p5-panel"><div className="p5-panel-title"><div><span>STORAGE</span><h2>{bytes(detail.storage.usedBytes)} used</h2></div><HardDrive size={17}/></div><div className="p5-storage-line"><span>Used + pending</span><strong>{bytes(detail.storage.usedBytes+detail.storage.pendingBytes)}</strong></div><div className="p5-track"><i style={{width:`${detail.storage.limitBytes?Math.min(100,(detail.storage.usedBytes+detail.storage.pendingBytes)/detail.storage.limitBytes*100):0}%`}}/></div><div className="p5-storage-line"><span>{detail.storage.pendingBytes?`${bytes(detail.storage.pendingBytes)} reserved`:'No active uploads'}</span><strong>{bytes(detail.storage.limitBytes)}</strong></div><label className="p5-limit">Storage limit<select value={detail.storage.limitBytes?String(detail.storage.limitBytes/GB):''} onChange={e=>void update({storageLimitBytes:e.target.value?Number(e.target.value)*GB:null})}><option value="5">5 GB</option><option value="10">10 GB</option><option value="25">25 GB</option><option value="50">50 GB</option><option value="100">100 GB</option><option value="500">500 GB</option><option value="1000">1 TB</option><option value="">Unlimited</option></select></label></div>
         <div className="p5-panel"><div className="p5-panel-title"><div><span>CONNECTED STORAGE</span><h2>Google Drive</h2></div><Shield size={17}/></div><div className="p5-drive"><b>G</b><div><strong>{detail.account?.google_email||'Unavailable'}</strong><span>Project folder · {detail.project.name}</span></div></div><p className="p5-note">Drive is the storage adapter. Client access never exposes the connected account or credentials.</p></div>
         <div className="p5-panel p5-activity"><div className="p5-panel-title"><div><span>ACTIVITY</span><h2>Recent project events</h2></div></div>{detail.activity.length?<div>{detail.activity.map(a=><div className="p5-event" key={a.id}><div><strong>{a.file_name||eventLabel(a.event_type)}</strong><span>{a.file_name?eventLabel(a.event_type):'Project event'}</span></div><time>{new Date(a.created_at).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</time></div>)}</div>:<p className="p5-empty">No activity yet.</p>}</div></section>
-    </>:<><section className="p5-dashboard"><div><span>MINIMICAL DROP / CONTROL ROOM</span><h1>Projects.</h1><p>Private delivery spaces, managed from one place.</p></div><button onClick={()=>{setShowCreate(true);setError('');const d=new Date(Date.now()+30*86400000);setForm(f=>({...f,expiresAt:dateInput(d.toISOString())}))}}><Plus size={16}/> New project</button></section>{message&&<div className="p5-message" role="status"><Check size={14}/>{message}</div>}{error&&<div className="p5-error p5-wide" role="alert">{error}{loadError&&<button type="button" onClick={()=>void load()} style={{marginLeft:12}}>Retry loading</button>}</div>}<div className="p5-summary"><div><span>PROJECTS</span><b>{projects.length}</b></div><div><span>ACTIVE</span><b>{activeCount}</b></div><div><span>DRIVE ACCOUNTS</span><b>{accounts.length}</b></div></div><section className="p5-projects finder-admin-projects" aria-label="Project manager">
+    </>:<><section className="p5-dashboard"><div><span>MINIMICAL DROP / CONTROL ROOM</span><h1>Projects.</h1><p>Private delivery spaces, managed from one place.</p></div><button disabled={!projectsLoaded||loadError} title={!projectsLoaded||loadError?'Project data must load before creating a new project':undefined} onClick={()=>{setShowCreate(true);setError('');const d=new Date(Date.now()+30*86400000);setForm(f=>({...f,expiresAt:dateInput(d.toISOString())}))}}><Plus size={16}/> New project</button></section>{message&&<div className="p5-message" role="status"><Check size={14}/>{message}</div>}{error&&<div className="p5-error p5-wide finder-admin-error" role="alert"><AlertCircle size={17}/><span>{error}</span>{loadError&&<button type="button" disabled={reloading} onClick={()=>void load()}><RefreshCw size={14} className={reloading?'p5-spin':''}/>{reloading?'Retrying…':'Retry loading'}</button>}</div>}<div className="p5-summary"><div><span>PROJECTS</span><b>{projectsLoaded?projects.length:'—'}</b></div><div><span>ACTIVE</span><b>{projectsLoaded?activeCount:'—'}</b></div><div><span>DRIVE ACCOUNTS</span><b>{projectsLoaded?accounts.length:'—'}</b></div></div><section className="p5-projects finder-admin-projects" aria-label="Project manager">
   <div className="p5-project-tools">
     <label><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search projects and clients…" aria-label="Search projects"/></label>
     <select value={status} onChange={e=>setStatus(e.target.value as typeof status)} aria-label="Filter project status"><option value="all">All projects</option><option value="active">Active</option><option value="inactive">Inactive</option></select>
@@ -99,8 +103,8 @@ export default function AdminPage() {
       <button className={projectView==='list'?'active':''} onClick={()=>changeProjectView('list')} aria-label="List view" title="List view" aria-pressed={projectView==='list'}><LayoutList size={17}/></button>
     </div>
   </div>
-  <div className="finder-admin-section-head"><strong>{status==='active'?'Active projects':status==='inactive'?'Archived & inactive':'Your projects'}</strong><span>{filtered.length} {filtered.length===1?'space':'spaces'}</span></div>
-  {filtered.length ? (projectView==='grid' ?
+  <div className="finder-admin-section-head"><strong>{status==='active'?'Active projects':status==='inactive'?'Archived & inactive':'Your projects'}</strong><span>{projectsLoaded?`${filtered.length} ${filtered.length===1?'space':'spaces'}`:'Connection pending'}</span></div>
+  {!projectsLoaded ? <div className="finder-admin-data-unavailable" role="status"><div><AlertCircle size={25}/></div><strong>Project data is unavailable</strong><p>Your projects are still stored safely. The dashboard couldn't read them just now.</p><button type="button" disabled={reloading} onClick={()=>void load()}><RefreshCw size={15} className={reloading?'p5-spin':''}/>{reloading?'Reconnecting…':'Reconnect to database'}</button></div> : filtered.length ? (projectView==='grid' ?
     <div className="finder-admin-card-grid">
       {filtered.map(p=>{const active=!p.disabled_at&&new Date(p.expires_at).getTime()>Date.now();return <button className="finder-project-card" key={p.id} onClick={()=>void loadDetail(p.id)}>
         <div className="finder-project-card-top"><span className="finder-project-card-icon"><Folder size={24}/></span><span className={active?'on':'off'}><i/>{p.disabled_at?'Disabled':active?'Active':'Expired'}</span></div>
@@ -113,7 +117,7 @@ export default function AdminPage() {
     <><div className="p5-list-head"><span>PROJECT</span><span>CLIENT</span><span>STORAGE</span><span>EXPIRY</span><span>STATUS</span></div>
     {filtered.map(p=>{const active=!p.disabled_at&&new Date(p.expires_at).getTime()>Date.now();return <button className="p5-row" key={p.id} onClick={()=>void loadDetail(p.id)}><div><strong>{p.name}</strong><span>{p.client_email||'No client email'}</span></div><span>{p.client_name}</span><span>{bytes(p.storage_limit_bytes)}</span><span>{dateLabel(p.expires_at)}</span><span className={active?'on':'off'}><i/>{p.disabled_at?'Disabled':active?'Active':'Expired'}</span></button>})}</>
   ) : <div className="finder-admin-empty"><Folder size={30}/><strong>No matching projects</strong><span>Try a different search or filter.</span></div>}
-</section><section className="p5-drive-strip"><div><span>CONNECTED STORAGE</span><strong>{accounts.length} Google Drive {accounts.length===1?'account':'accounts'}</strong></div><div>{accounts.map(a=><span key={a.id}>● {a.google_email}</span>)}<a href="/api/google/connect"><Plus size={13}/> Connect Drive</a></div></section></>}
+</section><section className="p5-drive-strip"><div><span>CONNECTED STORAGE</span><strong>{projectsLoaded?`${accounts.length} Google Drive ${accounts.length===1?'account':'accounts'}`:'Storage connection pending'}</strong></div><div>{accounts.map(a=><span key={a.id}>● {a.google_email}</span>)}<a href="/api/google/connect"><Plus size={13}/> Connect Drive</a></div></section></>}
       </div>
     </div>
     {showCreate&&<div className="p5-modal-bg" onMouseDown={e=>e.target===e.currentTarget&&setShowCreate(false)}><form className="p5-modal" onSubmit={create} role="dialog" aria-modal="true" aria-labelledby="p5-create-title"><button type="button" className="p5-close" onClick={()=>setShowCreate(false)} aria-label="Close"><X size={17}/></button><span>NEW PROJECT</span><h2 id="p5-create-title">Create delivery space</h2><label>Project name<input autoFocus value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Project / campaign name" required/></label><label>Client name<input value={form.clientName} onChange={e=>setForm({...form,clientName:e.target.value})} placeholder="Client or company" required/></label><label>Client email<input type="email" value={form.clientEmail} onChange={e=>setForm({...form,clientEmail:e.target.value})} placeholder="Optional"/></label><div className="p5-modal-grid"><label>Expiry<input type="date" value={form.expiresAt} onChange={e=>setForm({...form,expiresAt:e.target.value})} required/></label><label>Storage<select value={form.storageGb} onChange={e=>setForm({...form,storageGb:e.target.value})}><option value="5">5 GB</option><option value="10">10 GB</option><option value="25">25 GB</option><option value="50">50 GB</option><option value="100">100 GB</option><option value="500">500 GB</option><option value="">Unlimited</option></select></label></div>{error&&<div className="p5-error">{error}</div>}<div className="p5-modal-actions"><button type="button" onClick={()=>setShowCreate(false)}>Cancel</button><button className="primary" disabled={busy}>{busy?'Creating…':'Create project'}</button></div></form></div>}
