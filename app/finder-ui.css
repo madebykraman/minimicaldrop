@@ -293,3 +293,63 @@ body:has(.finder-admin-shell) .admin-delivery-trigger:hover,body:has(.finder-adm
 .admin-overview-detail-meta{border-color:#eae5ee;color:#948b9c}.admin-overview-events b{color:#4e445e}.admin-overview-events small{color:#9b93a1}
 .admin-delivery-panel button:focus-visible,.admin-overview-panel button:focus-visible,.admin-delivery-panel input:focus-visible,.admin-overview-panel input:focus-visible,.admin-delivery-panel select:focus-visible,.admin-overview-panel select:focus-visible,.admin-delivery-panel textarea:focus-visible,.admin-overview-panel textarea:focus-visible{outline:3px solid #b39bd5;outline-offset:2px}
 @media(max-width:700px){body:has(.finder-admin-shell) .drop-admin-tools{right:12px;bottom:12px}.admin-delivery-panel,.admin-overview-panel{padding:25px 18px 30px}}
+
+
+/* Finder admin login override: legacy v1-admin-polish adds !important dark
+   declarations to .p5-login and .p5-login-form during every build. Maintain
+   higher specificity rather than allowing a dark-on-dark half-theme. */
+body:has(.p5-admin.p5-login){background:#f2f1f7!important;color:#353148!important}
+.p5-admin.p5-login{
+  min-height:100dvh!important;
+  color:#363046!important;
+  background:radial-gradient(ellipse 54% 70% at 8% 12%,rgba(223,210,244,.9),transparent 75%),
+             radial-gradient(ellipse 43% 56% at 94% 83%,rgba(227,232,248,.76),transparent 74%),
+             #f4f4f8!important;
+}
+.p5-admin.p5-login::before{
+  background:radial-gradient(circle at 70% 35%,rgba(141,109,195,.08),transparent 40%)!important;
+  opacity:1;
+}
+.p5-admin.p5-login .p5-login-copy h1{
+  color:#332d47!important;
+  line-height:.96!important;
+  letter-spacing:-.06em!important;
+}
+.p5-admin.p5-login .p5-login-copy>span{color:#8b74b2!important}
+.p5-admin.p5-login .p5-login-copy p{color:#7d778e!important}
+.p5-admin.p5-login .p5-login-form{
+  background:rgba(255,255,255,.95)!important;
+  border:1px solid #e3deeb!important;
+  box-shadow:0 24px 65px rgba(70,57,107,.12),0 2px 9px rgba(70,57,107,.03)!important;
+  border-radius:17px!important;
+  backdrop-filter:blur(8px)!important;
+}
+.p5-admin.p5-login .p5-login-form label{color:#756f84!important}
+.p5-admin.p5-login .p5-login-form input{
+  background:#f9f8fc!important;
+  color:#353147!important;
+  border:1px solid #e4dfec!important;
+}
+.p5-admin.p5-login .p5-login-form input:focus{
+  background:#fff!important;
+  border-color:#987cc8!important;
+  box-shadow:0 0 0 3px rgba(136,99,194,.12)!important;
+}
+.p5-admin.p5-login .p5-login-form>button{
+  background:#7959b4!important;
+  border-color:#7959b4!important;
+  color:#fff!important;
+}
+.p5-admin.p5-login .p5-login-form>button:hover{
+  background:#6946a5!important;
+  border-color:#6946a5!important;
+  box-shadow:0 12px 30px rgba(110,75,168,.2)!important;
+}
+@media(max-width:800px){
+  .p5-admin.p5-login{padding:96px 18px 35px!important}
+  .p5-admin.p5-login .p5-login-form{padding:22px!important;max-width:440px}
+  .p5-admin.p5-login .p5-login-copy h1{font-size:clamp(44px,12vw,68px)!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .p5-admin.p5-login::before,.p5-admin.p5-login .p5-login-form{animation:none!important}
+}
