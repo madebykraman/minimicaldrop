@@ -9,6 +9,9 @@ const admin = fs.readFileSync('app/admin/admin.css', 'utf8')
 const finderCss = fs.readFileSync('app/finder-ui.css', 'utf8')
 const adminPage = fs.readFileSync('app/admin/page.tsx', 'utf8')
 const layout = fs.readFileSync('app/layout.tsx', 'utf8')
+const appearance = fs.readFileSync('app/appearance.css', 'utf8')
+const homepage = fs.readFileSync('app/page.tsx', 'utf8')
+const opsPage = fs.readFileSync('app/admin/ops/page.tsx', 'utf8')
 const projectRoute = fs.readFileSync('app/api/admin/projects/route.ts', 'utf8')
 const projectRead = projectRoute.split('export async function GET()')[1]?.split('export async function POST(')[0] || ''
 
@@ -26,6 +29,12 @@ const checks = [
   ['Studio project card and list controls', adminPage.includes('finder-project-card') && adminPage.includes('changeProjectView')],
   ['Responsive Finder breakpoints and accessible focus', finderCss.includes('@media(max-width:700px)') && finderCss.includes(':focus-visible')],
   ['Finder styles imported for all surfaces', layout.includes("import './finder-ui.css'")],
+  ['System font stack without external font downloads', !layout.includes('next/font/google') && appearance.includes('SF Pro Text')],
+  ['Minimal homepage with real links only', homepage.includes('mac-home-hero') && homepage.includes('mac-home-preview') && !homepage.includes('<button')],
+  ['Shared blue visual system', layout.includes("import './appearance.css'") && appearance.includes('--mac-blue:#007aff')],
+  ['Admin operations use neutral surfaces', opsPage.includes('className="mac-ops"') && opsPage.includes("background: '#f5f5f7'")],
+  ['Client selection and deferred search remain functional', workspace.includes('allVisibleSelected') && workspace.includes('useDeferredValue(search)')],
+  ['Project listing reads independent tables concurrently', projectRead.includes('Promise.all')],
   ['Minimal client shell and on-demand details', workspace.includes('finder-project-details') && workspace.includes('finder-mobile-menu')],
   ['Card actions stay available in a menu', workspace.includes('finder-card-more') && workspace.includes('finder-card-actions')],
   ['Delivery updates are collapsible', fs.readFileSync('app/u/[token]/delivery-panel.tsx','utf8').includes('drop-delivery-more')],

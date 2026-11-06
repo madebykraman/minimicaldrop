@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { AlertCircle, Check, ChevronLeft, ChevronRight, Download, File, FileAudio, FileImage, FileText, FileVideo, Folder, FolderPlus, Grid2X2, HardDrive, LayoutList, Loader2, LockKeyhole, Menu, MoreHorizontal, Pencil, RefreshCw, Search, Trash2, Upload, X } from 'lucide-react'
 import { isSafeInlineMime } from '@/lib/preview-types'
+import { filterAndSortFiles } from '@/lib/file-view'
 
 type Item = { id: string; name: string; mimeType: string; sizeBytes: number; modifiedTime: string | null }
 type Project = { id: string; name: string; clientName: string; expiresAt: string; storageLimitBytes: number | null }
@@ -78,21 +79,18 @@ export default function WorkspaceV5({ token, deliveryPanel }: { token: string; d
   function refreshFolder() { void load(folderId || undefined); void loadRecoveries() }
 
 
-  const visible = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    const filtered = items.filter(item =>
-      (!q || item.name.toLowerCase().includes(q)) &&
-      (navScope !== 'folders' || item.mimeType === FOLDER_MIME)
-    )
-    return [...filtered].sort((a, b) =>
-      (navScope === 'recent' || sort === 'newest')
-        ? new Date(b.modifiedTime || 0).getTime() - new Date(a.modifiedTime || 0).getTime()
-        : sort === 'size'
-          ? b.sizeBytes - a.sizeBytes
-          : a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
-    )
-  }, [items, search, sort, navScope])
-  const folders = visible.filter(item => item.mimeType === FOLDER_MIME); const files = visible.filter(item => item.mimeType !== FOLDER_MIME); const selectedItems = items.filter(item => selected.includes(item.id)); const selectedFiles = selectedItems.filter(item => item.mimeType !== FOLDER_MIME)
+  // Keep input responsive when a project contains many files.
+  const deferredSearch = useDeferredValue(search)
+  const selectedSet = useMemo(() => new Set(selected), [selected])
+  const visible = useMemo(
+    () => filterAndSortFiles(items, deferredSearch, sort, navScope),
+    [items, deferredSearch, sort, navScope],
+  )
+  const allVisibleSelected = visible.length > 0 && visible.every(item => selectedSet.has(item.id))
+  const folders = visible.filter(item => item.mimeType === FOLDER_MIME)
+  const files = visible.filter(item => item.mimeType !== FOLDER_MIME)
+  const selectedItems = items.filter(item => selectedSet.has(item.id))
+  const selectedFiles = selectedItems.filter(item => item.mimeType !== FOLDER_MIME)
   const reserved = used + pending; const usage = project?.storageLimitBytes ? Math.min(100, reserved / project.storageLimitBytes * 100) : 0; const isRoot = folderId === rootId
 
   async function openFolder(item: Item) { await load(item.id); setNavScope('all'); setTrail(prev => [...prev, { id: item.id, name: item.name }]); setSelected([]) }
@@ -103,7 +101,13 @@ export default function WorkspaceV5({ token, deliveryPanel }: { token: string; d
     const id = crypto.randomUUID(); const parentId = folderId; const recovery = recoveries.find(r => r.name === file.name && r.sizeBytes === file.size && r.folderId === (parentId === rootId ? null : parentId)); let serverId: string | null = recovery?.uploadId || null
     setShowQueue(true)
     setQueue(prev => [...prev, { id, name: file.name, size: file.size, progress: recovery ? recovery.uploadedBytes / Math.max(1, recovery.sizeBytes) : 0, status: 'uploading', file }])
-    const progress = (value: number) => setQueue(prev => prev.map(q => q.id === id ? { ...q, progress: value } : q))
+    let lastProgressUpdate = 0
+    const progress = (value: number) => {
+      const now = performance.now()
+      if (value < 1 && now - lastProgressUpdate < 90) return
+      lastProgressUpdate = now
+      setQueue(prev => prev.map(q => q.id === id ? { ...q, progress: value } : q))
+    }
     try {
       const init = recovery ? { uploadId: recovery.uploadId, sessionUrl: recovery.sessionUrl, uploadedBytes: recovery.uploadedBytes } : await jsonFetch(`/api/projects/${token}/upload`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: file.name, mimeType: file.type, size: file.size, parentId: parentId || undefined }) })
       serverId = init.uploadId
@@ -121,7 +125,17 @@ export default function WorkspaceV5({ token, deliveryPanel }: { token: string; d
   function download(item: Item) { const a = document.createElement('a'); a.href = `/api/projects/${token}/files/${encodeURIComponent(item.id)}`; a.download = item.name; a.rel = 'noreferrer'; document.body.appendChild(a); a.click(); a.remove() }
   function bulkDownload() { selectedFiles.forEach((item, index) => { window.setTimeout(() => download(item), index * 250) }) }
   function toggle(id: string) { setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]) }
-  function toggleAll() { setSelected(prev => prev.length === visible.length ? [] : visible.map(x => x.id)) }
+  function toggleAll() {
+    setSelected(previous => {
+      const updated = new Set(previous)
+      const shouldClear = visible.length > 0 && visible.every(item => updated.has(item.id))
+      for (const item of visible) {
+        if (shouldClear) updated.delete(item.id)
+        else updated.add(item.id)
+      }
+      return [...updated]
+    })
+  }
 
   useEffect(() => { const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setDialog(null); setPreview(null); setShowFolder(false); setSidebarOpen(false) } if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); document.getElementById('drop-search')?.focus() } }; window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey) }, [])
 
@@ -177,15 +191,15 @@ export default function WorkspaceV5({ token, deliveryPanel }: { token: string; d
                 <div className={`v5-dropzone finder-dropzone ${dragging ? 'dragging' : ''}`} onDragOver={e => {e.preventDefault();setDragging(true)}} onDragLeave={() => setDragging(false)} onDrop={e => {e.preventDefault();setDragging(false);addFiles(e.dataTransfer.files)}}><div className="finder-drop-icon"><Upload size={18}/></div><div><strong>{dragging ? 'Release to upload' : 'Drop files here to upload'}</strong></div></div>
                 {selected.length > 0 && <div className="v5-selection"><span><strong>{selected.length}</strong> selected</span><div>{selectedFiles.length > 0 && <button onClick={bulkDownload}><Download size={15}/> Download {selectedFiles.length > 1 ? 'files' : 'file'}</button>}<button className="danger" onClick={() => void bulkDelete()} disabled={busy}><Trash2 size={15}/> Delete</button><button onClick={() => setSelected([])}>Clear</button></div></div>}
                 {error && <div className="finder-inline-error" role="alert"><AlertCircle size={16}/><span>{error}</span><button onClick={() => setError('')} aria-label="Dismiss error"><X size={16}/></button></div>}
-                <div className="finder-files-head"><div><strong>{navScope==='folders'?'Folders':navScope==='recent'?'Recently modified':'All files'}</strong><span>{visible.length} {visible.length===1?'item':'items'} {loading ? '· Refreshing…' : ''}</span></div>{visible.length > 0 && <button onClick={toggleAll}>{selected.length===visible.length?'Clear selection':'Select all'}</button>}</div>
+                <div className="finder-files-head"><div><strong>{navScope==='folders'?'Folders':navScope==='recent'?'Recently modified':'All files'}</strong><span>{visible.length} {visible.length===1?'item':'items'} {loading ? '· Refreshing…' : ''}</span></div>{visible.length > 0 && <button onClick={toggleAll}>{allVisibleSelected?'Clear selection':'Select all'}</button>}</div>
                 <div className="finder-file-content">
                   {viewMode === 'list' ? <>
-                    <div className="v5-list-head"><span><input type="checkbox" checked={visible.length > 0 && selected.length === visible.length} onChange={toggleAll} aria-label="Select all visible items"/></span><span>NAME</span><span>SIZE</span><span>MODIFIED</span><span>ACTIONS</span></div>
-                    {folders.map(item => <Row key={item.id} item={item} selected={selected.includes(item.id)} toggle={toggle} open={() => void openFolder(item)} rename={() => {setDialog({type:'rename',kind:'folder',id:item.id,name:item.name});setDialogValue(item.name)}} remove={() => setDialog({type:'delete',kind:'folder',id:item.id,name:item.name})}/>)}
-                    {files.map(item => <Row key={item.id} item={item} selected={selected.includes(item.id)} toggle={toggle} open={() => previewable(item.mimeType) ? setPreview(item) : download(item)} rename={() => {setDialog({type:'rename',kind:'file',id:item.id,name:item.name});setDialogValue(item.name)}} remove={() => setDialog({type:'delete',kind:'file',id:item.id,name:item.name})} download={() => download(item)} previewable={previewable(item.mimeType)}/>)}
+                    <div className="v5-list-head"><span><input type="checkbox" checked={allVisibleSelected} onChange={toggleAll} aria-label="Select all visible items"/></span><span>NAME</span><span>SIZE</span><span>MODIFIED</span><span>ACTIONS</span></div>
+                    {folders.map(item => <Row key={item.id} item={item} selected={selectedSet.has(item.id)} toggle={toggle} open={() => void openFolder(item)} rename={() => {setDialog({type:'rename',kind:'folder',id:item.id,name:item.name});setDialogValue(item.name)}} remove={() => setDialog({type:'delete',kind:'folder',id:item.id,name:item.name})}/>)}
+                    {files.map(item => <Row key={item.id} item={item} selected={selectedSet.has(item.id)} toggle={toggle} open={() => previewable(item.mimeType) ? setPreview(item) : download(item)} rename={() => {setDialog({type:'rename',kind:'file',id:item.id,name:item.name});setDialogValue(item.name)}} remove={() => setDialog({type:'delete',kind:'file',id:item.id,name:item.name})} download={() => download(item)} previewable={previewable(item.mimeType)}/>)}
                   </> : <>
-                    {folders.length > 0 && <section className="finder-file-group"><header><Folder size={16}/><strong>Folders</strong><span>{folders.length}</span></header><div className="finder-card-grid">{folders.map(item => <FinderCard key={item.id} item={item} selected={selected.includes(item.id)} toggle={toggle} open={() => void openFolder(item)} rename={() => {setDialog({type:'rename',kind:'folder',id:item.id,name:item.name});setDialogValue(item.name)}} remove={() => setDialog({type:'delete',kind:'folder',id:item.id,name:item.name})}/>)}</div></section>}
-                    {files.length > 0 && <section className="finder-file-group"><header><File size={16}/><strong>Files</strong><span>{files.length}</span></header><div className="finder-card-grid">{files.map(item => <FinderCard key={item.id} item={item} selected={selected.includes(item.id)} toggle={toggle} open={() => previewable(item.mimeType) ? setPreview(item) : download(item)} rename={() => {setDialog({type:'rename',kind:'file',id:item.id,name:item.name});setDialogValue(item.name)}} remove={() => setDialog({type:'delete',kind:'file',id:item.id,name:item.name})} download={() => download(item)} previewable={previewable(item.mimeType)}/>)}</div></section>}
+                    {folders.length > 0 && <section className="finder-file-group"><header><Folder size={16}/><strong>Folders</strong><span>{folders.length}</span></header><div className="finder-card-grid">{folders.map(item => <FinderCard key={item.id} item={item} selected={selectedSet.has(item.id)} toggle={toggle} open={() => void openFolder(item)} rename={() => {setDialog({type:'rename',kind:'folder',id:item.id,name:item.name});setDialogValue(item.name)}} remove={() => setDialog({type:'delete',kind:'folder',id:item.id,name:item.name})}/>)}</div></section>}
+                    {files.length > 0 && <section className="finder-file-group"><header><File size={16}/><strong>Files</strong><span>{files.length}</span></header><div className="finder-card-grid">{files.map(item => <FinderCard key={item.id} item={item} selected={selectedSet.has(item.id)} toggle={toggle} open={() => previewable(item.mimeType) ? setPreview(item) : download(item)} rename={() => {setDialog({type:'rename',kind:'file',id:item.id,name:item.name});setDialogValue(item.name)}} remove={() => setDialog({type:'delete',kind:'file',id:item.id,name:item.name})} download={() => download(item)} previewable={previewable(item.mimeType)}/>)}</div></section>}
                   </>}
                   {!visible.length && <div className="finder-empty"><div><Folder size={32}/></div><strong>{search?'No matching files':navScope==='folders'?'No folders here':'This folder is empty'}</strong><p>{search?'Try a different search term.':'Create a folder or upload files to get started.'}</p><button onClick={()=>input.current?.click()}><Upload size={16}/> Upload files</button></div>}
                 </div>

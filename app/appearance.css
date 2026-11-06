@@ -1,0 +1,282 @@
+/* Minimical Drop · macOS-inspired design system.
+   This last layer harmonises existing components without touching their APIs. */
+:root{
+  --font-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue","Segoe UI",Arial,sans-serif;
+  --font-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","Segoe UI",Arial,sans-serif;
+  --font-mono:"SFMono-Regular",Menlo,Monaco,Consolas,monospace;
+  --display:var(--font-display);--body:var(--font-body);--mono:var(--font-mono);
+  --mac-blue:#007aff;--mac-blue-hover:#0069dd;--mac-blue-pale:#e8f2ff;
+  --mac-bg:#f5f5f7;--mac-sidebar:#f2f2f6;--mac-surface:#fff;
+  --mac-line:#e5e5ea;--mac-ink:#1d1d1f;--mac-sub:#6e6e73;
+  --mac-soft:#86868b;--mac-green:#278456;--mac-red:#b94a5e;
+  --gradient-brand:linear-gradient(120deg,#007aff,#268aff);
+  --gradient-atmosphere:none;
+}
+html,body{font-family:var(--font-body)!important;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+button,select,input,textarea{font-family:var(--font-body)}
+button,summary{-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--mac-blue);outline-offset:3px}
+html:has(.mac-home),body:has(.mac-home),html:has(.finder-app-shell),body:has(.finder-app-shell),html:has(.finder-admin-shell),body:has(.finder-admin-shell),body:has(.p5-login){background:var(--mac-bg)!important;color:var(--mac-ink)!important}
+
+/* Marketing homepage — actual content, not clickable fake file controls. */
+.mac-home{min-height:100dvh;background:var(--mac-bg);color:var(--mac-ink);font:400 15px var(--font-body);overflow:hidden}
+.mac-home *{box-sizing:border-box}
+.mac-home-header{max-width:1240px;margin:auto;height:84px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;border-bottom:1px solid #e8e8ec}
+.mac-home-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--mac-ink)}
+.mac-home-brand-icon{display:grid;place-items:center;height:35px;width:35px;background:var(--mac-blue);color:white;border-radius:11px}
+.mac-home-brand strong{font-size:19px;letter-spacing:-.07em;font-weight:740}.mac-home-brand strong span{color:var(--mac-blue);margin-left:3px}
+.mac-home-header nav{display:flex;align-items:center;gap:28px;color:var(--mac-sub);font-size:12px}
+.mac-home-header nav a{display:inline-flex;align-items:center;gap:5px;color:var(--mac-ink);text-decoration:none;font-weight:650}
+.mac-home-header a:hover{color:var(--mac-blue)}
+.mac-home-hero{max-width:1240px;margin:0 auto;padding:82px 32px 100px;display:grid;grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr);align-items:center;gap:clamp(28px,5vw,88px)}
+.mac-home-copy{min-width:0}.mac-home-eyebrow{display:flex;align-items:center;gap:8px;color:#537b9e;font-size:10px;letter-spacing:.14em;font-weight:740}
+.mac-home-eyebrow span{height:7px;width:7px;background:#3da46e;border-radius:50%}
+.mac-home-copy h1{font:720 clamp(58px,6.4vw,96px)/1.01 var(--font-display);letter-spacing:-.072em;color:var(--mac-ink);margin:20px 0 22px}
+.mac-home-copy>p:not(.mac-home-private){max-width:460px;line-height:1.7;font-size:16px;color:var(--mac-sub);margin:0}
+.mac-home-actions{display:flex;gap:13px;align-items:center;margin:31px 0 22px;flex-wrap:wrap}
+.mac-home-actions a{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:44px;padding:0 17px;border-radius:10px;text-decoration:none;font-size:13px;font-weight:680;transition:background .14s ease,color .14s ease}
+.mac-home-primary{background:var(--mac-blue);color:white}.mac-home-primary:hover{background:var(--mac-blue-hover)}
+.mac-home-secondary{color:#3a3b42;background:#fff;border:1px solid var(--mac-line)}.mac-home-secondary:hover{background:#eaf3ff;color:var(--mac-blue)}
+.mac-home-private{color:#83868e;display:flex;align-items:center;gap:7px;font-size:12px;margin:0}
+.mac-home-preview{background:white;border:1px solid #ddddE4;border-radius:19px;overflow:hidden;box-shadow:0 26px 65px rgba(25,32,50,.11),0 4px 12px rgba(25,32,50,.03);min-width:0}
+.mac-preview-bar{height:44px;border-bottom:1px solid var(--mac-line);background:linear-gradient(#fbfbfd,#f7f7fa);display:flex;align-items:center;justify-content:space-between;padding:0 18px;position:relative;color:#878a91}
+.mac-preview-dots{display:flex;gap:7px}.mac-preview-dots i{width:10px;height:10px;border-radius:50%;background:#ff5f57;border:1px solid rgba(0,0,0,.06)}.mac-preview-dots i:nth-child(2){background:#febc2e}.mac-preview-dots i:nth-child(3){background:#29c840}
+.mac-preview-bar>span{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:7px;font-size:11px;color:#565963;font-weight:650;white-space:nowrap}
+.mac-preview-body{padding:27px}.mac-preview-heading{display:flex;flex-direction:column;gap:7px}.mac-preview-heading>span{color:#89909b;font-size:9px;letter-spacing:.12em;font-weight:760}.mac-preview-heading strong{font:720 27px var(--font-display);letter-spacing:-.045em}.mac-preview-heading small{font-size:12px;color:#898b91}
+.mac-preview-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:23px;padding:12px 14px;background:#f5faff;border:1px dashed #b8d6f6;border-radius:11px}
+.mac-preview-toolbar>span:first-child{display:flex;align-items:center;gap:9px;font-size:11px;color:#7590a8}.mac-preview-toolbar svg{color:var(--mac-blue)}
+.mac-preview-action{background:var(--mac-blue);color:#fff;padding:8px 12px;border-radius:7px;font-size:10px;font-weight:700;white-space:nowrap}
+.mac-preview-section-title{display:flex;justify-content:space-between;margin:26px 0 13px;font-weight:700;font-size:13px}.mac-preview-section-title span{font-size:11px;color:#a0a2a8;font-weight:450}
+.mac-preview-files{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.mac-preview-files>div{padding:10px 9px 12px;border:1px solid #e7e7ed;border-radius:10px;min-width:0}
+.mac-preview-files>div>span{height:92px;display:grid;place-items:center;border-radius:8px;background:#f5f6f8;margin-bottom:12px;color:#87909b}
+.mac-preview-files>div>.mac-preview-folder{background:#e4f0ff;color:var(--mac-blue)}.mac-preview-files>div>.mac-preview-image{background:#efeafa;color:#8873bc}.mac-preview-files>div>.mac-preview-document{background:#e9f2f1;color:#59958c}
+.mac-preview-files strong{display:block;color:#31333a;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:690}
+.mac-preview-files small{display:block;color:#9b9ea5;font-size:10px;margin-top:5px}
+.mac-preview-foot{display:flex;align-items:center;gap:8px;font-size:10px;color:#7c888b;margin:21px 0 0}.mac-preview-foot svg{color:#299361}
+.mac-home-how{max-width:1176px;margin:auto;border-top:1px solid #e3e4e9;padding:54px 0 80px}
+.mac-home-how-head span{color:#90939b;font-size:10px;letter-spacing:.13em;font-weight:750}
+.mac-home-how-head h2{font:700 clamp(27px,3vw,40px) var(--font-display);letter-spacing:-.052em;color:#24262c;margin:9px 0 24px}
+.mac-home-benefits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.mac-home-benefits article{background:#fff;border:1px solid #e6e6eb;border-radius:14px;padding:25px 23px 26px}
+.mac-home-benefits article>span{font-size:11px;font-weight:700;color:#7e9ec4}.mac-home-benefits h3{font-size:18px;margin:24px 0 7px;color:#25262b;letter-spacing:-.035em}
+.mac-home-benefits p{font-size:12px;color:#7d7f86;line-height:1.6;margin:0}
+.mac-home-footer{max-width:1176px;margin:auto;padding:24px 0 35px;border-top:1px solid #e3e4e9;display:flex;justify-content:space-between;gap:20px;color:#8a8c93;font-size:11px}
+.mac-home-footer nav{display:flex;align-items:center;gap:19px}.mac-home-footer nav a{text-decoration:none;display:inline-flex;align-items:center;gap:3px}.mac-home-footer a:hover{color:var(--mac-blue)}
+@media(max-width:1080px){.mac-home-hero{gap:30px}.mac-home-copy h1{font-size:clamp(52px,6vw,76px)}.mac-home-how,.mac-home-footer{margin:0 32px}}
+@media(max-width:800px){.mac-home-hero{grid-template-columns:1fr;gap:40px;padding:56px 24px 65px}.mac-home-preview{max-width:650px;width:100%;margin:0 auto}.mac-home-copy h1{font-size:clamp(56px,10vw,82px)}.mac-home-how,.mac-home-footer{margin:0 24px}.mac-home-header{padding:0 24px}}
+@media(max-width:540px){.mac-home-header{height:68px;padding:0 18px}.mac-home-header nav>span{display:none}.mac-home-header nav{gap:12px}.mac-home-hero{padding:49px 17px 48px}.mac-home-copy h1{font-size:clamp(50px,13vw,69px);margin:17px 0}.mac-home-copy>p:not(.mac-home-private){font-size:14px}.mac-home-actions{margin:25px 0 19px}.mac-home-actions a{min-height:44px}.mac-preview-body{padding:17px}.mac-preview-heading strong{font-size:23px}.mac-preview-toolbar{margin-top:18px;padding:11px}.mac-preview-files{gap:7px}.mac-preview-files>div{padding:7px}.mac-preview-files>div>span{height:68px}.mac-preview-files strong{font-size:10px}.mac-home-how{padding:44px 0 50px;margin:0 17px}.mac-home-benefits{grid-template-columns:1fr;gap:9px}.mac-home-benefits article{padding:19px 20px}.mac-home-benefits h3{margin:8px 0}.mac-home-footer{margin:0 17px;flex-direction:column;padding:23px 0 35px}.mac-home-footer nav{flex-wrap:wrap}}
+
+/* Client Finder: compact, calm, with blue reserved for active controls. */
+.v5-shell:has(.finder-app-shell){background:var(--mac-bg)!important}
+.finder-app-shell{--fd-bg:var(--mac-bg);--fd-panel:#fff;--fd-line:var(--mac-line);--fd-ink:var(--mac-ink);--fd-sub:var(--mac-sub);--fd-violet:var(--mac-blue);--fd-violet-soft:var(--mac-blue-pale);background:var(--mac-bg)!important;color:var(--mac-ink);font-family:var(--font-body)!important}
+.finder-app-shell .finder-window{background:#fff!important;border:1px solid #e6e6eb!important;box-shadow:0 18px 45px rgba(20,28,40,.075)!important;border-radius:16px!important}
+.finder-app-shell .finder-window-bar{background:linear-gradient(#fafafa,#f6f6f8)!important;border-color:var(--mac-line)!important}
+.finder-app-shell .finder-window-title,.finder-app-shell .finder-window-secure{color:#63666d!important}
+.finder-app-shell .finder-window-title svg,.finder-app-shell .finder-window-secure svg{color:#858a94!important}
+.finder-app-shell .finder-sidebar{background:var(--mac-sidebar)!important;border-color:#e3e3e8!important}
+.finder-app-shell .finder-sidebar-logo{background:#e2f0ff!important;color:var(--mac-blue)!important;box-shadow:none!important}
+.finder-app-shell .finder-sidebar-brand strong{color:#313138!important}
+.finder-app-shell .finder-sidebar-group>span,.finder-app-shell .finder-sidebar-foot{color:#8f929a!important}
+.finder-app-shell .finder-sidebar-group button{color:#5b5e68!important}
+.finder-app-shell .finder-sidebar-group button.active{background:var(--mac-blue-pale)!important;color:#0969c7!important;box-shadow:none!important}
+.finder-app-shell .finder-sidebar-group button.active svg,.finder-app-shell .finder-sidebar-group button.active em{color:var(--mac-blue)!important}
+.finder-app-shell .finder-sidebar-group button:not(.active):hover{background:#e8e9ed!important}
+.finder-app-shell .finder-sidebar-storage{background:#fff!important;border-color:#e8e8ed!important}
+.finder-app-shell .finder-sidebar-storage strong{color:#33343b!important}
+.finder-app-shell .finder-meter{background:#dfe7f2!important}.finder-app-shell .finder-meter i{background:var(--mac-blue)!important}
+.finder-app-shell .finder-sidebar-foot{display:none}
+.finder-app-shell .finder-stage,.finder-app-shell .finder-stage-top{background:#fff!important}
+.finder-app-shell .finder-stage-top{border-color:var(--mac-line)!important}
+.finder-app-shell .finder-mobile-menu,.finder-app-shell .finder-icon-button{border-color:var(--mac-line)!important;background:#f7f7f9!important;color:#61656f!important}
+.finder-app-shell .finder-mobile-menu:hover,.finder-app-shell .finder-icon-button:hover{background:#ebedf2!important}
+.finder-app-shell .finder-stage-title strong,.finder-app-shell .finder-intro h1{color:var(--mac-ink)!important;font-family:var(--font-display)!important}
+.finder-app-shell .finder-intro h1{font-weight:720;letter-spacing:-.045em}
+.finder-app-shell .finder-intro p{color:var(--mac-sub)!important}
+.finder-app-shell .finder-private-label{background:#f7f7f9!important;border-color:#e9e9ed!important;color:#777a82!important}
+.finder-app-shell .finder-private-label svg{color:#878a92!important}
+.finder-app-shell .v5-workspace{background:#fff!important;border:1px solid var(--mac-line)!important;border-radius:13px!important;box-shadow:none!important}
+.finder-app-shell .finder-toolbar{background:#fafafb!important;border-color:#ebebf0!important}
+.finder-app-shell .v5-crumbs button{color:#888c96!important}
+.finder-app-shell .v5-crumbs button.active{color:#36383e!important}
+.finder-app-shell .v5-btn{background:#fff!important;border:1px solid var(--mac-line)!important;color:#454951!important;box-shadow:none!important}
+.finder-app-shell .v5-btn:hover{background:#f1f2f5!important;border-color:#d6d7de!important;color:#33353b!important}
+.finder-app-shell .v5-btn.primary{background:var(--mac-blue)!important;border-color:var(--mac-blue)!important;color:#fff!important}
+.finder-app-shell .v5-btn.primary:hover{background:var(--mac-blue-hover)!important;border-color:var(--mac-blue-hover)!important}
+.finder-app-shell .v5-search{background:#f5f5f7!important;border:1px solid #ebebef!important;color:#9296a0!important}
+.finder-app-shell .v5-search:focus-within{border-color:#97c7ff!important;box-shadow:0 0 0 3px rgba(0,122,255,.095)!important}
+.finder-app-shell .v5-search input{color:#35363d!important}
+.finder-app-shell .v5-sort{background:#fff!important;border-color:var(--mac-line)!important}
+.finder-app-shell .v5-sort select{color:#4b4e57!important}
+.finder-app-shell .finder-view-toggle{background:#f2f2f5!important;border-color:#e5e5eb!important}
+.finder-app-shell .finder-view-toggle button.active{background:#fff!important;color:var(--mac-blue)!important;box-shadow:0 1px 3px rgba(0,0,0,.08)!important}
+.finder-app-shell .finder-dropzone.v5-dropzone{background:#f8fbff!important;border:1px dashed #bcd8fa!important}
+.finder-app-shell .finder-drop-icon{background:#e4f1ff!important;color:var(--mac-blue)!important}
+.finder-app-shell .finder-dropzone strong{color:#6c839c!important}
+.finder-app-shell .finder-file-group>header svg{color:var(--mac-blue)!important}
+.finder-app-shell .finder-files-head strong,.finder-app-shell .finder-file-group>header strong{color:#36373e!important}
+.finder-app-shell .finder-files-head>button{color:var(--mac-blue)!important}
+.finder-app-shell .finder-card{border-color:#e7e8ed!important;background:#fff!important;box-shadow:none!important;transform:none!important}
+.finder-app-shell .finder-card:hover,.finder-app-shell .finder-card:focus-within{border-color:#a9cef9!important;background:#fcfdff!important;box-shadow:0 3px 10px rgba(35,69,105,.06)!important;transform:none!important}
+.finder-app-shell .finder-card.selected{border-color:var(--mac-blue)!important;background:#eef6ff!important;box-shadow:0 0 0 1px rgba(0,122,255,.15)!important}
+.finder-app-shell .finder-card-top{background:#f6f7f9!important}
+.finder-app-shell .finder-card-art{background:#eaeef3!important;color:#7a8491!important}
+.finder-app-shell .finder-card-art.is-folder{background:#e0eeff!important;color:var(--mac-blue)!important;box-shadow:none!important}
+.finder-app-shell .finder-card-art.is-image{background:#e5f3ed!important;color:#4a9a72!important}
+.finder-app-shell .finder-card-art.is-video{background:#e9edfc!important;color:#6f82bb!important}
+.finder-app-shell .finder-card-art.is-audio{background:#e2f3f8!important;color:#4893b4!important}
+.finder-app-shell .finder-card-label strong,.finder-app-shell .v5-name strong{color:#34363e!important}
+.finder-app-shell .finder-card-more summary{background:rgba(255,255,255,.96)!important;border-color:#e6e6eb!important;color:#66707c!important}
+.finder-app-shell .finder-card-more summary:hover,.finder-app-shell .finder-card-more[open] summary{background:#e9f3ff!important;color:var(--mac-blue)!important}
+.finder-app-shell .finder-card-more .finder-card-actions{border-color:var(--mac-line)!important;box-shadow:0 12px 28px rgba(23,32,46,.15)!important}
+.finder-app-shell .finder-card-more .finder-card-actions button:hover{background:#eff6ff!important;color:#006dd1!important}
+.finder-app-shell .finder-card-more .finder-card-actions button.danger:hover{background:#fff1f2!important;color:var(--mac-red)!important}
+.finder-app-shell input[type=checkbox],.finder-admin-shell input[type=checkbox]{accent-color:var(--mac-blue)}
+.finder-app-shell .v5-selection{background:var(--mac-blue-pale)!important;border-color:#bfdcff!important;color:#0864bf!important}
+.finder-app-shell .v5-selection button{background:#fff!important;color:#3f4f61!important;border-color:#cfe3fa!important}
+.finder-app-shell .v5-list-head,.finder-app-shell .v5-row{border-color:#ededf1!important}
+.finder-app-shell .v5-row{background:#fff!important}.finder-app-shell .v5-row:hover{background:#f5f9ff!important}
+.finder-app-shell .v5-icon{background:#e7f0fb!important;color:#5989bb!important}
+.finder-app-shell .finder-empty>div{background:#e9f3ff!important;color:var(--mac-blue)!important}
+.finder-app-shell .finder-empty button{background:var(--mac-blue)!important;color:#fff!important}
+.finder-app-shell .finder-project-details{background:#fafafb!important;border-color:var(--mac-line)!important}
+.finder-app-shell .finder-project-details summary{color:#6c727e!important}
+.finder-app-shell .finder-project-details summary:hover{background:#f0f6ff!important;color:var(--mac-blue)!important}
+.finder-app-shell .finder-project-meter{background:#dfe7f2!important}.finder-app-shell .finder-project-meter i{background:var(--mac-blue)!important}
+.finder-app-shell .v5-storage,.finder-app-shell .v5-recovery,.finder-app-shell .v5-queue{background:#fff!important;border-color:var(--mac-line)!important;color:#4a4d56!important}
+.finder-app-shell .v5-progress i,.finder-app-shell .v5-track i,.finder-app-shell .v5-recovery-progress i{background:var(--mac-blue)!important}
+.finder-app-shell .v5-recovery-resume{background:var(--mac-blue)!important;border-color:var(--mac-blue)!important;color:#fff!important}
+.finder-app-shell .v5-nav-status{background:#f5faff!important;color:#366d9b!important;border:1px solid #cfe4fc!important;box-shadow:0 3px 12px rgba(0,55,120,.08)!important}
+.finder-app-shell .v5-nav-status svg{color:var(--mac-blue)!important}
+.finder-app-shell .v5-workspace:after{display:none!important}
+.finder-app-shell .v5-modal{background:#fff!important;color:var(--mac-ink)!important;border-color:var(--mac-line)!important;border-radius:14px!important}
+.finder-app-shell .v5-modal h2,.finder-app-shell .v5-modal strong{color:var(--mac-ink)!important}
+.finder-app-shell .v5-modal input{background:#f8f8fa!important;border-color:var(--mac-line)!important;color:var(--mac-ink)!important}
+.finder-app-shell .v5-modal-actions button.primary{background:var(--mac-blue)!important;border-color:var(--mac-blue)!important;color:#fff!important}
+.finder-app-shell .v5-modal-actions button.danger{background:#bf5266!important;border-color:#bf5266!important;color:#fff!important}
+
+/* Client review, support and delivery: quietly integrated. */
+.finder-app-shell .drop-delivery{background:#fff!important;border-color:var(--mac-line)!important;box-shadow:none!important}
+.finder-app-shell .drop-delivery-icon{background:#e9f4ff!important;color:var(--mac-blue)!important}
+.finder-app-shell .drop-delivery-kicker,.finder-app-shell .drop-delivery-message>span{color:#678daf!important}
+.finder-app-shell .drop-delivery-status h2{color:#30333c!important}.finder-app-shell .drop-delivery-status p{color:var(--mac-sub)!important}
+.finder-app-shell .drop-delivery-more>summary{color:#667180!important}.finder-app-shell .drop-delivery-more>summary:hover{background:#f5f8fc!important}
+.finder-app-shell .drop-delivery-more>summary span{background:#e9f3ff!important;color:#3977b7!important}
+.finder-app-shell .drop-delivery button.primary{background:var(--mac-blue)!important;border-color:var(--mac-blue)!important;color:#fff!important}
+.finder-app-shell .drop-delivery button.secondary{background:#f5f6f8!important;border-color:var(--mac-line)!important;color:#48505b!important}
+body:has(.finder-app-shell) .drop-support{background:#fff!important;color:#586875!important;border-color:var(--mac-line)!important;box-shadow:0 5px 16px rgba(20,28,43,.1)!important}
+body:has(.finder-app-shell) .drop-support:hover{color:var(--mac-blue)!important}
+body:has(.finder-app-shell) .drop-support-card{background:#fff!important;border-color:var(--mac-line)!important;color:var(--mac-ink)!important}
+body:has(.finder-app-shell) .drop-support-card input,body:has(.finder-app-shell) .drop-support-card textarea{background:#f8f8fa!important;border-color:var(--mac-line)!important;color:var(--mac-ink)!important}
+body:has(.finder-app-shell) .drop-support-card .primary{background:var(--mac-blue)!important;border-color:var(--mac-blue)!important;color:#fff!important}
+
+/* Studio overview and admin controls share the same neutral palette. */
+.finder-admin-shell.p5-admin{background:#fff!important;color:var(--mac-ink)!important;border-color:#e6e6eb!important;box-shadow:0 18px 46px rgba(20,28,43,.075)!important;border-radius:16px!important}
+.finder-admin-window-bar{background:linear-gradient(#fafafa,#f6f6f8)!important;border-color:var(--mac-line)!important}
+.finder-admin-window-title,.finder-admin-live{color:#6b6d74!important}
+.finder-admin-window-title svg{color:#707f91!important}
+.finder-admin-shell .p5-head{background:#fff!important;border-color:var(--mac-line)!important}
+.finder-admin-shell .finder-admin-sidebar{background:var(--mac-sidebar)!important;border-color:var(--mac-line)!important}
+.finder-admin-shell .finder-admin-sidebar-brand>div{background:#e5f2ff!important;color:var(--mac-blue)!important}
+.finder-admin-shell .finder-admin-sidebar button,.finder-admin-shell .finder-admin-sidebar a{color:#5c636d!important}
+.finder-admin-shell .finder-admin-sidebar button.active{background:var(--mac-blue-pale)!important;color:#0a6fd1!important}
+.finder-admin-shell .finder-admin-sidebar button.active svg{color:var(--mac-blue)!important}
+.finder-admin-shell .finder-admin-sidebar p{color:#9398a0!important}
+.finder-admin-shell .finder-admin-sidebar-bottom{background:#fff!important;border-color:var(--mac-line)!important}
+.finder-admin-shell .finder-admin-mobile-toggle{background:#eaf3ff!important;border-color:#cee4ff!important;color:var(--mac-blue)!important}
+.finder-admin-shell .p5-dashboard h1,.finder-admin-shell .p5-detail-head h1{font-family:var(--font-display)!important;color:var(--mac-ink)!important;letter-spacing:-.04em}
+.finder-admin-shell .p5-dashboard>div>span,.finder-admin-shell .p5-detail-head>div>span{color:#7a8898!important}
+.finder-admin-shell .p5-dashboard p,.finder-admin-shell .p5-detail-head p{color:var(--mac-sub)!important}
+.finder-admin-shell .p5-dashboard>button{background:var(--mac-blue)!important;border-color:var(--mac-blue)!important;color:#fff!important;box-shadow:none!important}
+.finder-admin-shell .p5-dashboard>button:hover{background:var(--mac-blue-hover)!important}
+.finder-admin-shell .p5-summary>div,.finder-admin-shell .p5-projects,.finder-admin-shell .p5-panel{background:#fff!important;border-color:var(--mac-line)!important;box-shadow:none!important}
+.finder-admin-shell .p5-summary b,.finder-admin-shell .p5-panel-title h2,.finder-admin-shell .p5-summary strong{color:#35373d!important}
+.finder-admin-shell .p5-project-tools{background:#fafafb!important;border-color:var(--mac-line)!important}
+.finder-admin-shell .p5-project-tools label{background:#f5f5f7!important;border-color:var(--mac-line)!important}
+.finder-admin-shell .p5-project-tools input,.finder-admin-shell .p5-project-tools select{color:#373a42!important}
+.finder-admin-shell .finder-view-toggle{background:#f1f1f4!important;border-color:var(--mac-line)!important}
+.finder-admin-shell .finder-view-toggle button.active{background:#fff!important;color:var(--mac-blue)!important}
+.finder-admin-shell .finder-project-card{border-color:#e5e6eb!important;background:#fff!important;box-shadow:none!important;transform:none!important}
+.finder-admin-shell .finder-project-card:hover{border-color:#aad0fb!important;background:#fbfdff!important;box-shadow:0 4px 14px rgba(24,67,112,.065)!important;transform:none!important}
+.finder-admin-shell .finder-project-card-icon{background:#e4f1ff!important;color:var(--mac-blue)!important}
+.finder-admin-shell .finder-project-card>strong{color:#36383e!important}
+.finder-admin-shell .finder-project-card-open{background:#edf6ff!important;color:var(--mac-blue)!important;border-color:#d4e8ff!important}
+.finder-admin-shell .p5-drive-strip{background:#f8fafd!important;border-color:var(--mac-line)!important}
+.finder-admin-shell .p5-drive-strip a,.finder-admin-shell .p5-detail-head>button{background:#eaf4ff!important;border-color:#d3e8ff!important;color:#1172ce!important}
+.finder-admin-shell .p5-track i{background:var(--mac-blue)!important}
+.finder-admin-shell .p5-fields input,.finder-admin-shell .p5-modal input,.finder-admin-shell .p5-modal select{background:#f8f8fa!important;color:var(--mac-ink)!important;border-color:var(--mac-line)!important}
+.finder-admin-shell .p5-modal{background:#fff!important;border-color:var(--mac-line)!important;color:var(--mac-ink)!important}
+.finder-admin-shell .p5-modal h2{color:var(--mac-ink)!important}
+.finder-admin-shell .p5-modal-actions{background:#fff!important}
+.finder-admin-shell .p5-modal-actions button.primary{background:var(--mac-blue)!important;border-color:var(--mac-blue)!important;color:#fff!important}
+.finder-admin-shell .p5-fresh{background:#edf6ff!important;border-color:#d5eaff!important;color:#166bb6!important}
+.finder-admin-shell .p5-fresh code{color:#47647f!important}
+.finder-admin-shell .p5-message{background:#eef8f1!important;border-color:#d9ecdf!important;color:#397752!important}
+.finder-admin-shell .p5-error{background:#fff3f4!important;border-color:#efd7de!important;color:#b35467!important}
+.finder-admin-shell .finder-admin-data-unavailable>div{background:#fff2f3!important;color:#b35a6b!important}
+.finder-admin-shell .finder-admin-data-unavailable>button{background:#eaf4ff!important;border-color:#d1e8ff!important;color:var(--mac-blue)!important}
+body:has(.finder-admin-shell) .admin-delivery-trigger,body:has(.finder-admin-shell) .admin-overview-trigger{background:#fff!important;border-color:#e3e5ea!important;color:#526d88!important;box-shadow:0 4px 14px rgba(22,37,55,.09)!important}
+body:has(.finder-admin-shell) .admin-delivery-trigger:hover,body:has(.finder-admin-shell) .admin-overview-trigger:hover{background:#eaf4ff!important;border-color:#b8d7fa!important}
+.admin-delivery-panel,.admin-overview-panel{background:#fafafa!important;border-color:var(--mac-line)!important;color:var(--mac-ink)!important}
+.admin-delivery-panel h2,.admin-overview-panel h2{color:var(--mac-ink)!important}
+.admin-delivery-kicker,.admin-overview-kicker{color:#7696b4!important}
+.admin-delivery-panel input,.admin-delivery-panel select,.admin-delivery-panel textarea,.admin-overview-panel input{background:#fff!important;border-color:var(--mac-line)!important;color:var(--mac-ink)!important}
+.admin-delivery-fields .primary,.admin-delivery-panel button.primary{background:var(--mac-blue)!important;border-color:var(--mac-blue)!important;color:#fff!important}
+.admin-overview-projects article.selected,.admin-overview-projects article:hover{background:#edf6ff!important;border-color:#c4defb!important}
+.admin-overview-stats div,.admin-overview-storage,.admin-overview-detail,.admin-delivery-meta{background:#fff!important;border-color:var(--mac-line)!important}
+.admin-overview-stats b,.admin-overview-detail-head strong,.admin-delivery-meta strong{color:#37383e!important}
+
+/* Login needs higher priority than the legacy build-time dark !important rules. */
+.p5-admin.p5-login{background:var(--mac-bg)!important;color:var(--mac-ink)!important;min-height:100dvh!important}
+.p5-admin.p5-login:before{background:radial-gradient(circle at 72% 35%,rgba(0,122,255,.055),transparent 37%)!important;animation:none!important}
+.p5-admin.p5-login .p5-brand{visibility:visible!important;color:#24262b!important}
+.p5-admin.p5-login .p5-brand span{color:var(--mac-blue)!important}
+.p5-admin.p5-login .p5-login-copy h1{color:var(--mac-ink)!important;font-family:var(--font-display)!important;letter-spacing:-.055em!important}
+.p5-admin.p5-login .p5-login-copy p{color:var(--mac-sub)!important}
+.p5-admin.p5-login .p5-login-copy>span{color:#6c8ba9!important}
+.p5-admin.p5-login .p5-login-form{background:#fff!important;border:1px solid var(--mac-line)!important;box-shadow:0 16px 46px rgba(24,30,42,.09)!important;border-radius:17px!important;backdrop-filter:none!important;animation:none!important}
+.p5-admin.p5-login .p5-login-form label{color:#6b6e78!important}
+.p5-admin.p5-login .p5-login-form input{background:#f8f8fa!important;border:1px solid var(--mac-line)!important;color:var(--mac-ink)!important}
+.p5-admin.p5-login .p5-login-form input:focus{border-color:#80bcff!important;box-shadow:0 0 0 3px rgba(0,122,255,.1)!important}
+.p5-admin.p5-login .p5-login-form>button{background:var(--mac-blue)!important;border-color:var(--mac-blue)!important;color:#fff!important}
+.p5-admin.p5-login .p5-login-form>button:hover{background:var(--mac-blue-hover)!important;box-shadow:none!important;transform:none!important}
+
+/* Legal/error pages use matching neutral surfaces instead of legacy dark purple. */
+.legal-main{background:var(--mac-bg)!important;color:var(--mac-ink)!important}
+.legal-main:before{background:none!important}
+.legal-head h1,.legal-section h2{color:var(--mac-ink)!important}
+.legal-head p,.legal-section p{color:var(--mac-sub)!important}
+.legal-head .eyebrow,.legal-head>div,.legal-section a,.legal-footer a{color:var(--mac-blue)!important}
+.legal-card{background:#fff!important;border:1px solid var(--mac-line)!important;box-shadow:none!important;border-radius:16px}
+.legal-section{border-color:#ededf1!important}
+.legal-footer{border-color:#e6e6ea!important;color:#858991!important}
+body:has(.not-found-brand) .main{background:var(--mac-bg)!important;color:var(--mac-ink)!important}
+body:has(.not-found-brand) .main .eyebrow{color:var(--mac-blue)!important}
+.drop-error{background:var(--mac-bg)!important;color:var(--mac-ink)!important}
+.drop-error h1{color:var(--mac-ink)!important}
+.drop-error button{background:var(--mac-blue)!important;color:#fff!important}
+
+/* Quiet, predictable motion. Keep real upload progress and loading indicators. */
+.finder-app-shell .finder-card,.finder-app-shell .v5-row,.finder-admin-shell .finder-project-card{transform:none!important;will-change:auto!important;animation:none!important}
+.finder-app-shell .finder-card,.finder-app-shell .v5-row,.finder-app-shell .v5-btn,.finder-admin-shell .finder-project-card,.finder-admin-shell button{transition-property:background-color,border-color,color,box-shadow,opacity!important;transition-duration:140ms!important;transition-timing-function:ease-out!important}
+.finder-app-shell .v5-workspace:after{display:none!important}
+.finder-app-shell .finder-card:active,.finder-admin-shell .finder-project-card:active{opacity:.82}
+.finder-app-shell .finder-card-more summary:focus-visible,.finder-app-shell .finder-project-details summary:focus-visible,.finder-admin-shell button:focus-visible,.finder-admin-shell input:focus-visible{outline:2px solid var(--mac-blue)!important;outline-offset:2px!important}
+@media(max-width:780px){
+  .finder-app-shell{padding:0!important;background:#fff!important}
+  .finder-app-shell .finder-window,.finder-admin-shell.p5-admin{border:0!important;border-radius:0!important;box-shadow:none!important}
+  .finder-app-shell .finder-stage-scroll{padding:17px 11px 44px!important}
+  .finder-app-shell .finder-toolbar{gap:8px!important}
+  .finder-app-shell .finder-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+  .finder-app-shell .finder-card{padding:9px!important}
+  .finder-app-shell .v5-actions button,.finder-app-shell .finder-view-toggle button,.finder-app-shell .finder-card-more summary,.finder-app-shell .finder-mobile-menu{min-height:42px!important;min-width:42px!important}
+  .finder-app-shell .finder-card-more{top:10px!important;right:10px!important}
+  .finder-app-shell .finder-card-top{height:82px!important}.finder-app-shell .finder-card-art{height:50px!important;width:50px!important}
+  .finder-app-shell .v5-search input,.finder-admin-shell .p5-project-tools input,.finder-admin-shell .p5-modal input{font-size:16px!important}
+  .finder-admin-shell .p5-grid{grid-template-columns:1fr!important}
+  .finder-admin-shell .p5-modal-bg{padding:12px!important}
+  .finder-admin-shell .p5-modal{max-height:calc(100dvh - 24px)!important;overflow-y:auto!important}
+  .finder-app-shell .v5-modal{max-height:calc(100dvh - 24px)!important;overflow-y:auto!important}
+}
+@media(max-width:400px){.finder-app-shell .finder-file-group{padding-left:8px!important;padding-right:8px!important}.finder-app-shell .finder-card-label strong{font-size:10px!important}.finder-app-shell .finder-toolbar .v5-btn{padding:0 9px!important}}
+@media(prefers-reduced-motion:reduce){.finder-app-shell *,.finder-admin-shell *,.p5-admin.p5-login *{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}

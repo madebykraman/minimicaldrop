@@ -40,7 +40,7 @@ export default function DeliveryOpsPage() {
   useEffect(() => { void load() }, [])
   const filtered = useMemo(() => projects.filter(p => { const hay = `${p.name} ${p.client_name} ${p.client_email || ''}`.toLowerCase(); return (!query || hay.includes(query.toLowerCase())) && (status === 'all' || (p.delivery_status || 'in_progress') === status) }), [projects, query, status])
 
-  if (selected) return <main style={shell}>
+  if (selected) return <main className="mac-ops" style={shell}>
     <button style={back} onClick={() => setSelected(null)}><ArrowLeft size={15}/> Projects</button>
     <div style={header}><div><small style={eyebrow}>DELIVERY OPERATIONS</small><h1 style={h1}>{selected.name}</h1><p style={muted}>Prepared for {selected.client_name}{selected.client_email ? ` · ${selected.client_email}` : ''}</p></div><span style={privatePill}>CLIENT-FACING CONTROLS</span></div>
     <section style={grid}>
@@ -50,7 +50,7 @@ export default function DeliveryOpsPage() {
     </section>
   </main>
 
-  return <main style={shell}>
+  return <main className="mac-ops" style={shell}>
     <a href="/admin" style={back}><ArrowLeft size={15}/> Admin</a>
     <div style={header}><div><small style={eyebrow}>MINIMICAL DROP</small><h1 style={h1}>Delivery operations</h1><p style={muted}>Set what the client sees without exposing studio controls.</p></div><MessageSquare size={22} opacity={0.5}/></div>
     <div style={filters}><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search projects or clients" style={input}/><select value={status} onChange={e => setStatus(e.target.value)} style={input}>{[['all','All states'], ...statuses].map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select></div>
@@ -58,24 +58,24 @@ export default function DeliveryOpsPage() {
   </main>
 }
 
-const shell: CSSProperties = { minHeight: '100vh', padding: '42px clamp(18px, 4vw, 64px)', background: '#08070c', color: '#f7f5fa', fontFamily: 'Inter, system-ui, sans-serif' }
+const shell: CSSProperties = { minHeight: '100vh', padding: '42px clamp(18px, 4vw, 64px)', background: '#f5f5f7', color: '#1d1d1f', fontFamily: 'var(--font-body), system-ui, sans-serif' }
 const header: CSSProperties = { maxWidth: 1100, margin: '24px auto 30px', display: 'flex', justifyContent: 'space-between', gap: 24, alignItems: 'flex-start' }
 const h1: CSSProperties = { margin: '6px 0', fontSize: 'clamp(30px, 5vw, 54px)', letterSpacing: '-.04em' }
-const muted: CSSProperties = { color: '#9992a6', lineHeight: 1.6, margin: '6px 0' }
-const eyebrow: CSSProperties = { fontSize: 10, letterSpacing: '.15em', fontWeight: 700, color: '#a992c9' }
-const back: CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 7, color: '#c9b6e8', textDecoration: 'none', background: 'none', border: 0, padding: 0, cursor: 'pointer' }
-const privatePill: CSSProperties = { border: '1px solid rgba(118,80,173,.28)', padding: '8px 10px', borderRadius: 999, fontSize: 10, letterSpacing: '.1em', color: '#bca8d8' }
+const muted: CSSProperties = { color: '#6e6e73', lineHeight: 1.6, margin: '6px 0' }
+const eyebrow: CSSProperties = { fontSize: 10, letterSpacing: '.15em', fontWeight: 700, color: '#5d8bbb' }
+const back: CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 7, color: '#007aff', textDecoration: 'none', background: 'none', border: 0, padding: 0, cursor: 'pointer' }
+const privatePill: CSSProperties = { border: '1px solid rgba(0,122,255,.16)', padding: '8px 10px', borderRadius: 999, fontSize: 10, letterSpacing: '.1em', color: '#2478c2' }
 const grid: CSSProperties = { maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'minmax(0,2fr) minmax(260px,1fr)', gap: 14 }
-const card: CSSProperties = { border: '1px solid rgba(118,80,173,.22)', borderRadius: 18, padding: 22, background: 'rgba(20,16,28,.82)' }
-const label: CSSProperties = { display: 'block', margin: '20px 0 7px', fontSize: 12, color: '#c7c0d1' }
-const input: CSSProperties = { width: '100%', minHeight: 44, boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(153,146,166,.22)', background: '#0e0b13', color: '#f7f5fa', font: 'inherit' }
-const primary: CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 7, minHeight: 44, padding: '0 16px', borderRadius: 10, border: 0, background: '#7650ad', color: '#fff', fontWeight: 700, cursor: 'pointer' }
+const card: CSSProperties = { border: '1px solid rgba(40,57,79,.11)', borderRadius: 18, padding: 22, background: '#ffffff' }
+const label: CSSProperties = { display: 'block', margin: '20px 0 7px', fontSize: 12, color: '#545861' }
+const input: CSSProperties = { width: '100%', minHeight: 44, boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(40,50,65,.13)', background: '#fafafa', color: '#1d1d1f', font: 'inherit' }
+const primary: CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 7, minHeight: 44, padding: '0 16px', borderRadius: 10, border: 0, background: '#007aff', color: '#fff', fontWeight: 700, cursor: 'pointer' }
 const row: CSSProperties = { display: 'flex', alignItems: 'center', gap: 12, marginTop: 16, flexWrap: 'wrap' }
-const success: CSSProperties = { display: 'inline-flex', gap: 5, alignItems: 'center', color: '#bfe8c7', fontSize: 12 }
-const errorText: CSSProperties = { color: '#efaaaa', fontSize: 12 }
-const metric: CSSProperties = { display: 'flex', justifyContent: 'space-between', gap: 20, padding: '14px 0', borderBottom: '1px solid rgba(153,146,166,.12)', fontSize: 13 }
-const activityRow: CSSProperties = { display: 'flex', justifyContent: 'space-between', gap: 15, padding: '12px 0', borderBottom: '1px solid rgba(153,146,166,.1)', fontSize: 13 }
+const success: CSSProperties = { display: 'inline-flex', gap: 5, alignItems: 'center', color: '#228151', fontSize: 12 }
+const errorText: CSSProperties = { color: '#b74e64', fontSize: 12 }
+const metric: CSSProperties = { display: 'flex', justifyContent: 'space-between', gap: 20, padding: '14px 0', borderBottom: '1px solid rgba(40,50,65,.10)', fontSize: 13 }
+const activityRow: CSSProperties = { display: 'flex', justifyContent: 'space-between', gap: 15, padding: '12px 0', borderBottom: '1px solid rgba(40,50,65,.10)', fontSize: 13 }
 const filters: CSSProperties = { maxWidth: 1100, margin: '0 auto 14px', display: 'grid', gridTemplateColumns: '1fr 220px', gap: 10 }
-const list: CSSProperties = { maxWidth: 1100, margin: '0 auto', border: '1px solid rgba(118,80,173,.22)', borderRadius: 18, overflow: 'hidden', background: 'rgba(20,16,28,.72)' }
-const projectRow: CSSProperties = { width: '100%', display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 15, alignItems: 'center', textAlign: 'left', padding: '18px 20px', border: 0, borderBottom: '1px solid rgba(153,146,166,.1)', background: 'transparent', color: '#f7f5fa', cursor: 'pointer' }
-const state: CSSProperties = { fontSize: 11, letterSpacing: '.08em', color: '#bca8d8' }
+const list: CSSProperties = { maxWidth: 1100, margin: '0 auto', border: '1px solid rgba(40,57,79,.11)', borderRadius: 18, overflow: 'hidden', background: '#ffffff' }
+const projectRow: CSSProperties = { width: '100%', display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 15, alignItems: 'center', textAlign: 'left', padding: '18px 20px', border: 0, borderBottom: '1px solid rgba(40,50,65,.10)', background: 'transparent', color: '#1d1d1f', cursor: 'pointer' }
+const state: CSSProperties = { fontSize: 11, letterSpacing: '.08em', color: '#2478c2' }
