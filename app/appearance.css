@@ -280,3 +280,32 @@ body:has(.not-found-brand) .main .eyebrow{color:var(--mac-blue)!important}
 }
 @media(max-width:400px){.finder-app-shell .finder-file-group{padding-left:8px!important;padding-right:8px!important}.finder-app-shell .finder-card-label strong{font-size:10px!important}.finder-app-shell .finder-toolbar .v5-btn{padding:0 9px!important}}
 @media(prefers-reduced-motion:reduce){.finder-app-shell *,.finder-admin-shell *,.p5-admin.p5-login *{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+
+/* Additional screens and dynamic overlays: no surviving dark modal surfaces. */
+.v5-shell:has(.finder-app-shell){background:var(--mac-bg)!important;color:var(--mac-ink)!important}
+.v5-shell .v5-modal,.v5-shell .v5-dialog{background:#fff!important;color:var(--mac-ink)!important;border:1px solid var(--mac-line)!important;border-radius:15px!important;box-shadow:0 30px 80px rgba(19,26,39,.19)!important}
+.v5-shell .v5-modal h2,.v5-shell .v5-dialog h2{color:var(--mac-ink)!important}
+.v5-shell .v5-modal p,.v5-shell .v5-dialog p{color:var(--mac-sub)!important}
+.v5-shell .v5-modal input,.v5-shell .v5-dialog input{background:#f8f8fa!important;border:1px solid var(--mac-line)!important;color:var(--mac-ink)!important}
+.v5-shell .v5-modal-actions button.primary,.v5-shell .v5-dialog button.primary{background:var(--mac-blue)!important;border-color:var(--mac-blue)!important;color:#fff!important}
+.v5-shell .v5-modal-actions button.danger,.v5-shell .v5-dialog button.danger{background:#c25364!important;border-color:#c25364!important;color:#fff!important}
+.v5-shell .v5-modal-backdrop,.v5-shell .v5-dialog-backdrop{background:rgba(27,34,46,.36)!important}
+.finder-app-shell .v5-workspace,.finder-app-shell .v5-recovery,.finder-app-shell .v5-queue,.finder-app-shell .finder-intro{animation:none!important;will-change:auto!important}
+.finder-admin-shell .p5-summary>div,.finder-admin-shell .p5-projects,.finder-admin-shell .p5-panel{animation:none!important}
+.finder-admin-loading{background:var(--mac-bg)!important;color:var(--mac-ink)!important}
+.finder-admin-loading-content{background:#fff!important;border-color:var(--mac-line)!important}
+.finder-loading-line,.finder-loading-grid i{background:#ebecf0!important}
+html:has(.mac-ops),body:has(.mac-ops),html:has(.legal-main),body:has(.legal-main),html:has(.not-found-brand),body:has(.not-found-brand){background:var(--mac-bg)!important;color:var(--mac-ink)!important}
+.mac-ops{background:var(--mac-bg)!important;color:var(--mac-ink)!important}
+.mac-ops button:hover{background-color:#eef6ff!important}
+.mac-ops button:focus-visible,.mac-ops input:focus-visible,.mac-ops select:focus-visible,.mac-ops textarea:focus-visible{outline:2px solid var(--mac-blue);outline-offset:2px}
+.mac-ops button[style*="background: rgb(0, 122, 255)"],.mac-ops button[style*="background: #007aff"]{color:#fff!important}
+.legal-brand img,.not-found-brand img{filter:brightness(0);opacity:.88}
+@media(max-width:760px){
+  .mac-ops{padding:20px 14px!important}
+  .mac-ops section[style*="grid"]{grid-template-columns:minmax(0,1fr)!important}
+  .mac-ops div[style*="grid-template-columns"]{grid-template-columns:minmax(0,1fr)!important}
+  .mac-ops input,.mac-ops select{min-width:0}
+  .mac-ops button{min-height:43px}
+}
