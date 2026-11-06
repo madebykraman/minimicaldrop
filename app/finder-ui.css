@@ -1,0 +1,295 @@
+/* Minimical Drop — Finder-inspired UI layer
+   Scoped to the client workspace and admin control room. No global color resets. */
+.finder-app-shell {
+  --fd-bg:#f4f5f8; --fd-panel:#fff; --fd-line:#e7e8ee; --fd-ink:#242638;
+  --fd-sub:#8a8d9b; --fd-violet:#7456b1; --fd-violet-soft:#f0ebfa;
+  color:var(--fd-ink); color-scheme:light; min-height:100dvh;
+  padding:clamp(12px,2.7vw,36px); box-sizing:border-box;
+  background:radial-gradient(ellipse 55% 45% at 3% 2%,#e4dff3,transparent 80%),
+             radial-gradient(ellipse 48% 50% at 96% 90%,#dfe6f5,transparent 80%),#eff0f5;
+  font-family:var(--font-body),ui-sans-serif,system-ui,sans-serif;
+}
+.finder-app-shell *, .finder-app-shell *::before,.finder-app-shell *::after{box-sizing:border-box}
+.finder-app-shell button,.finder-app-shell select,.finder-app-shell input{font:inherit}
+.finder-app-shell button:focus-visible,.finder-app-shell a:focus-visible,.finder-app-shell input:focus-visible,.finder-app-shell select:focus-visible{outline:3px solid #ae97de;outline-offset:3px}
+.finder-window{max-width:1536px;min-height:calc(100dvh - clamp(24px,5.4vw,72px));margin:0 auto;border-radius:21px;overflow:hidden;background:var(--fd-panel);border:1px solid #fff;box-shadow:0 24px 60px rgba(47,44,72,.10),0 65px 130px rgba(39,36,60,.08),0 2px 10px rgba(39,36,60,.05)}
+.finder-window-bar{height:51px;display:flex;align-items:center;padding:0 22px;border-bottom:1px solid var(--fd-line);background:linear-gradient(180deg,#fdfdff,#f7f7fb);position:relative}
+.finder-traffic{display:flex;align-items:center;gap:8px;min-width:76px}.finder-traffic span{width:12px;height:12px;display:block;border-radius:50%;border:1px solid rgba(0,0,0,.06);box-shadow:inset 0 1px 2px rgba(255,255,255,.35)}.finder-traffic span:nth-child(1){background:#ff5f58}.finder-traffic span:nth-child(2){background:#ffbd2e}.finder-traffic span:nth-child(3){background:#29c840}
+.finder-window-title{display:flex;align-items:center;justify-content:center;gap:9px;position:absolute;left:50%;transform:translateX(-50%);color:#515366;font-size:12px;white-space:nowrap}.finder-window-title svg{color:#8b72bf}.finder-window-title strong{font-weight:750;letter-spacing:-.02em}.finder-window-title span{color:#a8a8b6}
+.finder-window-secure{margin-left:auto;display:flex;align-items:center;gap:6px;color:#858995;font-size:10px;font-weight:650;letter-spacing:.02em}.finder-window-secure svg{color:#8b75bf}
+.finder-window-body{display:flex;min-height:calc(100dvh - 130px);align-items:stretch}
+.finder-sidebar{width:236px;flex:none;background:linear-gradient(150deg,#f7f7fb 0%,#f2f1f7 100%);border-right:1px solid #e8e6ef;padding:26px 15px 22px;display:flex;flex-direction:column;gap:27px}
+.finder-sidebar-brand{display:flex;gap:10px;align-items:center;padding:0 12px 5px}.finder-sidebar-logo{width:36px;height:36px;background:linear-gradient(145deg,#9273c8,#7655b2);box-shadow:0 6px 16px rgba(118,85,178,.22);border-radius:11px;display:grid;place-items:center;color:#fff}
+.finder-sidebar-brand strong{display:block;color:#28263a;font:750 17px var(--font-display),system-ui;letter-spacing:-.045em}.finder-sidebar-brand span{display:block;font-size:8px;color:#9895a4;font-weight:800;letter-spacing:.11em;margin-top:2px}
+.finder-sidebar-group{display:flex;flex-direction:column;gap:5px}
+.finder-sidebar-group>span{font-size:10px;font-weight:800;letter-spacing:.09em;color:#a2a0ae;padding:0 13px;margin-bottom:7px}
+.finder-sidebar-group button{width:100%;display:flex;align-items:center;gap:12px;min-height:41px;padding:0 13px;text-align:left;border:0;border-radius:10px;background:transparent;color:#696a7a;font-size:12px;font-weight:650;cursor:pointer;transition:background .18s,color .18s,transform .18s}
+.finder-sidebar-group button svg{color:#9996ab;flex:none}.finder-sidebar-group button em{margin-left:auto;font-style:normal;font-size:10px;color:#a2a1ac;font-weight:600}.finder-sidebar-group button:hover{background:#e9e7f2;color:#383249}.finder-sidebar-group button.active{background:#e6ddf7;color:#6745a4;box-shadow:inset 0 0 0 1px rgba(133,99,191,.06)}.finder-sidebar-group button.active svg,.finder-sidebar-group button.active em{color:#7955b5}
+.finder-sidebar-spacer{flex:1;min-height:40px}
+.finder-sidebar-storage{background:rgba(255,255,255,.76);border:1px solid #e8e5ef;border-radius:14px;padding:15px}
+.finder-sidebar-storage>span{display:block;color:#9995a4;font-size:9px;font-weight:800;letter-spacing:.10em}.finder-sidebar-storage strong{display:block;color:#343043;font-size:17px;margin-top:8px;letter-spacing:-.045em}.finder-sidebar-storage small{font-size:10px;font-weight:500;color:#9996a6}.finder-sidebar-storage p{font-size:10px;color:#9e9aaa;margin:8px 0 0}
+.finder-meter{height:6px;border-radius:6px;background:#e7e2f1;margin-top:13px;overflow:hidden}.finder-meter i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#9c81d0,#6e4aa9)}
+.finder-sidebar-foot{display:flex;align-items:center;gap:7px;padding:0 5px;font-size:8px;color:#aaa8b4;letter-spacing:.06em;font-weight:700}.finder-status-dot{width:7px;height:7px;border-radius:50%;background:#4ab895;box-shadow:0 0 0 4px rgba(74,184,149,.1)}
+.finder-stage{min-width:0;flex:1;background:#fff}
+.finder-stage-top{height:64px;border-bottom:1px solid var(--fd-line);display:flex;justify-content:space-between;align-items:center;padding:0 clamp(20px,3.1vw,40px);background:rgba(255,255,255,.98)}
+.finder-stage-title{display:flex;align-items:center;gap:12px;min-width:0}.finder-stage-title span{font-size:10px;font-weight:800;letter-spacing:.12em;color:#b3b0bd}.finder-stage-title strong{font-size:13px;font-weight:750;color:#424256;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:380px}
+.finder-private-label{font-size:10px;letter-spacing:.01em;font-weight:700;display:flex;align-items:center;gap:7px;padding:8px 12px;background:#f5f7f5;border:1px solid #e6efe9;border-radius:999px;color:#648b77}.finder-private-label>span{width:6px;height:6px;border-radius:50%;background:#58bc8f}
+.finder-mobile-menu{display:none}
+.finder-stage-scroll{max-width:1320px;margin:0 auto;padding:clamp(24px,3vw,44px) clamp(18px,3vw,42px) 44px}
+.finder-intro{display:flex;gap:28px;justify-content:space-between;align-items:flex-end;margin-bottom:26px}
+.finder-intro>div:first-child>span{color:#9679c4;letter-spacing:.13em;font-size:9px;font-weight:800}
+.finder-intro h1{font-family:var(--font-display),system-ui;font-size:clamp(28px,3.4vw,44px);font-weight:750;letter-spacing:-.055em;line-height:1.18;color:#27283b;margin:8px 0 9px;overflow-wrap:anywhere}
+.finder-intro p{font-size:12px;color:#9596a4;margin:0;line-height:1.6}.finder-intro p strong{color:#505165;font-weight:700}.finder-intro-divider{margin:0 5px;color:#b2b0b9}
+.finder-intro-chip{display:flex;align-items:center;gap:10px;min-width:206px;padding:13px 15px;border:1px solid #e9e8ef;background:#fafafe;border-radius:11px;color:#89899a;font-size:11px;line-height:1.4}.finder-intro-chip svg{flex:none;color:#9a7dc7}
+.finder-app-shell .v5-workspace{border:1px solid #e9e9ef;background:#fff;border-radius:15px;overflow:hidden;box-shadow:0 12px 32px rgba(25,30,54,.035)}
+.finder-toolbar{min-height:68px;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:11px 20px;border-bottom:1px solid #eeeef3;background:#fcfcfe}
+.finder-navigation-controls{display:flex;align-items:center;gap:10px;min-width:0}
+.finder-icon-button{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:8px;border:1px solid #e7e7ee;background:#fff;color:#858399;cursor:pointer}
+.finder-icon-button:disabled{opacity:.34;cursor:default}
+.finder-app-shell .v5-crumbs{display:flex;align-items:center;max-width:600px;min-width:0;overflow-x:auto;white-space:nowrap;gap:0}.finder-app-shell .v5-crumbs>span{color:#c0bbc9}.finder-app-shell .v5-crumbs button{border:0;background:none;color:#9c9caa;padding:8px 7px;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer}.finder-app-shell .v5-crumbs button.active{color:#453e60;font-weight:800}
+.finder-app-shell .v5-actions{display:flex;gap:8px;flex:none;align-items:center}
+.finder-app-shell .v5-btn{display:flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:0 13px;border:1px solid #e5e5ee;border-radius:9px;background:#fff;color:#656477;font-size:11px;font-weight:750;white-space:nowrap;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.025)}
+.finder-app-shell .v5-btn:hover{border-color:#b9acd5;color:#674fa1;background:#faf8ff}
+.finder-app-shell .v5-btn.primary{background:#7959b3;color:#fff;border-color:#7959b3;box-shadow:0 4px 10px rgba(111,76,171,.13)}
+.finder-app-shell .v5-btn.primary:hover{background:#66449f;border-color:#66449f;color:#fff}
+.finder-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px 10px}
+.finder-app-shell .v5-search{height:41px;display:flex;align-items:center;gap:9px;flex:1;max-width:415px;border-radius:10px;background:#f7f7fa;border:1px solid #ededf2;padding:0 13px;color:#a1a0af}
+.finder-app-shell .v5-search:focus-within{border-color:#c7b4e5;box-shadow:0 0 0 3px rgba(129,92,187,.08)}
+.finder-app-shell .v5-search input{flex:1;min-width:0;background:transparent;color:#34334c;font-size:12px;outline:none;border:0}.finder-app-shell .v5-search input::placeholder{color:#a2a1ae}.finder-app-shell .v5-search button{border:0;background:none;color:#9492a4;padding:5px;cursor:pointer}
+.finder-tools-right{display:flex;align-items:center;gap:11px}
+.finder-app-shell .v5-sort{height:40px;border:1px solid #eaeaf0;border-radius:9px;background:#fff;display:flex;align-items:center;padding:0 8px 0 10px;gap:9px}
+.finder-app-shell .v5-sort span{font-size:10px;color:#a4a3af;white-space:nowrap;font-weight:700}.finder-app-shell .v5-sort select{background:transparent;border:0;outline:0;color:#575369;font-size:11px;font-weight:750;min-width:100px;max-width:150px}
+.finder-view-toggle{display:flex;align-items:center;border:1px solid #e6e6ed;background:#f6f5f9;border-radius:10px;padding:3px;gap:2px}
+.finder-view-toggle button{height:32px;width:35px;display:grid;place-items:center;border:0;background:none;border-radius:7px;color:#aaa7b7;cursor:pointer}
+.finder-view-toggle button.active{background:#fff;color:#7651aa;box-shadow:0 1px 5px rgba(37,37,51,.11)}
+.finder-app-shell .v5-dropzone.finder-dropzone{margin:8px 20px 0;min-height:83px;display:flex;align-items:center;justify-content:flex-start;gap:14px;padding:14px 17px;border:1px dashed #cabbe5;background:linear-gradient(110deg,#fcfaff,#f9f7fd);border-radius:11px;color:#635082;cursor:default}
+.finder-app-shell .v5-dropzone.dragging{background:#eae0fa;border-color:#825fba}
+.finder-drop-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:#eee7f8;color:#855fb6;flex:none}
+.finder-dropzone strong{display:block;color:#625479;font-size:12px;font-weight:800}.finder-dropzone span{display:block;margin:4px 0 0;font-size:10px;color:#9a8dab}.finder-drop-hint{margin-left:auto!important;font-size:10px!important;color:#a7a0b1!important;white-space:nowrap}
+.finder-files-head{display:flex;align-items:center;justify-content:space-between;padding:23px 22px 14px;gap:12px}
+.finder-files-head>div{display:flex;align-items:baseline;gap:11px;min-width:0}.finder-files-head strong{font:750 16px var(--font-display),system-ui;color:#35344a;letter-spacing:-.035em}.finder-files-head span{font-size:10px;color:#a5a4b0}
+.finder-files-head>button{border:0;background:transparent;color:#8060b4;font-size:11px;font-weight:750;cursor:pointer}
+.finder-file-content{padding-bottom:24px;min-height:285px}
+.finder-file-group{padding:0 21px 24px}.finder-file-group>header{display:flex;gap:9px;align-items:center;margin:6px 2px 15px;color:#777687}.finder-file-group>header svg{color:#9477c3}.finder-file-group>header strong{font-size:12px;color:#676477;font-weight:800}.finder-file-group>header span{margin-left:auto;color:#aeaeb8;font-size:10px}
+.finder-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(166px,1fr));gap:13px}
+.finder-card{min-width:0;border:1px solid #e9e8ef;border-radius:13px;background:#fff;padding:11px 11px 9px;box-shadow:0 2px 7px rgba(49,47,65,.025);transition:transform .18s,border-color .18s,box-shadow .18s}
+.finder-card:hover,.finder-card:focus-within{border-color:#cfbfeb;box-shadow:0 9px 22px rgba(78,65,105,.09);transform:translateY(-2px)}.finder-card.selected{border-color:#9d81ce;background:#fbf8ff;box-shadow:0 0 0 2px rgba(145,113,201,.13)}
+.finder-card-top{height:106px;position:relative;display:grid;place-items:center;background:linear-gradient(145deg,#f5f2fa,#faf9fd);border-radius:9px;overflow:hidden}
+.finder-card-art{width:69px;height:69px;display:grid;place-items:center;border-radius:18px;background:#ebe5f7;color:#9174be}
+.finder-card-art.is-folder{background:linear-gradient(145deg,#e6d8fa,#d8c9f2);color:#7450ac;box-shadow:0 6px 14px rgba(110,76,173,.13)}
+.finder-card-art.is-image{background:#e3eef9;color:#7297c8}.finder-card-art.is-video{background:#fbe8ef;color:#ca839d}.finder-card-art.is-audio{background:#e4f3ef;color:#69a994}
+.finder-card-top input{position:absolute;top:9px;left:9px;width:16px;height:16px;accent-color:#7955b5;cursor:pointer;opacity:.35}
+.finder-card:hover .finder-card-top input,.finder-card.selected .finder-card-top input,.finder-card-top input:focus-visible{opacity:1}
+.finder-card-label{padding:11px 1px 8px;display:block;width:100%;text-align:left;border:0;background:none;cursor:pointer;min-height:54px}
+.finder-card-label strong{font-size:11px;color:#3a394c;font-weight:800;line-height:1.4;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.finder-card-label span{display:block;font-size:10px;color:#a2a0ab;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.finder-card-actions{display:flex;justify-content:space-between;gap:3px;border-top:1px solid #f0eef4;padding:7px 0 0}
+.finder-card-actions button{flex:1;display:grid;place-items:center;height:31px;border:0;border-radius:7px;background:none;color:#a4a0b1;cursor:pointer}
+.finder-card-actions button:hover{background:#f0ebf8;color:#7653af}
+.finder-app-shell .v5-list-head,.finder-app-shell .v5-row{grid-template-columns:42px minmax(180px,1fr) 104px 132px 158px}
+.finder-app-shell .v5-list-head{height:40px;border-color:#f0edf3;background:#fbfafd;color:#9c9aaa}
+.finder-app-shell .v5-row{color:#8b8999;border-color:#f0edf3;background:#fff;min-height:64px}
+.finder-app-shell .v5-row:hover{background:#faf8fe}.finder-app-shell .v5-name{color:#34334a}.finder-app-shell .v5-icon{background:#f0eaf9;color:#9577bd}.finder-app-shell .v5-row-actions button{color:#a3a0b0}.finder-app-shell .v5-row-actions button:hover{background:#ede7f7;color:#7853b4}
+.finder-app-shell input[type=checkbox]{accent-color:#7655b2}
+.finder-app-shell .v5-selection{margin:13px 20px 0;min-height:49px;padding:10px 14px;background:#f4effa;border:1px solid #e6dcf3;border-radius:9px;color:#664b8c}
+.finder-app-shell .v5-selection button{background:#fff;color:#74549e;border:1px solid #e3d7f0;border-radius:7px;height:33px;padding:0 11px;display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;cursor:pointer}
+.finder-app-shell .v5-selection button.danger{color:#b25d70}
+.finder-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:230px;padding:25px;text-align:center;color:#9995a7}
+.finder-empty>div{display:grid;place-items:center;width:65px;height:65px;border-radius:20px;background:#f1edf9;color:#9a82c2;margin-bottom:14px}.finder-empty strong{font-size:14px;color:#494459}.finder-empty p{font-size:11px;margin:8px 0 16px}.finder-empty button{display:flex;gap:7px;align-items:center;border:0;background:#7b59b2;color:#fff;border-radius:8px;padding:9px 13px;cursor:pointer;font-size:11px}
+.finder-app-shell .v5-storage.finder-storage-card{display:flex;align-items:center;gap:14px;border:1px solid #e9e9f0;border-radius:12px;background:#fff;margin-top:15px;padding:16px 18px;color:#656477}
+.finder-storage-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#f1ecfa;color:#8461bb;flex:none}.finder-storage-copy{flex:1;min-width:0}.finder-storage-copy>span{font-size:9px;letter-spacing:.1em;color:#9b96aa;font-weight:800}.finder-storage-copy strong{font-size:15px;color:#454057;font-weight:800;margin-top:3px}.finder-storage-copy small{font-size:11px;color:#9993a3;font-weight:550}.finder-storage-copy .v5-track{height:6px;border-radius:5px;margin-top:10px;background:#ede8f6}.finder-storage-copy .v5-track i{border-radius:5px;background:#8d69c2}
+.finder-storage-status{font-size:10px;color:#8c8798;white-space:nowrap}
+.finder-app-shell .v5-recovery,.finder-app-shell .v5-queue{border:1px solid #e6e2ee;border-radius:12px;background:#fff;color:#8d6cb5;margin-top:15px}
+.finder-app-shell .v5-recovery strong,.finder-app-shell .v5-queue-head strong,.finder-app-shell .v5-transfer-main strong{color:#444057}
+.finder-app-shell .v5-recovery span,.finder-app-shell .v5-queue-head span,.finder-app-shell .v5-transfer-main span{color:#9b97a4}.finder-app-shell .v5-queue-head{border-color:#eeeaf3}
+.finder-app-shell .v5-transfer{border-color:#eeeaf3}.finder-app-shell .v5-file-icon{background:#f2eef9;color:#8b6abc}.finder-app-shell .v5-progress{background:#efeaf6}.finder-app-shell .v5-progress i{background:#8665bc}
+.finder-app-shell .v5-recovery-resume{background:#805fb6!important;color:#fff!important;border-color:#805fb6!important}
+.finder-app-shell .v5-recovery-head{border-color:#eeeaf2}
+.finder-app-shell .v5-recovery-file strong{color:#514c65}.finder-app-shell .v5-recovery-file span,.finder-app-shell .v5-recovery-file em{color:#9791a1}
+.v5-shell .v5-show-queue{background:#fff;color:#624a84;border-color:#ddd2ee;border-radius:12px}
+.v5-shell .v5-modal{background:#fff;color:#34334a;border-color:#e9e3f0;box-shadow:0 40px 100px rgba(19,15,40,.18)}
+.v5-shell .v5-modal h2{color:#323144}.v5-shell .v5-modal-field{color:#827b91}.v5-shell .v5-modal-field input{background:#f7f6fa;color:#343245;border-color:#ddd6e9}
+.v5-shell .v5-modal-actions button{background:#f5f2fa;color:#584b69;border-color:#e8e1f1}
+.v5-shell .v5-modal-actions button.primary{background:#7957b3;color:#fff;border-color:#7957b3}.v5-shell .v5-modal-actions button.danger{background:#ad5774;color:#fff;border-color:#ad5774}
+.v5-shell .v5-delete-copy{color:#706c7c}.v5-shell .v5-delete-copy strong{color:#363246}
+.v5-shell .v5-preview{background:rgba(24,20,38,.98)}
+.finder-sidebar-scrim{display:none}
+@media(max-width:1160px){.finder-sidebar{width:206px}.finder-intro-chip{display:none}.finder-toolbar{flex-wrap:wrap}.finder-app-shell .v5-crumbs{max-width:420px}.finder-file-group{padding:0 15px 22px}.finder-card-grid{grid-template-columns:repeat(auto-fill,minmax(158px,1fr))}}
+@media(max-width:860px){.finder-app-shell{padding:10px}.finder-window{min-height:calc(100dvh - 20px);border-radius:15px}.finder-window-title{position:static;transform:none}.finder-window-bar{justify-content:space-between}.finder-window-secure{display:none}.finder-sidebar{width:202px}.finder-stage-scroll{padding:24px 16px}.finder-stage-top{padding:0 17px}.finder-intro h1{font-size:30px}.finder-app-shell .v5-actions .ghost>span{display:none}.finder-app-shell .v5-crumbs{max-width:320px}.finder-files-head{padding:20px 16px 13px}.finder-tools{padding:12px 15px}}
+@media(max-width:700px){.finder-app-shell{padding:0;background:#fff}.finder-window{border-radius:0;min-height:100dvh;border:0;box-shadow:none}.finder-window-bar{height:43px;padding:0 15px}.finder-window-title{font-size:11px}.finder-traffic{min-width:68px;gap:6px}.finder-traffic span{width:10px;height:10px}
+.finder-sidebar{position:fixed;z-index:60;left:0;top:0;bottom:0;width:min(275px,86vw);box-shadow:10px 0 36px rgba(42,35,63,.1);transform:translateX(-105%);transition:transform .22s;padding-top:32px}.finder-sidebar.is-open{transform:translateX(0)}.finder-sidebar-scrim{display:block;position:fixed;inset:0;z-index:59;background:rgba(31,24,49,.35);border:0;width:100%;height:100%}
+.finder-mobile-menu{display:grid;place-items:center;width:37px;height:37px;border:0;border-radius:8px;background:#f3f1f7;color:#726390;cursor:pointer}.finder-stage-top{height:60px;justify-content:flex-start;gap:13px}.finder-stage-title{flex:1}.finder-stage-title span{display:none}.finder-stage-title strong{font-size:13px;max-width:45vw}.finder-private-label{font-size:9px;padding:6px 9px}
+.finder-stage-scroll{padding:22px 11px 48px}.finder-intro{margin:0 4px 18px}.finder-intro h1{font-size:clamp(26px,7vw,34px)}.finder-intro p{font-size:11px}
+.finder-toolbar{padding:12px;gap:12px;align-items:stretch}.finder-navigation-controls{width:100%}.finder-app-shell .v5-crumbs{max-width:calc(100vw - 82px)}.finder-app-shell .v5-actions{width:100%}.finder-app-shell .v5-actions .v5-btn{flex:1;min-width:0;padding:0 8px}.finder-app-shell .v5-actions .ghost>span{display:inline}.finder-tools{flex-direction:column;align-items:stretch;padding:11px}.finder-app-shell .v5-search{max-width:none;width:100%;flex:none}.finder-tools-right{justify-content:space-between}.finder-app-shell .v5-sort{flex:1}.finder-app-shell .v5-sort select{flex:1}
+.finder-app-shell .v5-dropzone.finder-dropzone{margin:5px 11px 0;min-height:72px;padding:11px}.finder-drop-hint{display:none!important}.finder-files-head{padding:19px 13px 12px}.finder-file-group{padding:0 12px 20px}.finder-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.finder-card{padding:9px}.finder-card-top{height:95px}.finder-card-art{height:59px;width:59px}.finder-card-actions button{min-height:34px}.finder-app-shell .v5-list-head{display:none}.finder-app-shell .v5-row{grid-template-columns:28px minmax(0,1fr);padding:10px}.finder-app-shell .v5-row-actions{grid-column:2/-1;margin-left:0}.finder-app-shell .v5-row-actions button{min-height:39px;min-width:39px}
+.finder-app-shell .v5-storage.finder-storage-card{margin-top:12px;padding:13px;flex-wrap:wrap}.finder-storage-status{width:100%;padding-left:54px}.finder-app-shell .v5-selection{margin:10px 11px 0}.finder-app-shell .v5-selection>div{flex-wrap:wrap}
+}
+@media(max-width:390px){.finder-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.finder-window-title span{display:none}.finder-app-shell .v5-actions .v5-btn{font-size:10px;gap:5px}.finder-app-shell .v5-actions .ghost>span{display:none}.finder-card-label strong{font-size:10px}.finder-view-toggle button{width:32px}.finder-stage-title strong{max-width:120px}}
+@media(prefers-reduced-motion:reduce){.finder-app-shell *, .finder-app-shell *::before,.finder-app-shell *::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+
+/* Studio/admin Finder companion */
+body:has(.finder-admin-shell){background:#eff0f5!important}
+.p5-admin.finder-admin-shell{--fa-border:#e7e7ef;--fa-ink:#343449;--fa-muted:#9897a8;color:#343449;color-scheme:light;min-height:calc(100dvh - 28px);max-width:1536px;margin:14px auto;padding:0;background:#fff;border:1px solid #fff;border-radius:21px;overflow:hidden;box-shadow:0 24px 72px rgba(45,43,72,.12),0 55px 120px rgba(31,30,56,.08);font-family:var(--font-body),system-ui,sans-serif}
+.finder-admin-shell *, .finder-admin-shell *::before,.finder-admin-shell *::after{box-sizing:border-box}
+.finder-admin-shell button:focus-visible,.finder-admin-shell a:focus-visible,.finder-admin-shell input:focus-visible,.finder-admin-shell select:focus-visible{outline:3px solid #ac96dc;outline-offset:3px}
+.finder-admin-window-bar{height:50px;background:linear-gradient(#fff,#f8f8fb);border-bottom:1px solid #e9e9f0;display:flex;align-items:center;padding:0 21px;position:relative}
+.finder-admin-window-title{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:9px;white-space:nowrap;font-weight:750;color:#615b70;font-size:12px}.finder-admin-window-title svg{color:#8a69be}.finder-admin-window-title b{color:#b9b5c3}
+.finder-admin-live{margin-left:auto;display:flex;gap:7px;align-items:center;color:#9797a6;font-size:10px;font-weight:700}.finder-admin-live i{width:7px;height:7px;border-radius:50%;background:#58ba93}
+.finder-admin-shell .p5-head{background:#fff;height:64px;border-bottom:1px solid #edeaf2;padding:0 26px;color:#3b3548}
+.finder-admin-shell .p5-brand{color:#333047;font-weight:800;letter-spacing:-.01em;font-size:15px}.finder-admin-shell .p5-brand span{color:#8c6fbe}
+.finder-admin-shell .p5-head-right{gap:14px;color:#8a8a9b}.finder-admin-shell .p5-head-right>span{display:flex;align-items:center;border:1px solid #e4e9e8;background:#f4faf7;color:#619077;padding:7px 11px;border-radius:99px;font-size:10px;font-weight:750}.finder-admin-shell .p5-head-right i{background:#55b88f}.finder-admin-shell .p5-head-right button{border:1px solid #e8e7ee;background:#faf9fc;color:#807b91;display:grid;place-items:center;width:36px;height:36px;border-radius:9px;cursor:pointer}
+.finder-admin-layout{display:flex;align-items:stretch;min-height:calc(100dvh - 143px)}.finder-admin-sidebar{width:237px;flex:none;display:flex;flex-direction:column;gap:5px;background:linear-gradient(155deg,#f7f7fb,#f1f0f7);border-right:1px solid #e9e7f0;padding:28px 16px 20px}
+.finder-admin-sidebar-brand{display:grid;grid-template-columns:37px 1fr;column-gap:10px;align-items:center;margin:0 9px 20px}.finder-admin-sidebar-brand>div{width:37px;height:37px;display:grid;place-items:center;border-radius:11px;background:#e9e1f6;color:#8464b8;grid-row:1/3}.finder-admin-sidebar-brand strong{font-size:14px;color:#474055;letter-spacing:-.035em}.finder-admin-sidebar-brand span{font-size:8px;letter-spacing:.12em;color:#a5a0b0;font-weight:800}
+.finder-admin-sidebar p{color:#a2a0b1;font-size:9px;letter-spacing:.1em;font-weight:800;margin:18px 12px 6px}
+.finder-admin-sidebar button,.finder-admin-sidebar a{display:flex;align-items:center;text-decoration:none;gap:12px;text-align:left;border:0;border-radius:10px;min-height:42px;width:100%;padding:0 12px;background:none;color:#797788;font-size:12px;font-weight:700;cursor:pointer}
+.finder-admin-sidebar button svg,.finder-admin-sidebar a svg{color:#9995aa;flex:none}.finder-admin-sidebar button:hover,.finder-admin-sidebar a:hover{color:#6d509d;background:#ebe7f4}.finder-admin-sidebar button.active{background:#e7ddf8;color:#7752b0}.finder-admin-sidebar button.active svg{color:#7752b0}.finder-admin-sidebar button em{font-size:10px;color:#a6a0b3;font-style:normal;font-weight:700;margin-left:auto}
+.finder-admin-sidebar-bottom{margin-top:auto;padding:16px 12px;border-radius:13px;background:#fff;border:1px solid #e9e7ef}
+.finder-admin-sidebar-bottom div>span{display:block;font-size:9px;letter-spacing:.07em;color:#a4a0ae;font-weight:800}.finder-admin-sidebar-bottom strong{display:block;font-size:13px;color:#655879;margin-top:5px}.finder-admin-sidebar-bottom>span{display:flex;align-items:center;gap:7px;margin-top:16px;font-size:9px;color:#8e9b90}.finder-admin-sidebar-bottom>span i{width:6px;height:6px;border-radius:50%;background:#62bf96}
+.finder-admin-workspace{flex:1;min-width:0;background:#fff;padding:0 clamp(16px,2.6vw,38px) 38px}
+.finder-admin-mobile-toggle{display:none}
+.finder-admin-shell .p5-dashboard,.finder-admin-shell .p5-detail-head{width:100%;padding:33px 0 25px;gap:20px}
+.finder-admin-shell .p5-dashboard>div>span,.finder-admin-shell .p5-detail-head>div>span{font-size:9px;letter-spacing:.12em;font-weight:800;color:#9375bc}
+.finder-admin-shell .p5-dashboard h1,.finder-admin-shell .p5-detail-head h1{font-family:var(--font-display),system-ui;color:#2f2c41;font-size:clamp(34px,3.8vw,49px);font-weight:760;letter-spacing:-.055em;overflow-wrap:anywhere;line-height:1.1}
+.finder-admin-shell .p5-dashboard p,.finder-admin-shell .p5-detail-head p{color:#9996a5}
+.finder-admin-shell .p5-dashboard>button{background:#7957b4;color:#fff;border-color:#7957b4;border-radius:9px;height:42px;box-shadow:0 4px 11px rgba(104,73,162,.15);font-size:12px;font-weight:750}
+.finder-admin-shell .p5-summary,.finder-admin-shell .p5-projects,.finder-admin-shell .p5-drive-strip,.finder-admin-shell .p5-grid{width:100%;margin-left:0;margin-right:0}
+.finder-admin-shell .p5-summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;border:0;margin-bottom:15px}
+.finder-admin-shell .p5-summary>div{background:linear-gradient(145deg,#fff,#fbfaff);border:1px solid #eae8f0;border-radius:13px;padding:18px 20px;box-shadow:0 4px 16px rgba(36,30,58,.025)}
+.finder-admin-shell .p5-summary span{color:#9592a3;font-size:10px;letter-spacing:.08em;font-weight:800}
+.finder-admin-shell .p5-summary b{font:760 27px var(--font-display),system-ui;color:#403850}
+.finder-admin-shell .p5-projects{background:#fff;border:1px solid #e9e8ee;border-radius:14px;overflow:hidden;box-shadow:0 8px 24px rgba(27,20,57,.025)}
+.finder-admin-shell .p5-project-tools{background:#fcfcfe;border-color:#eceaf1;padding:15px;align-items:center}
+.finder-admin-shell .p5-project-tools label{max-width:none;height:42px;flex:1;background:#f6f6fa;border:1px solid #eceaf1;color:#a1a0ac;border-radius:9px}
+.finder-admin-shell .p5-project-tools input{color:#343247;font-size:12px}.finder-admin-shell .p5-project-tools input::placeholder{color:#a7a4b1}
+.finder-admin-shell .p5-project-tools select{border:1px solid #e7e5ee;background:#fff;color:#60576b;font-size:11px;font-weight:700;min-height:41px;border-radius:9px}
+.finder-admin-shell .finder-view-toggle{flex:none}
+.finder-admin-section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:21px 19px 13px}.finder-admin-section-head strong{font:750 16px var(--font-display),system-ui;letter-spacing:-.03em;color:#434058}.finder-admin-section-head>span{font-size:11px;color:#aaa7b2}
+.finder-admin-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;padding:0 18px 22px}
+.finder-project-card{display:flex;flex-direction:column;gap:0;min-width:0;text-align:left;border:1px solid #e9e7ee;border-radius:13px;background:#fff;padding:15px;cursor:pointer;color:#504b61;transition:transform .2s,box-shadow .2s,border-color .2s}
+.finder-project-card:hover,.finder-project-card:focus-visible{transform:translateY(-3px);border-color:#c8b8e6;box-shadow:0 14px 32px rgba(70,57,98,.09);background:#fefcff}
+.finder-project-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:9px;margin-bottom:14px}
+.finder-project-card-icon{height:48px;width:48px;border-radius:13px;background:#ede4f9;color:#8561bd;display:grid;place-items:center}
+.finder-project-card-top>.on,.finder-project-card-top>.off{display:flex;gap:0;align-items:center;padding:6px 9px;border-radius:99px;font-size:10px;font-weight:800;white-space:nowrap}
+.finder-project-card-top>.on{background:#eef8f2;color:#579574!important}.finder-project-card-top>.on i{background:#62b68b}.finder-project-card-top>.off{background:#f5f3f5;color:#918d99!important}.finder-project-card-top>.off i{background:#9e9aa4}
+.finder-project-card>strong{font-size:13px;color:#363447;font-weight:800;letter-spacing:-.025em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.finder-project-client{font-size:11px;font-weight:650;color:#706b7d;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.finder-project-email{font-size:10px;color:#a8a4b3;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.finder-project-card-meta{display:flex;flex-direction:column;gap:9px;margin-top:17px;border-top:1px solid #f0eef3;padding-top:13px;font-size:10px;color:#9591a1}
+.finder-project-card-meta>span{display:flex;align-items:center;gap:8px}.finder-project-card-meta svg{color:#9a7dbf}
+.finder-project-card-open{display:flex;align-items:center;justify-content:space-between;margin-top:17px;padding:10px 11px;border:1px solid #eee9f6;background:#f7f4fc;border-radius:8px;color:#7658a8;font-size:11px;font-weight:800}
+.finder-admin-empty{padding:50px 15px 65px;display:flex;align-items:center;flex-direction:column;gap:9px;color:#a09baa}.finder-admin-empty svg{color:#a98dcf;background:#f1ebfa;padding:12px;height:62px;width:62px;border-radius:18px}.finder-admin-empty strong{font-size:13px;color:#59536a}.finder-admin-empty span{font-size:11px}
+.finder-admin-shell .p5-list-head{background:#fdfcfe;border-color:#eeeaf2;color:#aaa5b5}
+.finder-admin-shell .p5-row{color:#908c9b;border-color:#f0eef4;background:#fff}.finder-admin-shell .p5-row:hover{background:#fbf9ff}.finder-admin-shell .p5-row strong{color:#4e465c}.finder-admin-shell .p5-row span{color:#928f9d}
+.finder-admin-shell .p5-row .on{color:#63a07e!important}.finder-admin-shell .p5-row .off{color:#9a97a4!important}
+.finder-admin-shell .p5-drive-strip{background:#fdfbff;border:1px solid #eae5f1;border-radius:12px;margin-top:15px;padding:16px 18px;align-items:center}
+.finder-admin-shell .p5-drive-strip strong{color:#494259}.finder-admin-shell .p5-drive-strip div>span{color:#938d9f}.finder-admin-shell .p5-drive-strip a{background:#eae3f4;color:#7856aa;border-radius:9px;padding:10px 12px;text-decoration:none;font-size:11px;font-weight:700}
+.finder-admin-shell .p5-message,.finder-admin-shell .p5-error{color:#6f5791;background:#f4eefb;border:1px solid #e6d9f5;border-radius:10px;width:100%;padding:12px 14px;margin:0 0 13px;font-size:12px}
+.finder-admin-shell .p5-error{background:#fff2f2;color:#aa4d64;border-color:#f5dce3}
+.finder-admin-shell .p5-detail-head{padding:35px 0 25px;flex-wrap:wrap}.finder-admin-shell .p5-detail-head>button{color:#7455a9;font-weight:800;padding:10px 12px;border-radius:9px;background:#f3ecfc;font-size:11px}.finder-admin-shell .p5-detail-head>strong{background:#f1faf4;border:1px solid #e0eee4;color:#5d9679!important;border-radius:99px}
+.finder-admin-shell .p5-grid{grid-template-columns:minmax(0,1.35fr) minmax(280px,1fr);gap:14px}
+.finder-admin-shell .p5-panel{background:#fff;border:1px solid #e9e6ee;border-radius:14px;color:#4b445b;min-width:0;padding:21px;box-shadow:0 4px 15px rgba(55,45,70,.023)}
+.finder-admin-shell .p5-panel-title>div>span{color:#947eba;font-size:9px;font-weight:800}.finder-admin-shell .p5-panel-title h2{color:#393449}.finder-admin-shell .p5-panel-title>button{border:1px solid #eee9f2;border-radius:8px;padding:7px;background:#faf8ff;color:#8b78ac}
+.finder-admin-shell .p5-fields label{color:#797287}.finder-admin-shell .p5-fields input{background:#f8f7fb;color:#443d56;border-color:#e7e2ec}
+.finder-admin-shell .p5-link{border-color:#eee9f2}.finder-admin-shell .p5-link strong{color:#443f52}.finder-admin-shell .p5-link button,.finder-admin-shell .p5-actions button{background:#f5f1fa;border:1px solid #e5dcee;color:#7d60a8;border-radius:8px;min-height:38px}.finder-admin-shell .p5-actions .danger{background:#fff2f4;color:#b75d73;border-color:#f4e0e6}
+.finder-admin-shell .p5-fresh{border-color:#e8dff3;background:#f7f3fc;color:#7958ab;border-radius:9px}.finder-admin-shell .p5-fresh code{color:#69547c}
+.finder-admin-shell .p5-storage-line,.finder-admin-shell .p5-note{color:#96909e}.finder-admin-shell .p5-storage-line strong{color:#4f495f}
+.finder-admin-shell .p5-track{background:#ece8f2;border-radius:6px;height:6px}.finder-admin-shell .p5-track i{background:#8c6bbd;border-radius:6px}
+.finder-admin-shell .p5-limit{color:#746d80}.finder-admin-shell .p5-limit select{background:#f9f7fc;color:#5c4f6e;border:1px solid #e7e0f0}
+.finder-admin-shell .p5-drive>b{background:#f1eaf9;color:#9273bd}.finder-admin-shell .p5-drive strong{color:#3d394e}.finder-admin-shell .p5-drive span{color:#9f9ba9}
+.finder-admin-shell .p5-event{border-color:#f0eef4}.finder-admin-shell .p5-event strong{color:#4c4757}.finder-admin-shell .p5-event span,.finder-admin-shell .p5-event time{color:#aaa6b3}
+.finder-admin-shell .p5-modal-bg{color:#424052}.finder-admin-shell .p5-modal{background:#fff;color:#42394f;border-color:#ece7f2;box-shadow:0 32px 100px rgba(30,22,47,.3)}
+.finder-admin-shell .p5-modal>span{color:#9884b7}.finder-admin-shell .p5-modal h2{color:#393448}
+.finder-admin-shell .p5-modal label{color:#8f899c}.finder-admin-shell .p5-modal input,.finder-admin-shell .p5-modal select{background:#f9f8fc;border-color:#e6e1ed;color:#45405b}
+.finder-admin-shell .p5-modal-actions{background:#fff}.finder-admin-shell .p5-modal-actions button{background:#f5f2f8;color:#766c86;border-color:#e9e4ee}.finder-admin-shell .p5-modal-actions button.primary{background:#7958b2;color:#fff;border-color:#7958b2}
+.finder-admin-shell .p5-close{color:#8e8899}.finder-admin-shell .p5-close:hover{color:#4a405d}
+.finder-admin-shell .p5-overlay{background:rgba(245,242,251,.5)}
+.finder-admin-scrim{display:none}
+@media(max-width:1080px){.finder-admin-sidebar{width:207px}.finder-admin-workspace{padding:0 18px 25px}.finder-admin-card-grid{grid-template-columns:repeat(auto-fill,minmax(205px,1fr))}.finder-admin-shell .p5-list-head,.finder-admin-shell .p5-row{grid-template-columns:minmax(180px,1.5fr) 1fr 90px 100px 80px}}
+@media(max-width:750px){body:has(.finder-admin-shell){background:#fff!important}.p5-admin.finder-admin-shell{margin:0;min-height:100dvh;border-radius:0;border:0;box-shadow:none}
+.finder-admin-window-bar{height:44px;padding:0 15px}.finder-admin-window-title{position:static;transform:none;font-size:10px}.finder-admin-live{display:none}
+.finder-admin-shell .p5-head{padding:0 15px;height:60px}.finder-admin-sidebar{position:fixed;z-index:60;top:0;bottom:0;left:0;width:min(270px,85vw);transform:translateX(-105%);transition:transform .2s;box-shadow:10px 0 35px rgba(35,25,55,.12);padding-top:30px}.finder-admin-sidebar.open{transform:translateX(0)}
+.finder-admin-scrim{display:block;position:fixed;inset:0;z-index:59;background:rgba(28,23,42,.35);border:0}
+.finder-admin-workspace{padding:0 14px 28px}.finder-admin-mobile-toggle{display:flex;align-items:center;gap:8px;background:#f2edf8;border:1px solid #eae2f4;color:#7858af;font-size:11px;font-weight:800;border-radius:9px;min-height:37px;padding:0 12px;margin-top:15px;cursor:pointer}
+.finder-admin-shell .p5-dashboard,.finder-admin-shell .p5-detail-head{padding:22px 0}.finder-admin-shell .p5-dashboard h1,.finder-admin-shell .p5-detail-head h1{font-size:clamp(31px,7vw,42px)}
+.finder-admin-shell .p5-summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.finder-admin-shell .p5-summary>div{padding:13px}.finder-admin-shell .p5-summary b{font-size:23px}.finder-admin-shell .p5-summary span{font-size:8px}
+.finder-admin-shell .p5-project-tools{flex-wrap:wrap;padding:11px}.finder-admin-shell .p5-project-tools label{flex:1 1 100%;max-width:none}.finder-admin-shell .p5-project-tools select{flex:1}.finder-admin-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:0 11px 14px}.finder-project-card{padding:12px}.finder-project-card-top{margin-bottom:13px}.finder-project-card-meta{margin-top:12px}.finder-admin-shell .p5-grid{grid-template-columns:1fr}.finder-admin-shell .p5-activity{grid-column:auto}
+.finder-admin-shell .p5-list-head{display:none}.finder-admin-shell .p5-row{grid-template-columns:minmax(0,1fr) 100px}.finder-admin-shell .p5-row span:nth-child(2),.finder-admin-shell .p5-row span:nth-child(3),.finder-admin-shell .p5-row span:nth-child(4){display:none}
+}
+@media(max-width:460px){.finder-admin-card-grid{grid-template-columns:1fr}.finder-project-card{padding:15px}.finder-admin-shell .p5-summary>div{padding:12px 9px}.finder-admin-shell .p5-dashboard>button{width:100%;justify-content:center}.finder-admin-shell .p5-dashboard{display:block}.finder-admin-shell .p5-dashboard>button{margin-top:16px}
+.finder-admin-shell .p5-modal-bg{padding:10px}.finder-admin-shell .p5-modal{padding:17px}.finder-admin-shell .p5-modal-actions button{flex:1}.finder-admin-shell .p5-detail-head>strong{margin-top:7px}.finder-admin-shell .p5-fields{grid-template-columns:1fr}.finder-admin-shell .p5-actions{gap:8px;flex-wrap:wrap}
+}
+/* Consistent entry screen before the admin session is established. */
+.p5-admin.p5-login{color-scheme:light;background:radial-gradient(ellipse at 8% 0,#e7dcf6,transparent 45%),#f0f0f5;color:#302b41;min-height:100dvh}
+.p5-admin.p5-login .p5-brand{color:#333047}.p5-admin.p5-login .p5-brand span{color:#8c6fbe}.p5-admin.p5-login .p5-login-copy h1{color:#2e2a3e;font:760 clamp(42px,6vw,75px) var(--font-display),system-ui;letter-spacing:-.055em}.p5-admin.p5-login .p5-login-copy p{color:#908a9e;font-size:14px;line-height:1.7}
+.p5-admin.p5-login .p5-login-form{background:#fff;border:1px solid #e7e2ef;border-radius:17px;padding:30px;box-shadow:0 27px 65px rgba(53,45,74,.10);max-width:410px}
+.p5-admin.p5-login .p5-login-form label{color:#80788b;font-weight:750}.p5-admin.p5-login .p5-login-form input{background:#f8f7fb;border:1px solid #e7e2ee;color:#433c50;border-radius:9px}
+.p5-admin.p5-login .p5-login-form>button{background:#7855b0;border:1px solid #7855b0;color:#fff;border-radius:9px;font-weight:800;min-height:44px}
+.p5-admin.p5-login .p5-error{background:#ffeff0;border:1px solid #f3d4db;color:#aa5166;border-radius:8px}
+@media(max-width:760px){.p5-admin.p5-login{padding:88px 20px 40px}.p5-admin.p5-login .p5-login-form{padding:22px;margin-top:28px}}
+@media(prefers-reduced-motion:reduce){.finder-admin-shell *, .finder-admin-shell *::before,.finder-admin-shell *::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+.finder-inline-error{display:flex;align-items:center;gap:9px;margin:12px 20px 0;border:1px solid #f1d6dd;border-radius:10px;background:#fff5f6;color:#a75b70;font-size:11px;line-height:1.5;padding:11px 13px}
+.finder-inline-error span{min-width:0;flex:1}.finder-inline-error button{border:0;background:none;color:#b7808d;cursor:pointer;display:grid;place-items:center;height:27px;width:27px}
+.finder-empty-transfers{font-size:11px;color:#9c94a5;padding:21px;text-align:center}
+@media(max-width:700px){.finder-inline-error{margin:11px 11px 0}}
+
+
+/* Delivery card is now rendered inside the Finder content column. */
+body:has(.finder-app-shell){background:#eff0f5!important}
+body:has(.finder-app-shell) .drop-private-app-icon{display:none}
+.finder-app-shell .drop-delivery{width:100%;margin:0 0 16px;background:#fff;border:1px solid #eae7f0;border-radius:14px;color:#403b50;overflow:hidden;box-shadow:0 8px 24px rgba(40,35,55,.035)}
+.finder-app-shell .drop-delivery-head{border-color:#eeeaf2;padding:19px 22px;gap:15px}
+.finder-app-shell .drop-delivery-kicker,.finder-app-shell .drop-delivery-message>span,.finder-app-shell .drop-delivery-history-head span{color:#9675bf;font-weight:800}
+.finder-app-shell .drop-delivery-status h2{color:#3f3852}.finder-app-shell .drop-delivery-status p{color:#9e98aa}
+.finder-app-shell .drop-delivery-icon{background:linear-gradient(145deg,#e9ddfa,#dcd0ef);color:#815eb4;border-radius:11px}
+.finder-app-shell .drop-delivery button{background:#f5f1fa;border:1px solid #e8e0f1;color:#795aab;border-radius:9px;font-weight:750}
+.finder-app-shell .drop-delivery button.primary{background:#7b58b4;border-color:#7b58b4;color:#fff}
+.finder-app-shell .drop-delivery-message{background:#faf7ff;border-color:#eee8f5}.finder-app-shell .drop-delivery-message p{color:#7b7388}
+.finder-app-shell .drop-delivery-comment{background:#fdfcfe;border-color:#eeeaf3;border-radius:12px}
+.finder-app-shell .drop-delivery-comment strong{color:#3e374f}.finder-app-shell .drop-delivery-comment span{color:#9a95a7}
+.finder-app-shell .drop-delivery-comment textarea{background:#fff;border:1px solid #e9e3ef;color:#50465e;border-radius:9px}
+.finder-app-shell .drop-delivery-comment small{color:#a19baa}
+.finder-app-shell .drop-delivery-history{border-color:#eeeaf1}.finder-app-shell .drop-delivery-history-head strong{color:#514b60}
+.finder-app-shell .drop-delivery-events article>i{box-shadow:0 0 0 4px #fff}.finder-app-shell .drop-delivery-event-top strong{color:#51495e}
+.finder-app-shell .drop-delivery-event-top time,.finder-app-shell .drop-delivery-events article>div>span{color:#aaa5b1}.finder-app-shell .drop-delivery-events p{color:#938d9b}
+.finder-app-shell .drop-delivery-notice{color:#6a9c7c;background:#eff8f3}.finder-app-shell .drop-delivery-error{color:#ad5970;background:#fff0f3}
+body:has(.finder-app-shell) .drop-support{background:#fff;border:1px solid #e7e3ee;color:#7c61a8;box-shadow:0 12px 35px rgba(62,47,80,.11);border-radius:999px;min-height:43px;z-index:38}
+body:has(.finder-app-shell) .drop-support-backdrop{z-index:75}
+body:has(.finder-app-shell) .drop-support-card{background:#fff;border:1px solid #e8e4ed;border-radius:16px;color:#4d475c;max-height:calc(100dvh - 24px);overflow-y:auto}
+body:has(.finder-app-shell) .drop-support-card h2{color:#3e364e}
+body:has(.finder-app-shell) .drop-support-card p{color:#938b9b}
+body:has(.finder-app-shell) .drop-support-card input,body:has(.finder-app-shell) .drop-support-card textarea,body:has(.finder-app-shell) .drop-support-card select{background:#f9f8fb;border:1px solid #e9e3f0;color:#51465e}
+body:has(.finder-app-shell) .drop-support-card .primary{background:#7c5bb6;color:#fff;border-color:#7c5bb6}
+body:has(.finder-app-shell) .drop-support-card label{color:#80778c}
+@media(max-width:700px){.finder-app-shell .drop-delivery-head{padding:16px}.finder-app-shell .drop-delivery-actions{gap:7px}.finder-app-shell .drop-delivery-message,.finder-app-shell .drop-delivery-history{padding:14px 16px}.finder-app-shell .drop-delivery-comment{margin:12px 16px}body:has(.finder-app-shell) .drop-support{right:12px;bottom:12px}}
+/* Integrated studio overlays and their floating launch controls. */
+body:has(.finder-admin-shell) .drop-admin-tools{right:21px;bottom:19px;gap:8px}
+body:has(.finder-admin-shell) .admin-delivery-trigger,body:has(.finder-admin-shell) .admin-overview-trigger{background:#fff;border:1px solid #e5dfec;color:#7459a1;border-radius:11px;font-size:11px;font-weight:800;min-height:40px;box-shadow:0 8px 28px rgba(57,45,76,.12);padding:0 14px}
+body:has(.finder-admin-shell) .admin-delivery-trigger:hover,body:has(.finder-admin-shell) .admin-overview-trigger:hover{background:#f4eefa;border-color:#bea9db}
+.admin-delivery-panel,.admin-overview-panel{background:#fbfbfe;border:1px solid #edeaf3;color:#41384e;color-scheme:light;box-shadow:-20px 0 70px rgba(25,20,45,.15)}
+.admin-delivery-kicker,.admin-overview-kicker{color:#9475bb}
+.admin-delivery-panel h2,.admin-overview-panel h2{color:#343147}
+.admin-delivery-close,.admin-overview-close{color:#9b91a7;width:38px;height:38px;display:grid;place-items:center;background:#f1ecf8;border-radius:9px;cursor:pointer}
+.admin-delivery-select,.admin-delivery-fields label{color:#857d92}
+.admin-delivery-select select,.admin-delivery-fields select,.admin-delivery-fields textarea,.admin-delivery-comment textarea{background:#fff;border:1px solid #e4deeb;color:#4b415c;border-radius:9px}
+.admin-delivery-meta,.admin-delivery-fields,.admin-delivery-comment{border-color:#eee9f2}
+.admin-delivery-meta{color:#9792a4}.admin-delivery-meta b{background:#ede4f8;color:#8062ad}
+.admin-delivery-comment>div{color:#856ab0}.admin-delivery-comment strong{color:#49405b}
+.admin-delivery-fields .primary{background:#7c5bb6;border-color:#7c5bb6;border-radius:9px}
+.admin-delivery-comment>button{background:#f0e9f9;border-color:#e6dcef;color:#7858a7;border-radius:9px}
+.admin-delivery-history>span{color:#988ca8}.admin-delivery-history>strong{color:#51465e}
+.admin-delivery-history article i{box-shadow:0 0 0 4px #fbfbfe}.admin-delivery-history article b{color:#51495d}
+.admin-delivery-history article small,.admin-delivery-history article p{color:#9b94a3}
+.admin-delivery-notice,.admin-overview-notice{background:#eff7f3;color:#5e9378}.admin-delivery-error,.admin-overview-error{background:#ffeff2;color:#b15b71}
+.admin-overview-intro{color:#9891a3}
+.admin-overview-stats div{background:#fff;border-color:#e8e2ee;border-radius:11px}.admin-overview-stats span{color:#aba5b1}.admin-overview-stats b{color:#51435f}
+.admin-overview-storage{background:#fff;border-color:#e9e4ef;border-radius:11px}.admin-overview-storage span{color:#a6a0af}.admin-overview-storage strong{color:#8564b2}.admin-overview-storage>i{background:#e7deef}
+.admin-overview-search{background:#fff;border-color:#e5e0eb;border-radius:9px;color:#a5a0b1}
+.admin-overview-search input{color:#453b52}
+.admin-overview-projects article{background:#fff;border-color:#e7e3ec;border-radius:10px}.admin-overview-projects article:hover,.admin-overview-projects article.selected{background:#f7f3fc;border-color:#c6b3df}.admin-overview-projects article strong{color:#514558}
+.admin-overview-project-meta b{color:#805ab1}.admin-overview-project-meta span,.admin-overview-project-meta small,.admin-overview-projects article>div:first-child span{color:#a29ba9}
+.admin-overview-detail{background:#fff;border-color:#e7dff0;border-radius:11px}.admin-overview-detail-head strong{color:#51445e}.admin-overview-detail-head span{color:#a19aaa}.admin-overview-detail-head button{background:#eee7f7;border-color:#ddcff0;color:#7b5eaa}
+.admin-overview-detail-meta{border-color:#eae5ee;color:#948b9c}.admin-overview-events b{color:#4e445e}.admin-overview-events small{color:#9b93a1}
+.admin-delivery-panel button:focus-visible,.admin-overview-panel button:focus-visible,.admin-delivery-panel input:focus-visible,.admin-overview-panel input:focus-visible,.admin-delivery-panel select:focus-visible,.admin-overview-panel select:focus-visible,.admin-delivery-panel textarea:focus-visible,.admin-overview-panel textarea:focus-visible{outline:3px solid #b39bd5;outline-offset:2px}
+@media(max-width:700px){body:has(.finder-admin-shell) .drop-admin-tools{right:12px;bottom:12px}.admin-delivery-panel,.admin-overview-panel{padding:25px 18px 30px}}
