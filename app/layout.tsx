@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { DM_Mono, Manrope, Space_Grotesk } from 'next/font/google'
 import appIcon from '@/assets/branding/04_drop_app_icon.png'
 import GlobalChrome from '@/components/global-chrome'
 import './globals.css'
@@ -11,7 +12,10 @@ import './admin/admin.css'
 import './admin/admin-delivery.css'
 import './admin/studio-overview.css'
 import './finder-ui.css'
-import './macos-polish.css'
+
+const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-display', display: 'swap' })
+const manrope = Manrope({ subsets: ['latin'], variable: '--font-body', display: 'swap' })
+const dmMono = DM_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-mono', display: 'swap' })
 
 export const metadata: Metadata = {
   title: 'MINIMICAL DROP',
@@ -21,5 +25,5 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body><GlobalChrome/>{children}</body></html>
+  return <html lang="en" className={`${spaceGrotesk.variable} ${manrope.variable} ${dmMono.variable}`}><body><GlobalChrome/>{children}</body></html>
 }
