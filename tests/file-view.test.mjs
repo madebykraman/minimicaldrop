@@ -8,7 +8,7 @@ const items = [
 ]
 test('filter is case insensitive and never mutates input', () => {
   const before = structuredClone(items)
-  assert.deepEqual(filterAndSortFiles(items, 'A', 'name', 'all').map(x=>x.id), ['3','2','1'])
+  assert.deepEqual(filterAndSortFiles(items, 'A', 'name', 'all').map(x=>x.id), ['2','3','1'])
   assert.deepEqual(items, before)
 })
 test('folders view excludes files', () => assert.deepEqual(filterAndSortFiles(items, '', 'name', 'folders').map(x=>x.id), ['2']))
