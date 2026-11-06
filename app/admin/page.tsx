@@ -18,6 +18,10 @@ export default function AdminPage() {
   const [loggedIn,setLoggedIn]=useState(false),[checking,setChecking]=useState(true),[accounts,setAccounts]=useState<Account[]>([]),[projects,setProjects]=useState<Project[]>([]),[selectedId,setSelectedId]=useState<string|null>(null),[detail,setDetail]=useState<Detail|null>(null),[showCreate,setShowCreate]=useState(false),[loadingDetail,setLoadingDetail]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[error,setError]=useState(''),[loadError,setLoadError]=useState(false),[freshLink,setFreshLink]=useState(''),[query,setQuery]=useState(''),[status,setStatus]=useState<'all'|'active'|'inactive'>('all')
   const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[form,setForm]=useState({name:'',clientName:'',clientEmail:'',expiresAt:'',storageGb:'10'})
   async function load(){
+    if (new URLSearchParams(window.location.search).get('drive') === 'connected') {
+      setMessage('Google Drive connected successfully.')
+      window.history.replaceState(null, '', '/admin')
+    }
     try {
       const d = await request('/api/admin/projects')
       setLoggedIn(true)
@@ -25,10 +29,6 @@ export default function AdminPage() {
       setError('')
       setAccounts(d.accounts || [])
       setProjects(d.projects || [])
-      if (new URLSearchParams(window.location.search).get('drive') === 'connected') {
-        setMessage('Google Drive connected successfully.')
-        window.history.replaceState(null, '', '/admin')
-      }
     } catch (e) {
       if (e instanceof Error && e.message === 'Unauthorized.') {
         setLoggedIn(false)
