@@ -49,7 +49,7 @@ async function uploadToGoogle(file: File, sessionUrl: string, statusUrl: string,
   throw new Error('Google did not confirm the upload')
 }
 
-export default function WorkspaceV5({ token }: { token: string }) {
+export default function WorkspaceV5({ token, deliveryPanel }: { token: string; deliveryPanel?: React.ReactNode }) {
   const input = useRef<HTMLInputElement>(null)
   const [project, setProject] = useState<Project | null>(null); const [items, setItems] = useState<Item[]>([]); const [folderId, setFolderId] = useState(''); const [rootId, setRootId] = useState(''); const [trail, setTrail] = useState<{ id: string; name: string }[]>([])
   const [used, setUsed] = useState(0); const [pending, setPending] = useState(0); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [recoveries, setRecoveries] = useState<Recovery[]>([]); const [queue, setQueue] = useState<QueueItem[]>([])
@@ -163,6 +163,7 @@ export default function WorkspaceV5({ token }: { token: string }) {
             </div>
             <div className="finder-stage-scroll">
               <div className="finder-intro"><div><span>YOUR FILES, BEAUTIFULLY ORGANISED</span><h1>{project.name}</h1><p>Shared with <strong>{project.clientName}</strong> <span className="finder-intro-divider">·</span> Available until {new Date(project.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p></div><div className="finder-intro-chip"><LockKeyhole size={15}/><span>A private place for your project files.</span></div></div>
+              {deliveryPanel}
               <section className="v5-workspace">
                 <div className="finder-toolbar">
                   <div className="finder-navigation-controls"><button className="finder-icon-button" onClick={() => void goTrail(Math.max(0,trail.length-2))} disabled={trail.length<2} aria-label="Go back"><ChevronLeft size={18}/></button><div className="v5-crumbs" aria-label="Current folder">{trail.map((item,i) => <span key={item.id}>{i > 0 && <ChevronRight size={14}/>}<button className={i === trail.length-1 ? 'active' : ''} onClick={() => void goTrail(i)}>{item.name}</button></span>)}</div></div>
