@@ -41,7 +41,7 @@ const checks = [
   ['Build transform cannot duplicate navigation state', fs.readFileSync('scripts/v1-runtime-polish.cjs','utf8').includes("if (!source.includes('const [navigating, setNavigating]'))")],
   ['Consistent app icon on client and studio', workspace.includes("from '@/components/drop-icon'") && adminPage.includes("from '@/components/drop-icon'")],
   ['Project listing reads independent tables concurrently', projectRead.includes('Promise.all')],
-  ['Minimal client shell and on-demand details', workspace.includes('finder-project-details') && workspace.includes('finder-mobile-menu')],
+  ['Minimal client shell and on-demand details', workspace.includes('finder-project-details') && workspace.includes('finder-stage-app-icon') && workspace.includes('finder-workspace-options')],
   ['Card actions stay available in a menu', workspace.includes('finder-card-more') && workspace.includes('finder-card-actions')],
   ['Delivery updates are collapsible', fs.readFileSync('app/u/[token]/delivery-panel.tsx','utf8').includes('drop-delivery-more')],
   ['Client and admin skeletons are present', workspace.includes('finder-loading-window') && adminPage.includes('finder-admin-loading')],

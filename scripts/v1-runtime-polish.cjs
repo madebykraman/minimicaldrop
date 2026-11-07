@@ -11,7 +11,7 @@ let source = fs.readFileSync(workspace, 'utf8')
 
 const stateLine = "const [used, setUsed] = useState(0); const [pending, setPending] = useState(0); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [recoveries, setRecoveries] = useState<Recovery[]>([]); const [queue, setQueue] = useState<QueueItem[]>([])"
 const stateLineNext = stateLine + "; const [navigating, setNavigating] = useState(false)"
-source = source.replace(stateLine, stateLineNext)
+if (!source.includes('const [navigating, setNavigating]')) source = source.replace(stateLine, stateLineNext)
 
 const oldOpen = "async function openFolder(item: Item) { await load(item.id); setTrail(prev => [...prev, { id: item.id, name: item.name }]); setSelected([]) }"
 const newOpen = "async function openFolder(item: Item) { setNavigating(true); setTrail(prev => [...prev, { id: item.id, name: item.name }]); setSelected([]); try { await load(item.id) } finally { setNavigating(false) } }"
