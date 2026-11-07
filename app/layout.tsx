@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import appIcon from '@/assets/branding/04_drop_app_icon.png'
 import GlobalChrome from '@/components/global-chrome'
+import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
 import './globals.css'
 import './brand.css'
 import './home.css'
@@ -12,6 +14,7 @@ import './admin/admin-delivery.css'
 import './admin/studio-overview.css'
 import './finder-ui.css'
 import './appearance.css'
+import './finder-refinements.css'
 
 
 export const metadata: Metadata = {
@@ -22,5 +25,5 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body><GlobalChrome/>{children}</body></html>
+  return <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}><body><GlobalChrome/>{children}</body></html>
 }

@@ -15,26 +15,33 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
   const parentId = url.searchParams.get('parentId') || project.drive_folder_id
   if (!/^[A-Za-z0-9_-]+$/.test(parentId)) return NextResponse.json({ error: 'Invalid folder.' }, { status: 400 })
 
-  if (parentId !== project.drive_folder_id) {
-    const folders = await supabase<Array<{ id: string }>>(`folders?project_id=eq.${project.id}&drive_folder_id=eq.${encodeURIComponent(parentId)}&select=id&limit=1`)
-    if (!folders[0]) return NextResponse.json({ error: 'Folder is not part of this project.' }, { status: 403 })
-  }
+  const metadataStart = performance.now()
+  // Permission and metadata reads are independent. Authorize folder ownership
+  // before touching the Drive API; keep invalid folder requests rejected.
+  const folderPermission = parentId === project.drive_folder_id
+    ? Promise.resolve(true)
+    : supabase<Array<{ id: string }>>(`folders?project_id=eq.${project.id}&drive_folder_id=eq.${encodeURIComponent(parentId)}&select=id&limit=1`)
+        .then(rows => Boolean(rows[0]))
 
-  const accounts = await supabase<Array<{ refresh_token: string }>>(`drive_accounts?id=eq.${project.drive_account_id}&select=refresh_token&limit=1`)
-  const account = accounts[0]
-  if (!account) return NextResponse.json({ error: 'Storage account unavailable.' }, { status: 500 })
-  const { access_token } = await accessTokenFromRefreshToken(account.refresh_token)
-
-  const [drive, usageRows, pendingRows] = await Promise.all([
-    listDriveChildren(access_token, parentId),
+  const [permitted, accounts, usageRows, pendingRows] = await Promise.all([
+    folderPermission,
+    supabase<Array<{ refresh_token: string }>>(`drive_accounts?id=eq.${project.drive_account_id}&select=refresh_token&limit=1`),
     supabase<Array<{ size_bytes: number }>>(`uploads?project_id=eq.${project.id}&status=eq.complete&select=size_bytes`),
     supabase<Array<{ size_bytes: number }>>(`uploads?project_id=eq.${project.id}&status=eq.uploading&select=size_bytes`),
   ])
+  if (!permitted) return NextResponse.json({ error: 'Folder is not part of this project.' }, { status: 403 })
+  const account = accounts[0]
+  if (!account) return NextResponse.json({ error: 'Storage account unavailable.' }, { status: 500 })
+  const metadataMs = performance.now() - metadataStart
+
+  const { access_token } = await accessTokenFromRefreshToken(account.refresh_token)
+  const drive = await listDriveChildren(access_token, parentId)
+  const driveMs = performance.now() - metadataStart - metadataMs
 
   const usedBytes = usageRows.reduce((sum, row) => sum + Number(row.size_bytes || 0), 0)
   const pendingBytes = pendingRows.reduce((sum, row) => sum + Number(row.size_bytes || 0), 0)
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     project: {
       id: project.id,
       name: project.name,
@@ -49,4 +56,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
     usedBytes,
     pendingBytes,
   })
+  response.headers.set('Server-Timing', `metadata;dur=${metadataMs.toFixed(1)}, drive;dur=${driveMs.toFixed(1)}`)
+  return response
 }

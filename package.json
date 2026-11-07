@@ -12,7 +12,8 @@
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "lucide-react": "latest"
+    "lucide-react": "latest",
+    "geist": "1.9.2"
   },
   "devDependencies": {
     "@types/node": "latest",

@@ -10,6 +10,10 @@ const finderCss = fs.readFileSync('app/finder-ui.css', 'utf8')
 const adminPage = fs.readFileSync('app/admin/page.tsx', 'utf8')
 const layout = fs.readFileSync('app/layout.tsx', 'utf8')
 const appearance = fs.readFileSync('app/appearance.css', 'utf8')
+const finderRefinements = fs.readFileSync('app/finder-refinements.css', 'utf8')
+const filePackage = JSON.parse(fs.readFileSync('package.json', 'utf8'))
+const folderRoute = fs.readFileSync('app/api/projects/[token]/route.ts', 'utf8')
+const googleDrive = fs.readFileSync('lib/google-drive.ts', 'utf8')
 const homepage = fs.readFileSync('app/page.tsx', 'utf8')
 const opsPage = fs.readFileSync('app/admin/ops/page.tsx', 'utf8')
 const projectRoute = fs.readFileSync('app/api/admin/projects/route.ts', 'utf8')
@@ -29,12 +33,21 @@ const checks = [
   ['Studio project card and list controls', adminPage.includes('finder-project-card') && adminPage.includes('changeProjectView')],
   ['Responsive Finder breakpoints and accessible focus', finderCss.includes('@media(max-width:700px)') && finderCss.includes(':focus-visible')],
   ['Finder styles imported for all surfaces', layout.includes("import './finder-ui.css'")],
-  ['System font stack without external font downloads', !layout.includes('next/font/google') && appearance.includes('SF Pro Text')],
+  ['Geist Sans and Mono self-hosted globally', layout.includes("import { GeistSans } from 'geist/font/sans'") && layout.includes("import { GeistMono } from 'geist/font/mono'") && filePackage.dependencies.geist === '1.9.2'],
+  ['Finder refinements loaded last', layout.includes("import './finder-refinements.css'")],
+  ['Full folder names are not clipped', finderRefinements.includes('white-space: normal !important') && finderRefinements.includes('overflow-wrap: anywhere !important')],
+  ['Folder cards fit mobile screens', finderRefinements.includes('grid-template-columns: minmax(0,1fr) !important')],
+  ['Folder permission checked before Drive list', folderRoute.includes('if (!permitted) return NextResponse.json') && folderRoute.includes('listDriveChildren(access_token, parentId)')],
+  ['Independent folder metadata reads run concurrently', folderRoute.includes('Promise.all([')],
+  ['Concurrent Google token refreshes share a request', googleDrive.includes('tokenRefreshInFlight.get(refreshToken)') && googleDrive.includes('tokenRefreshInFlight.set(refreshToken, request)')],
   ['Minimal homepage with real links only', homepage.includes('mac-home-hero') && homepage.includes('mac-home-preview') && !homepage.includes('<button')],
   ['Shared blue visual system', layout.includes("import './appearance.css'") && appearance.includes('--mac-blue:#007aff')],
   ['Admin operations use neutral surfaces', opsPage.includes('className="mac-ops"') && opsPage.includes("background: '#f5f5f7'")],
   ['Client selection and deferred search remain functional', workspace.includes('allVisibleSelected') && workspace.includes('useDeferredValue(search)')],
   ['Folder cache ignores stale network responses', workspace.includes('latestLoadId.current') && workspace.includes('folderCache.current.set') && workspace.includes('currentFolderRef.current')],
+  ['Folder prefetch shares requests', workspace.includes('folderRequests.current.get(id)') && workspace.includes('getFolderRequest(parentId)')],
+  ['Cached folders are usable before revalidation finishes', workspace.includes('void fetchLatest().catch') && workspace.includes('return true')],
+  ['Folder names get accessible labels', workspace.includes('aria-label=') && workspace.includes('Open ${item.name}')],
   ['Essential actions remain visible', workspace.includes('finder-new-folder') && workspace.includes('Upload</span>')],
   ['Secondary controls are in an accessible menu', workspace.includes('finder-workspace-options') && workspace.includes('More file options')],
   ['Navigation contains retry-safe success checks', workspace.includes('if (!await load(item.id)) setTrail(previous)')],

@@ -8,6 +8,7 @@ import DropIcon from '@/components/drop-icon'
 
 type Item = { id: string; name: string; mimeType: string; sizeBytes: number; modifiedTime: string | null }
 type Project = { id: string; name: string; clientName: string; expiresAt: string; storageLimitBytes: number | null }
+type WorkspacePayload = { project: Project; items: Item[]; currentFolderId: string; usedBytes: number; pendingBytes: number }
 type Recovery = { uploadId: string; name: string; mimeType: string | null; sizeBytes: number; uploadedBytes: number; folderId: string | null; sessionUrl: string; createdAt: string }
 type QueueItem = { id: string; name: string; size: number; progress: number; status: 'uploading' | 'complete' | 'error'; error?: string; file?: File }
 type Dialog = { type: 'rename' | 'delete'; kind: 'file' | 'folder'; id: string; name: string } | null
@@ -55,6 +56,7 @@ export default function WorkspaceV5({ token, deliveryPanel }: { token: string; d
   const input = useRef<HTMLInputElement>(null)
   const optionsRef = useRef<HTMLDetailsElement>(null)
   const folderCache = useRef(new Map<string, { items: Item[]; currentFolderId: string; usedBytes: number; pendingBytes: number }>())
+  const folderRequests = useRef(new Map<string, Promise<WorkspacePayload>>())
   const latestLoadId = useRef(0)
   const currentFolderRef = useRef('')
   const dragDepth = useRef(0)
@@ -63,13 +65,41 @@ export default function WorkspaceV5({ token, deliveryPanel }: { token: string; d
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid'); const [navScope, setNavScope] = useState<'all' | 'folders' | 'recent'>('all'); const [sidebarOpen, setSidebarOpen] = useState(false); const [selectionMode, setSelectionMode] = useState(false); const [navigating, setNavigating] = useState(false); const [folderPending, setFolderPending] = useState(false)
   const [search, setSearch] = useState(''); const [sort, setSort] = useState<'name' | 'newest' | 'size'>('name'); const [selected, setSelected] = useState<string[]>([]); const [folderName, setFolderName] = useState(''); const [showFolder, setShowFolder] = useState(false); const [dialog, setDialog] = useState<Dialog>(null); const [dialogValue, setDialogValue] = useState(''); const [preview, setPreview] = useState<Item | null>(null); const [busy, setBusy] = useState(false); const [dragging, setDragging] = useState(false); const [showQueue, setShowQueue] = useState(false)
 
-  // Keep cached folders responsive while Drive refreshes in the background.
-  // A stale response must never replace a newer navigation target.
+  // A hover prefetch and a folder click share the same request.
+  function getFolderRequest(id: string): Promise<WorkspacePayload> {
+    const existing = folderRequests.current.get(id)
+    if (existing) return existing
+    const task = jsonFetch(`/api/projects/${token}?parentId=${encodeURIComponent(id)}`) as Promise<WorkspacePayload>
+    folderRequests.current.set(id, task)
+    void task.then(
+      () => { if (folderRequests.current.get(id) === task) folderRequests.current.delete(id) },
+      () => { if (folderRequests.current.get(id) === task) folderRequests.current.delete(id) },
+    )
+    return task
+  }
+  function cacheWorkspace(key: string, data: WorkspacePayload) {
+    const snapshot = {
+      items: data.items || [],
+      currentFolderId: data.currentFolderId,
+      usedBytes: data.usedBytes || 0,
+      pendingBytes: data.pendingBytes || 0,
+    }
+    folderCache.current.set(key, snapshot)
+    return snapshot
+  }
+  function prefetchFolder(id: string) {
+    if (!id || folderCache.current.has(id) || folderRequests.current.has(id)) return
+    void getFolderRequest(id).then(data => {
+      if (data.currentFolderId === id) cacheWorkspace(id, data)
+    }, () => undefined)
+  }
+
+  // Cached folders are immediately usable; refreshes do not block navigation.
   async function load(parentId?: string): Promise<boolean> {
     const requestId = ++latestLoadId.current
     const cacheKey = !parentId || parentId === rootId ? '__root__' : parentId
     const cached = folderCache.current.get(cacheKey)
-    const previousFolder = { items, used, pending, folderId, currentId: currentFolderRef.current }
+    const previous = { items, used, pending, folderId, currentId: currentFolderRef.current }
     if (cached) {
       setItems(cached.items)
       setUsed(cached.usedBytes)
@@ -80,45 +110,60 @@ export default function WorkspaceV5({ token, deliveryPanel }: { token: string; d
     if (!project) setLoading(true)
     else setFolderPending(!cached)
     setError('')
-    try {
-      const data = await jsonFetch(`/api/projects/${token}${parentId ? `?parentId=${encodeURIComponent(parentId)}` : ''}`)
+    const fetchLatest = async () => {
+      const data = parentId && parentId !== rootId
+        ? await getFolderRequest(parentId)
+        : await jsonFetch(`/api/projects/${token}`) as WorkspacePayload
       if (requestId !== latestLoadId.current) return false
-      const snapshot = {
-        items: (data.items || []) as Item[],
-        currentFolderId: data.currentFolderId as string,
-        usedBytes: (data.usedBytes || 0) as number,
-        pendingBytes: (data.pendingBytes || 0) as number,
-      }
-      folderCache.current.set(cacheKey, snapshot)
+      const snapshot = cacheWorkspace(cacheKey, data)
       currentFolderRef.current = snapshot.currentFolderId
       setProject(data.project)
       setItems(snapshot.items)
       setUsed(snapshot.usedBytes)
       setPending(snapshot.pendingBytes)
       setFolderId(snapshot.currentFolderId)
-      setRootId(previous => previous || snapshot.currentFolderId)
-      setTrail(previous => previous.length ? previous : [{ id: snapshot.currentFolderId, name: data.project.name }])
+      setRootId(current => current || snapshot.currentFolderId)
+      setTrail(current => current.length ? current : [{ id: snapshot.currentFolderId, name: data.project.name }])
       return true
-    } catch (e) {
+    }
+    if (cached) {
+      void fetchLatest().catch(error => {
+        if (requestId === latestLoadId.current)
+          setError(error instanceof Error ? `Could not refresh folder: ${error.message}` : 'Could not refresh folder')
+      }).finally(() => {
+        if (requestId === latestLoadId.current) { setLoading(false); setFolderPending(false) }
+      })
+      return true
+    }
+    try {
+      return await fetchLatest()
+    } catch (error) {
       if (requestId === latestLoadId.current) {
         folderCache.current.delete(cacheKey)
-        setItems(previousFolder.items)
-        setUsed(previousFolder.used)
-        setPending(previousFolder.pending)
-        setFolderId(previousFolder.folderId)
-        currentFolderRef.current = previousFolder.currentId
-        setError(e instanceof Error ? e.message : 'Unable to load project')
+        setItems(previous.items)
+        setUsed(previous.used)
+        setPending(previous.pending)
+        setFolderId(previous.folderId)
+        currentFolderRef.current = previous.currentId
+        setError(error instanceof Error ? error.message : 'Unable to open folder')
       }
       return false
     } finally {
-      if (requestId === latestLoadId.current) {
-        setLoading(false)
-        setFolderPending(false)
-      }
+      if (requestId === latestLoadId.current) { setLoading(false); setFolderPending(false) }
     }
   }
+
   async function loadRecoveries() { try { const data = await jsonFetch(`/api/projects/${token}/upload/recover`); setRecoveries(data.uploads || []) } catch {} }
   useEffect(() => { void load(); void loadRecoveries() }, [token])
+  // Warm at most four visible root folders without delaying initial paint.
+  useEffect(() => {
+    if (!project || !rootId || folderId !== rootId) return
+    const folders = items.filter(item => item.mimeType === FOLDER_MIME).slice(0, 4)
+    const timers = folders.map((item, index) => window.setTimeout(() => {
+      if (document.visibilityState === 'visible') prefetchFolder(item.id)
+    }, 650 + index * 180))
+    return () => timers.forEach(window.clearTimeout)
+  }, [project?.id, rootId, folderId, items])
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem('drop-file-view')
@@ -316,8 +361,8 @@ export default function WorkspaceV5({ token, deliveryPanel }: { token: string; d
                     {folders.map(item => <Row key={item.id} item={item} selected={selectedSet.has(item.id)} toggle={toggle} open={() => void openFolder(item)} rename={() => {setDialog({type:'rename',kind:'folder',id:item.id,name:item.name});setDialogValue(item.name)}} remove={() => setDialog({type:'delete',kind:'folder',id:item.id,name:item.name})}/>)}
                     {files.map(item => <Row key={item.id} item={item} selected={selectedSet.has(item.id)} toggle={toggle} open={() => previewable(item.mimeType) ? setPreview(item) : download(item)} rename={() => {setDialog({type:'rename',kind:'file',id:item.id,name:item.name});setDialogValue(item.name)}} remove={() => setDialog({type:'delete',kind:'file',id:item.id,name:item.name})} download={() => download(item)} previewable={previewable(item.mimeType)}/>)}
                   </> : <>
-                    {folders.length > 0 && <section className="finder-file-group"><header><Folder size={16}/><strong>Folders</strong><span>{folders.length}</span></header><div className="finder-card-grid">{folders.map(item => <FinderCard key={item.id} item={item} selected={selectedSet.has(item.id)} toggle={toggle} open={() => void openFolder(item)} rename={() => {setDialog({type:'rename',kind:'folder',id:item.id,name:item.name});setDialogValue(item.name)}} remove={() => setDialog({type:'delete',kind:'folder',id:item.id,name:item.name})}/>)}</div></section>}
-                    {files.length > 0 && <section className="finder-file-group"><header><File size={16}/><strong>Files</strong><span>{files.length}</span></header><div className="finder-card-grid">{files.map(item => <FinderCard key={item.id} item={item} selected={selectedSet.has(item.id)} toggle={toggle} open={() => previewable(item.mimeType) ? setPreview(item) : download(item)} rename={() => {setDialog({type:'rename',kind:'file',id:item.id,name:item.name});setDialogValue(item.name)}} remove={() => setDialog({type:'delete',kind:'file',id:item.id,name:item.name})} download={() => download(item)} previewable={previewable(item.mimeType)}/>)}</div></section>}
+                    {folders.length > 0 && <section className="finder-file-group finder-folder-group"><header><Folder size={16}/><strong>Folders</strong><span>{folders.length}</span></header><div className="finder-card-grid">{folders.map(item => <FinderCard key={item.id} item={item} selected={selectedSet.has(item.id)} toggle={toggle} open={() => void openFolder(item)} rename={() => {setDialog({type:'rename',kind:'folder',id:item.id,name:item.name});setDialogValue(item.name)}} remove={() => setDialog({type:'delete',kind:'folder',id:item.id,name:item.name})} prefetch={() => prefetchFolder(item.id)}/>)}</div></section>}
+                    {files.length > 0 && <section className="finder-file-group finder-document-group"><header><File size={16}/><strong>Files</strong><span>{files.length}</span></header><div className="finder-card-grid">{files.map(item => <FinderCard key={item.id} item={item} selected={selectedSet.has(item.id)} toggle={toggle} open={() => previewable(item.mimeType) ? setPreview(item) : download(item)} rename={() => {setDialog({type:'rename',kind:'file',id:item.id,name:item.name});setDialogValue(item.name)}} remove={() => setDialog({type:'delete',kind:'file',id:item.id,name:item.name})} download={() => download(item)} previewable={previewable(item.mimeType)}/>)}</div></section>}
                   </>}
                   {!visible.length && <div className="finder-empty"><div><Folder size={32}/></div><strong>{search?'No matching files':navScope==='folders'?'No folders here':'This folder is empty'}</strong><p>{search?'Try a different search term.':'Create a folder or upload files to get started.'}</p><button onClick={()=>input.current?.click()}><Upload size={16}/> Upload files</button></div>}
                 </div>
@@ -339,15 +384,15 @@ export default function WorkspaceV5({ token, deliveryPanel }: { token: string; d
   </Shell>
 }
 
-function FinderCard({ item, selected, toggle, open, rename, remove, download, previewable: canPreview }: { item: Item; selected: boolean; toggle: (id: string) => void; open: () => void; rename: () => void; remove: () => void; download?: () => void; previewable?: boolean }) {
+function FinderCard({ item, selected, toggle, open, rename, remove, download, previewable: canPreview, prefetch }: { item: Item; selected: boolean; toggle: (id: string) => void; open: () => void; rename: () => void; remove: () => void; download?: () => void; previewable?: boolean; prefetch?: () => void }) {
   const isFolder = item.mimeType === FOLDER_MIME
   const Icon = isFolder ? Folder : iconFor(item.mimeType)
-  return <article className={`finder-card ${selected ? 'selected' : ''}`}>
+  return <article className={`finder-card ${isFolder ? 'finder-folder-card' : 'finder-file-card'} ${selected ? 'selected' : ''}`} onPointerEnter={isFolder ? prefetch : undefined} onFocusCapture={isFolder ? prefetch : undefined}>
     <div className="finder-card-top">
       <div className={`finder-card-art ${isFolder ? 'is-folder' : item.mimeType.startsWith('image/') ? 'is-image' : item.mimeType.startsWith('video/') ? 'is-video' : item.mimeType.startsWith('audio/') ? 'is-audio' : ''}`}><Icon size={31} strokeWidth={1.55}/></div>
       <input type="checkbox" checked={selected} onChange={() => toggle(item.id)} aria-label={`Select ${item.name}`}/>
     </div>
-    <button className="finder-card-label" onClick={open} title={item.name}><strong>{item.name}</strong><span>{isFolder ? 'Folder' : formatBytes(item.sizeBytes)} {item.modifiedTime ? `· ${formatDate(item.modifiedTime)}` : ''}</span></button>
+    <button className="finder-card-label" onClick={open} title={item.name} aria-label={`Open ${item.name}`}><strong>{item.name}</strong><span>{isFolder ? 'Folder' : formatBytes(item.sizeBytes)} {item.modifiedTime ? `· ${formatDate(item.modifiedTime)}` : ''}</span></button>
     <details className="finder-card-more"><summary title={`More actions for ${item.name}`} aria-label={`More actions for ${item.name}`}><MoreHorizontal size={17}/></summary><div className="finder-card-actions">
       <button type="button" onClick={open}><ChevronRight size={15}/>{isFolder ? 'Open folder' : canPreview ? 'Preview' : 'Open'}</button>
       {!isFolder && <button type="button" onClick={download || open}><Download size={15}/> Download</button>}
@@ -357,7 +402,7 @@ function FinderCard({ item, selected, toggle, open, rename, remove, download, pr
   </article>
 }
 
-function Row({ item, selected, toggle, open, rename, remove, download, previewable: canPreview }: { item: Item; selected: boolean; toggle: (id: string) => void; open: () => void; rename: () => void; remove: () => void; download?: () => void; previewable?: boolean }) { const Icon = item.mimeType === FOLDER_MIME ? Folder : iconFor(item.mimeType); return <div className="v5-row" role="row"><span><input type="checkbox" checked={selected} onChange={() => toggle(item.id)} aria-label={`Select ${item.name}`}/></span><button className="v5-name" onClick={open}><span className={`v5-icon ${item.mimeType === FOLDER_MIME ? 'folder' : ''}`}><Icon size={17}/></span><strong>{item.name}</strong></button><span>{item.mimeType === FOLDER_MIME ? 'Folder' : formatBytes(item.sizeBytes)}</span><span>{formatDate(item.modifiedTime)}</span><div className="v5-row-actions">{item.mimeType !== FOLDER_MIME && <button onClick={download || open} aria-label={`Download ${item.name}`}><Download size={14}/></button>}{canPreview && <button onClick={open} aria-label={`Preview ${item.name}`}>Preview</button>}<button onClick={rename} aria-label={`Rename ${item.name}`}><Pencil size={14}/></button><button onClick={remove} aria-label={`Delete ${item.name}`}><Trash2 size={14}/></button></div></div> }
+function Row({ item, selected, toggle, open, rename, remove, download, previewable: canPreview }: { item: Item; selected: boolean; toggle: (id: string) => void; open: () => void; rename: () => void; remove: () => void; download?: () => void; previewable?: boolean }) { const Icon = item.mimeType === FOLDER_MIME ? Folder : iconFor(item.mimeType); return <div className="v5-row" role="row"><span><input type="checkbox" checked={selected} onChange={() => toggle(item.id)} aria-label={`Select ${item.name}`}/></span><button className="v5-name" onClick={open} aria-label={`Open ${item.name}`} title={item.name}><span className={`v5-icon ${item.mimeType === FOLDER_MIME ? 'folder' : ''}`}><Icon size={17}/></span><strong>{item.name}</strong></button><span>{item.mimeType === FOLDER_MIME ? 'Folder' : formatBytes(item.sizeBytes)}</span><span>{formatDate(item.modifiedTime)}</span><div className="v5-row-actions">{item.mimeType !== FOLDER_MIME && <button onClick={download || open} aria-label={`Download ${item.name}`}><Download size={14}/></button>}{canPreview && <button onClick={open} aria-label={`Preview ${item.name}`}>Preview</button>}<button onClick={rename} aria-label={`Rename ${item.name}`}><Pencil size={14}/></button><button onClick={remove} aria-label={`Delete ${item.name}`}><Trash2 size={14}/></button></div></div> }
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) { return <div className="v5-modal-backdrop" onMouseDown={e => e.target === e.currentTarget && onClose()}><div className="v5-modal" role="dialog" aria-modal="true" aria-labelledby="v5-modal-title"><button className="v5-modal-close" onClick={onClose} aria-label="Close"><X size={17}/></button><h2 id="v5-modal-title">{title}</h2>{children}</div></div> }
 function Shell({ children }: { children: React.ReactNode }) { return <div className="v5-shell">{children}</div> }
 
