@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ArrowRight, ArrowUpRight, Check, CloudUpload, FileText, Film, Folder, LockKeyhole } from 'lucide-react'
+import DropIcon from '@/components/drop-icon'
 
 export const metadata = {
   title: 'MINIMICAL DROP — Simple private file sharing',
@@ -17,7 +18,7 @@ export default function Home() {
   return (
     <main className="mac-home">
       <header className="mac-home-header">
-        <Link href="/" className="mac-home-brand" aria-label="Minimical Drop home"><span className="mac-home-brand-icon"><Folder size={19} strokeWidth={1.9}/></span><strong>minimical<span>drop</span></strong></Link>
+        <Link href="/" className="mac-home-brand" aria-label="Minimical Drop home"><DropIcon size={35} className="mac-home-brand-icon"/><strong>minimical<span>drop</span></strong></Link>
         <nav aria-label="Main navigation"><span>Private client workspace</span><a href="https://minimical.online" target="_blank" rel="noopener noreferrer">Minimical <ArrowUpRight size={15}/></a></nav>
       </header>
       <section className="mac-home-hero">

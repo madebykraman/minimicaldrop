@@ -1,6 +1,8 @@
-import Image from 'next/image'
-import icon from '@/assets/branding/04_drop_app_icon.png'
+import { Folder } from 'lucide-react'
 
-export default function DropIcon({ className = '', priority = false, size = 22 }: { className?: string; priority?: boolean; size?: number }) {
-  return <Image className={className} src={icon} alt="MINIMICAL DROP" priority={priority} width={size} height={size} sizes={`${size}px`} />
+/** Shared Finder-style app mark used on the homepage, client and studio. */
+export default function DropIcon({ className = '', size = 22 }: { className?: string; priority?: boolean; size?: number }) {
+  return <span className={`drop-unified-icon ${className}`} style={{ width: size, height: size }} aria-hidden="true">
+    <Folder size={Math.max(14, Math.round(size * .55))} strokeWidth={1.9}/>
+  </span>
 }

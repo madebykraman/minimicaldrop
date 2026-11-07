@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { AlertCircle, Archive, Check, ChevronLeft, Copy, ExternalLink, Folder, Grid2X2, HardDrive, LayoutList, Link2, LogOut, Menu, Plus, RefreshCw, Search, Shield, X } from 'lucide-react'
+import DropIcon from '@/components/drop-icon'
 
 const GB = 1024 ** 3
 type Account = { id: string; label: string; google_email: string; root_folder_id: string | null }
@@ -74,7 +75,7 @@ export default function AdminPage() {
     <div className="finder-admin-layout">
       {adminSidebarOpen && <button className="finder-admin-scrim" onClick={()=>setAdminSidebarOpen(false)} aria-label="Close navigation"/>}
       <aside className={`finder-admin-sidebar ${adminSidebarOpen?'open':''}`} id="finder-admin-navigation" aria-label="Admin navigation">
-        <div className="finder-admin-sidebar-brand"><div><HardDrive size={19}/></div><strong>Control Room</strong><span>STUDIO WORKSPACE</span></div>
+        <div className="finder-admin-sidebar-brand"><DropIcon size={38}/><strong>Control Room</strong><span>STUDIO WORKSPACE</span></div>
         <p>WORKSPACE</p>
         <button className={status==='all'&&!selectedId?'active':''} onClick={()=>navigateProjects('all')}><Grid2X2 size={17}/> All projects <em>{projectsLoaded?projects.length:'—'}</em></button>
         <button className={status==='active'&&!selectedId?'active':''} onClick={()=>navigateProjects('active')}><Folder size={17}/> Active <em>{projectsLoaded?activeCount:'—'}</em></button>
