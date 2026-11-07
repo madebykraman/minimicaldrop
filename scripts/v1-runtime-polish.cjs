@@ -38,9 +38,9 @@ if (!css.includes(marker)) {
 
 ${marker}
 .v5-workspace{position:relative}
-.v5-nav-status{position:absolute;top:9px;left:50%;transform:translateX(-50%);z-index:8;display:flex;align-items:center;gap:8px;padding:7px 11px;border:1px solid rgba(118,80,173,.32);background:rgba(13,10,18,.88);backdrop-filter:blur(12px);border-radius:999px;color:#c9bdd7;font-size:10px;box-shadow:0 12px 40px rgba(0,0,0,.28);animation:v5-status-in .24s cubic-bezier(.22,1,.36,1) both}
-.v5-nav-status .v5-spin{color:#9b73c4}
-.v5-workspace:after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 12% 8%,rgba(76,43,129,.10),transparent 28%),radial-gradient(circle at 86% 92%,rgba(118,80,173,.07),transparent 30%);opacity:.7;z-index:0}
+.v5-nav-status{position:absolute;top:9px;left:50%;transform:translateX(-50%);z-index:8;display:flex;align-items:center;gap:8px;padding:7px 11px;border:1px solid rgba(0,122,255,.32);background:rgba(13,10,18,.88);backdrop-filter:blur(12px);border-radius:999px;color:#c9bdd7;font-size:10px;box-shadow:0 12px 40px rgba(0,0,0,.28);animation:v5-status-in .24s cubic-bezier(.22,1,.36,1) both}
+.v5-nav-status .v5-spin{color:#398cdb}
+.v5-workspace:after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 12% 8%,rgba(0,103,206,.10),transparent 28%),radial-gradient(circle at 86% 92%,rgba(0,122,255,.07),transparent 30%);opacity:.7;z-index:0}
 .v5-workspace>*{position:relative;z-index:1}
 .v5-header,.v5-hero,.v5-workspace,.v5-storage,.v5-recovery,.v5-transfers{animation:v5-surface-in .45s cubic-bezier(.22,1,.36,1) both}
 @keyframes v5-status-in{from{opacity:0;transform:translateX(-50%) translateY(-4px) scale(.97)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
@@ -63,7 +63,7 @@ const adminMarker = '/* v1.1 admin login polish */'
 const adminCssBlock = `
 ${adminMarker}
 .p5-login{position:relative;min-height:100svh;display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,440px);align-items:center;gap:clamp(60px,10vw,150px);padding:clamp(28px,6vw,80px) clamp(28px,7vw,110px);overflow:hidden;background:#08070c}
-.p5-login:before{content:"";position:absolute;inset:-20%;pointer-events:none;background:radial-gradient(circle at 72% 35%,rgba(76,43,129,.18),transparent 24%),radial-gradient(circle at 88% 80%,rgba(118,80,173,.11),transparent 28%);animation:p5-login-drift 12s ease-in-out infinite alternate}
+.p5-login:before{content:"";position:absolute;inset:-20%;pointer-events:none;background:radial-gradient(circle at 72% 35%,rgba(0,103,206,.18),transparent 24%),radial-gradient(circle at 88% 80%,rgba(0,122,255,.11),transparent 28%);animation:p5-login-drift 12s ease-in-out infinite alternate}
 .p5-login>*{position:relative;z-index:1}
 .p5-login .p5-brand{position:absolute;top:30px;left:clamp(28px,7vw,110px)}
 .p5-login-copy{max-width:650px;justify-self:end}
@@ -71,9 +71,9 @@ ${adminMarker}
 .p5-login-copy p{max-width:480px;line-height:1.7}
 .p5-login-form{width:100%;box-sizing:border-box;padding:30px;border:1px solid rgba(255,255,255,.09);background:linear-gradient(145deg,rgba(22,17,29,.92),rgba(10,8,14,.92));box-shadow:0 35px 100px rgba(0,0,0,.38);backdrop-filter:blur(16px);animation:p5-form-in .5s cubic-bezier(.22,1,.36,1) both}
 .p5-login-form input{transition:border-color .22s ease,box-shadow .22s ease,background-color .22s ease}
-.p5-login-form input:focus{box-shadow:0 0 0 3px rgba(118,80,173,.09)}
+.p5-login-form input:focus{box-shadow:0 0 0 3px rgba(0,122,255,.09)}
 .p5-login-form button{transition:transform .22s cubic-bezier(.22,1,.36,1),box-shadow .22s ease}
-.p5-login-form button:hover{transform:translateY(-1px);box-shadow:0 14px 36px rgba(76,43,129,.2)}
+.p5-login-form button:hover{transform:translateY(-1px);box-shadow:0 14px 36px rgba(0,103,206,.2)}
 .p5-login-form button:active{transform:scale(.99)}
 @keyframes p5-login-drift{from{transform:translate3d(-2%,0,0) scale(1)}to{transform:translate3d(2%,1%,0) scale(1.04)}}
 @keyframes p5-form-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}

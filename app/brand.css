@@ -2,8 +2,8 @@
   --display:var(--font-display),sans-serif;
   --body:var(--font-body),sans-serif;
   --mono:var(--font-mono),monospace;
-  --gradient-brand:linear-gradient(110deg,#4c2b81 0%,#7650ad 52%,#b79be4 100%);
-  --gradient-atmosphere:radial-gradient(circle at 12% 0,rgba(76,43,129,.25),transparent 30%),radial-gradient(circle at 88% 15%,rgba(118,80,173,.12),transparent 26%);
+  --gradient-brand:linear-gradient(110deg,#006ecb 0%,#007aff 52%,#77b7ff 100%);
+  --gradient-atmosphere:radial-gradient(circle at 12% 0,rgba(0,103,206,.25),transparent 30%),radial-gradient(circle at 88% 15%,rgba(0,122,255,.12),transparent 26%);
   --drop-logo-home:128px;
   --drop-logo-legal:112px;
   --drop-logo-404:120px;
@@ -26,8 +26,8 @@ code,kbd,.mono,.client-footer,.drop-home-footer,.legal-footer,.p5-link strong,.p
 .p5-admin{font-family:var(--body)!important}
 .v5-shell h1,.v5-shell h2,.client-header h1,.client-dialog h2,.p5-admin h1,.p5-admin h2{font-family:var(--display)!important}
 .v5-track i,.v5-progress i{background:var(--gradient-brand)!important}
-.v5-dropzone{background:radial-gradient(circle at 50% 0,rgba(76,43,129,.16),transparent 55%),rgba(255,255,255,.012)!important}
-.v5-dropzone.dragging{background:radial-gradient(circle at 50% 0,rgba(76,43,129,.25),transparent 58%),rgba(255,255,255,.02)!important}
+.v5-dropzone{background:radial-gradient(circle at 50% 0,rgba(0,103,206,.16),transparent 55%),rgba(255,255,255,.012)!important}
+.v5-dropzone.dragging{background:radial-gradient(circle at 50% 0,rgba(0,103,206,.25),transparent 58%),rgba(255,255,255,.02)!important}
 
 .drop-private-app-icon{position:fixed;left:22px;top:22px;width:var(--drop-app-icon);height:var(--drop-app-icon);z-index:12;pointer-events:none}
 .drop-private-app-icon img{width:var(--drop-app-icon)!important;height:var(--drop-app-icon)!important;object-fit:contain}

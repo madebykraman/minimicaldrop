@@ -44,6 +44,12 @@ const checks = [
   ['Independent folder metadata reads run concurrently', folderRoute.includes('Promise.all([')],
   ['Concurrent Google token refreshes share a request', googleDrive.includes('tokenRefreshInFlight.get(refreshToken)') && googleDrive.includes('tokenRefreshInFlight.set(refreshToken, request)')],
   ['Minimal homepage with real links only', homepage.includes('mac-home-hero') && homepage.includes('mac-home-preview') && !homepage.includes('<button')],
+  ['Old homepage stylesheet removed', !layout.includes("import './home.css'") && !fs.existsSync('app/home.css')],
+  ['Global canvas starts neutral', fs.readFileSync('app/globals.css','utf8').includes('--bg:#f5f5f7')],
+  ['Legacy purple tokens removed from shared CSS', !/#(?:7650ad|4c2b81|b79be4|c9b6e8|7752b0)/i.test(
+    ['app/globals.css','app/brand.css','app/drop.css','app/delivery.css','app/legal.css','app/finder-ui.css','app/admin/admin.css','app/admin/admin-delivery.css','app/admin/studio-overview.css'].map(f=>fs.readFileSync(f,'utf8')).join('\\n')
+  )],
+
   ['Shared blue visual system', layout.includes("import './appearance.css'") && appearance.includes('--mac-blue:#007aff')],
   ['Admin operations use neutral surfaces', opsPage.includes('className="mac-ops"') && opsPage.includes("background: '#f5f5f7'")],
   ['Client selection and deferred search remain functional', workspace.includes('allVisibleSelected') && workspace.includes('useDeferredValue(search)')],
