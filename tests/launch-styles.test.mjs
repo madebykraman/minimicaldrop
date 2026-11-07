@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { readFileSync, existsSync } from 'node:fs'
 
 const read = p => readFileSync(p, 'utf8')
-const legacyPrimary = /#(?:7650ad|4c2b81|b79be4|c9b6e8|a98bce|7752b0|7858af)/i
+const legacyPrimary = /#(?:7650ad|4c2b81|b79be4|c9b6e8|a98bce|7752b0|7858af)|rgba\(183\s*,\s*155\s*,\s*228/i
 const sharedCss = [
   'app/globals.css', 'app/brand.css', 'app/drop.css', 'app/delivery.css',
   'app/legal.css','app/finder-ui.css','app/appearance.css',
