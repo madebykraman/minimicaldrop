@@ -10,6 +10,9 @@ const finderCss = fs.readFileSync('app/finder-ui.css', 'utf8')
 const adminPage = fs.readFileSync('app/admin/page.tsx', 'utf8')
 const layout = fs.readFileSync('app/layout.tsx', 'utf8')
 const appearance = fs.readFileSync('app/appearance.css', 'utf8')
+const finalStudioCss = fs.readFileSync('app/admin-finish.css', 'utf8')
+const adminOpsGuard = fs.readFileSync('app/admin/ops/layout.tsx', 'utf8')
+const globalLayout = fs.readFileSync('app/layout.tsx', 'utf8')
 const finderRefinements = fs.readFileSync('app/finder-refinements.css', 'utf8')
 const filePackage = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const folderRoute = fs.readFileSync('app/api/projects/[token]/route.ts', 'utf8')
@@ -53,6 +56,12 @@ const checks = [
   ['Navigation contains retry-safe success checks', workspace.includes('if (!await load(item.id)) setTrail(previous)')],
   ['Build transform cannot duplicate navigation state', fs.readFileSync('scripts/v1-runtime-polish.cjs','utf8').includes("if (!source.includes('const [navigating, setNavigating]'))")],
   ['Consistent app icon on client and studio', workspace.includes("from '@/components/drop-icon'") && adminPage.includes("from '@/components/drop-icon'")],
+  ['No floating global admin widgets', !globalLayout.includes('<GlobalChrome') && adminPage.includes('finder-admin-inline-tools')],
+  ['Studio tool panels are rendered from sidebar', adminPage.includes('<StudioOverview/>') && adminPage.includes('<AdminDelivery/>')],
+  ['Operations page server-side restricted', adminOpsGuard.includes('await isAdmin()') && adminOpsGuard.includes("redirect('/admin')")],
+  ['Project actions advanced and link regeneration confirmed', adminPage.includes('finder-admin-advanced') && adminPage.includes('Regenerate this client link?')],
+  ['Consistent final studio style imported last', globalLayout.includes("import './admin-finish.css'") && finalStudioCss.includes('--studio-blue: #007aff')],
+
   ['Project listing reads independent tables concurrently', projectRead.includes('Promise.all')],
   ['Minimal client shell and on-demand details', workspace.includes('finder-project-details') && workspace.includes('finder-stage-app-icon') && workspace.includes('finder-workspace-options')],
   ['Card actions stay available in a menu', workspace.includes('finder-card-more') && workspace.includes('finder-card-actions')],

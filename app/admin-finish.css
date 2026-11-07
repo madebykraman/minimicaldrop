@@ -1,0 +1,404 @@
+/* Final studio polish: one coherent macOS/Geist system.
+   Admin controls are in the sidebar, never floating above project content. */
+.finder-admin-shell {
+  --studio-blue: #007aff;
+  --studio-blue-soft: #edf5ff;
+  --studio-line: #e5e8ee;
+  --studio-ink: #242933;
+  --studio-sub: #687381;
+  font-family: var(--font-body);
+}
+.finder-admin-shell .finder-admin-window-bar {
+  height: 46px !important;
+  background: linear-gradient(180deg,#fcfcfd,#f7f8fa) !important;
+  border-bottom: 1px solid var(--studio-line) !important;
+}
+.finder-admin-shell .finder-admin-window-title,
+.finder-admin-shell .finder-admin-window-title svg { color:#667688 !important; }
+.finder-admin-shell .p5-head {
+  height: 50px !important;
+  padding: 0 24px !important;
+  border-bottom: 1px solid var(--studio-line) !important;
+  background: #fff !important;
+}
+.finder-admin-shell .finder-admin-head-label {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  font-weight:690;
+  color:#596879;
+}
+.finder-admin-shell .finder-admin-head-label svg{color:var(--studio-blue)}
+.finder-admin-shell .p5-head-right>span {
+  border:1px solid #dbeae2 !important;
+  background:#f4faf6 !important;
+  color:#358662 !important;
+  font-size:11px !important;
+  font-weight:650 !important;
+}
+.finder-admin-shell .p5-head-right button {
+  color:#667385 !important;
+  background:#f7f8fa !important;
+  border:1px solid var(--studio-line) !important;
+  border-radius:10px !important;
+  transition:background .16s ease,color .16s ease !important;
+}
+.finder-admin-shell .p5-head-right button:hover{background:var(--studio-blue-soft)!important;color:var(--studio-blue)!important}
+.finder-admin-shell .finder-admin-layout{min-height:calc(100dvh - 96px)!important}
+.finder-admin-shell .finder-admin-sidebar {
+  width:228px;
+  background:#f7f8fb !important;
+  padding:23px 13px 19px !important;
+  border-right:1px solid var(--studio-line) !important;
+  gap:4px;
+}
+.finder-admin-shell .finder-admin-sidebar-brand {
+  display:flex !important;
+  grid-template-columns:none !important;
+  align-items:center !important;
+  margin:0 8px 20px !important;
+  gap:11px !important;
+  min-width:0;
+}
+.finder-admin-shell .finder-admin-sidebar-brand>.drop-unified-icon {
+  width:39px!important;height:39px!important;
+  flex:none;background:var(--studio-blue)!important;color:#fff!important;
+  border-radius:11px;
+}
+.finder-admin-shell .finder-admin-brand-copy {
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:4px;
+  min-width:0;
+}
+.finder-admin-shell .finder-admin-brand-copy strong {
+  display:block;
+  color:var(--studio-ink)!important;
+  font-size:13px!important;
+  font-weight:730!important;
+  letter-spacing:-.03em!important;
+  line-height:1.18;
+  white-space:nowrap;
+}
+.finder-admin-shell .finder-admin-brand-copy span {
+  display:block;
+  color:#8892a0!important;
+  font-size:9px!important;
+  font-weight:670!important;
+  line-height:1.2;
+  letter-spacing:.045em!important;
+  white-space:nowrap;
+}
+.finder-admin-shell .finder-admin-sidebar>p {
+  color:#9199a4!important;
+  font-size:10px!important;
+  letter-spacing:.09em!important;
+  font-weight:680!important;
+  margin:14px 12px 6px!important;
+}
+.finder-admin-shell .finder-admin-sidebar>button,
+.finder-admin-shell .finder-admin-sidebar>a,
+.finder-admin-shell .finder-admin-inline-tools>button {
+  min-height:42px !important;
+  border-radius:9px !important;
+  font-size:12px!important;
+  font-weight:620!important;
+  color:#5c6776!important;
+  box-shadow:none!important;
+  background:transparent!important;
+  border:0!important;
+  letter-spacing:0!important;
+  padding:0 11px!important;
+  text-align:left!important;
+  justify-content:flex-start!important;
+  gap:11px!important;
+  transition:background .15s ease,color .15s ease!important;
+}
+.finder-admin-shell .finder-admin-sidebar>button svg,
+.finder-admin-shell .finder-admin-sidebar>a svg,
+.finder-admin-shell .finder-admin-inline-tools>button svg {
+  flex:none;color:#8893a2!important;
+}
+.finder-admin-shell .finder-admin-sidebar>button:hover,
+.finder-admin-shell .finder-admin-sidebar>a:hover,
+.finder-admin-shell .finder-admin-inline-tools>button:hover {
+  background:#e9f2fd!important;color:#116bc0!important;
+}
+.finder-admin-shell .finder-admin-sidebar>button.active {
+  background:#e4f0ff!important;color:#076ad0!important;
+  font-weight:720!important;
+}
+.finder-admin-shell .finder-admin-sidebar>button.active svg{color:var(--studio-blue)!important}
+.finder-admin-shell .finder-admin-inline-tools {
+  display:flex;flex-direction:column;gap:3px;
+  width:100%;min-width:0;
+}
+.finder-admin-shell .finder-admin-inline-tools .admin-overview-trigger,
+.finder-admin-shell .finder-admin-inline-tools .admin-delivery-trigger {
+  position:static!important;
+  inset:auto!important;
+  width:100%!important;
+  height:42px!important;
+  display:flex!important;
+  align-items:center!important;
+  padding:0 11px!important;
+  margin:0!important;
+  box-shadow:none!important;
+  border:0!important;
+  background:transparent!important;
+  color:#5c6776!important;
+  font:620 12px var(--font-body)!important;
+  letter-spacing:0!important;
+  border-radius:9px!important;
+  gap:11px!important;
+}
+.finder-admin-shell .finder-admin-inline-tools .admin-overview-trigger:hover,
+.finder-admin-shell .finder-admin-inline-tools .admin-delivery-trigger:hover {
+  background:#e9f2fd!important;color:#116bc0!important;
+}
+.finder-admin-shell .finder-admin-inline-tools svg{width:17px;height:17px}
+.finder-admin-shell .finder-admin-inline-tools .admin-overview-trigger span,
+.finder-admin-shell .finder-admin-inline-tools .admin-delivery-trigger span {
+  display:inline!important;
+  font:inherit!important;
+}
+.finder-admin-shell .finder-admin-sidebar-bottom {
+  margin-top:auto!important;
+  padding:13px 11px!important;
+  border:1px solid var(--studio-line)!important;
+  border-radius:11px!important;
+}
+.finder-admin-shell .finder-admin-sidebar-bottom div>span,
+.finder-admin-shell .finder-admin-sidebar-bottom>span{font-size:10px!important}
+.finder-admin-shell .finder-admin-workspace {min-width:0}
+.finder-admin-shell .p5-detail-head {align-items:center!important;gap:18px!important}
+.finder-admin-shell .p5-detail-head h1 {
+  font-size:clamp(28px,3.4vw,42px)!important;
+  line-height:1.12!important;
+  letter-spacing:-.045em!important;
+  overflow-wrap:anywhere;
+}
+.finder-admin-shell .p5-detail-head>div>span {
+  font-size:10px!important;color:#6d8cac!important;letter-spacing:.11em!important;
+}
+.finder-admin-shell .p5-detail-head p{font-size:12px!important;color:#87909c!important}
+.finder-admin-shell .p5-grid {
+  display:grid!important;
+  grid-template-columns:minmax(0,1.32fr) minmax(280px,1fr)!important;
+  gap:14px!important;
+  align-items:start!important;
+}
+.finder-admin-shell .p5-panel {
+  min-height:0!important;
+  height:auto!important;
+  padding:20px!important;
+  background:#fff!important;
+  border:1px solid var(--studio-line)!important;
+  border-radius:14px!important;
+  box-shadow:none!important;
+}
+.finder-admin-shell .p5-panel-title h2 {
+  color:var(--studio-ink)!important;
+  font-size:16px!important;
+  font-weight:710!important;
+}
+.finder-admin-shell .p5-panel-title span {
+  color:#71859c!important;
+  font-size:10px!important;
+  letter-spacing:.1em!important;
+  font-weight:670!important;
+}
+.finder-admin-shell .p5-fields label,
+.finder-admin-shell .p5-modal label,
+.finder-admin-shell .p5-limit {
+  font-size:11px!important;
+  font-weight:600!important;
+  color:#727d89!important;
+  letter-spacing:0!important;
+}
+.finder-admin-shell .p5-fields input,
+.finder-admin-shell .p5-limit select {
+  height:41px!important;
+  background:#f8f9fb!important;
+  border:1px solid #e5e8ee!important;
+  border-radius:9px!important;
+  color:#394452!important;
+  font-size:12px!important;
+}
+.finder-admin-shell .p5-fields input:focus,
+.finder-admin-shell .p5-limit select:focus {
+  outline:2px solid #a8d1ff!important;
+  outline-offset:1px!important;
+}
+.finder-admin-shell .p5-link {
+  border-top:1px solid #eaedf2!important;
+  gap:12px!important;
+  flex-wrap:wrap!important;
+}
+.finder-admin-shell .p5-link>div {min-width:0;flex:1 1 190px}
+.finder-admin-shell .p5-link strong {
+  overflow-wrap:anywhere;
+  font-size:12px!important;
+  color:#566170!important;
+}
+.finder-admin-shell .p5-link>button {
+  background:#edf5ff!important;
+  border:1px solid #d5e8ff!important;
+  color:#0968c0!important;
+  border-radius:9px!important;
+  min-height:39px!important;
+  font-size:12px!important;
+  font-weight:660!important;
+}
+.finder-admin-shell .p5-link>button:hover{background:#e0efff!important}
+.finder-admin-shell .finder-admin-advanced {
+  margin-top:17px;
+  border-top:1px solid #eaedf2;
+}
+.finder-admin-shell .finder-admin-advanced>summary {
+  list-style:none;
+  display:flex;
+  align-items:center;
+  min-height:42px;
+  color:#788392;
+  font-size:11px;
+  font-weight:680;
+  cursor:pointer;
+}
+.finder-admin-shell .finder-admin-advanced>summary::-webkit-details-marker{display:none}
+.finder-admin-shell .finder-admin-advanced>summary::after{
+  content:'⌄';margin-left:auto;color:#98a2b0;font-size:16px;
+}
+.finder-admin-shell .finder-admin-advanced[open]>summary::after{transform:rotate(180deg)}
+.finder-admin-shell .finder-admin-advanced>summary:hover{color:#126bc6}
+.finder-admin-shell .finder-admin-advanced .p5-actions {
+  margin-top:4px!important;
+  display:flex;flex-wrap:wrap;gap:9px;
+}
+.finder-admin-shell .finder-admin-advanced .p5-actions button {
+  background:#f7f8fa!important;
+  border:1px solid #e2e7ed!important;
+  color:#526071!important;
+  font-size:11px!important;
+  font-weight:650!important;
+  border-radius:9px!important;
+}
+.finder-admin-shell .finder-admin-advanced .p5-actions button.danger {
+  color:#b54d60!important;
+  background:#fff4f5!important;
+  border-color:#f3dce0!important;
+}
+.finder-admin-shell .p5-drive {min-width:0}
+.finder-admin-shell .p5-drive strong {overflow-wrap:anywhere}
+.finder-admin-shell .p5-storage-line {font-size:11px!important}
+.finder-admin-shell .p5-track i {background:var(--studio-blue)!important}
+.finder-admin-shell .p5-activity{grid-column:1/-1!important}
+.p5-admin.p5-login .p5-login-private {
+  display:flex;align-items:center;gap:8px;
+  color:#8792a0!important;
+  font-size:11px!important;
+  line-height:1.5;
+  margin:16px 0 0;
+}
+.p5-admin.p5-login .p5-login-private svg{color:#5d8bab!important;flex:none}
+
+/* Slide-over tools are portaled to document.body to avoid clipping
+   inside the mobile sidebar's transformed stacking context. */
+.admin-overview-backdrop,.admin-delivery-backdrop {
+  z-index:1000!important;
+  background:rgba(25,33,44,.36)!important;
+  backdrop-filter:blur(4px)!important;
+}
+.admin-overview-panel,.admin-delivery-panel {
+  background:#f8f9fb!important;
+  color:#252c35!important;
+  border-left:1px solid #e2e7ed!important;
+  box-shadow:-24px 0 55px rgba(19,33,50,.13)!important;
+  padding:30px 24px 42px!important;
+}
+.admin-overview-panel h2,.admin-delivery-panel h2 {color:#222b36!important;font-size:27px!important}
+.admin-overview-kicker,.admin-delivery-kicker {
+  color:#367abf!important;
+  font-size:10px!important;
+  letter-spacing:.09em!important;
+}
+.admin-overview-intro{color:#728091!important;font-size:12px!important}
+.admin-overview-stats>div,.admin-overview-storage,.admin-overview-detail,
+.admin-delivery-meta {
+  background:#fff!important;
+  border:1px solid #e5eaf0!important;
+  border-radius:11px!important;
+}
+.admin-overview-stats b,.admin-overview-detail-head strong,
+.admin-delivery-meta strong,.admin-delivery-comment strong {
+  color:#2a3441!important;
+}
+.admin-overview-stats svg,.admin-overview-storage strong{color:#007aff!important}
+.admin-overview-stats span,.admin-overview-storage span,
+.admin-delivery-history>span{color:#8290a0!important}
+.admin-overview-projects article {
+  background:#fff!important;
+  border:1px solid #e5e9ee!important;
+  border-radius:10px!important;
+}
+.admin-overview-projects article:hover,
+.admin-overview-projects article.selected {
+  background:#edf5ff!important;border-color:#b9d7fc!important;
+}
+.admin-overview-projects article strong{color:#29333f!important}
+.admin-overview-project-meta b,.admin-delivery-meta b{color:#1671cd!important;background:#eaf4ff!important}
+.admin-overview-search,.admin-delivery-select select,
+.admin-delivery-fields select,.admin-delivery-fields textarea,
+.admin-delivery-comment textarea {
+  background:#fff!important;
+  border:1px solid #e0e6ed!important;
+  border-radius:9px!important;
+  color:#293542!important;
+}
+.admin-overview-search input {color:#293542!important}
+.admin-overview-detail-head button,.admin-delivery-fields button.primary{
+  background:#007aff!important;color:#fff!important;
+  border:1px solid #007aff!important;border-radius:9px!important;
+}
+.admin-overview-close,.admin-delivery-close{color:#758293!important}
+.admin-delivery-comment>button {
+  background:#eff5fc!important;color:#176ec1!important;
+  border:1px solid #d9e8fa!important;border-radius:9px!important;
+}
+.admin-delivery-comment>div,.admin-delivery-history article b{
+  color:#404c59!important;
+}
+.admin-delivery-history article{border-left-color:#c9d9ea!important}
+.admin-delivery-history article i {
+  background:#007aff!important;box-shadow:0 0 0 4px #f8f9fb!important;
+}
+.admin-delivery-notice,.admin-overview-notice {
+  background:#e9f6ed!important;color:#267c4b!important;
+  border:1px solid #d5eade!important;
+}
+@media(max-width:940px){
+  .finder-admin-shell .p5-grid{grid-template-columns:minmax(0,1fr)!important}
+  .finder-admin-shell .finder-admin-sidebar{width:min(270px,85vw)!important}
+  .finder-admin-shell .p5-head{padding:0 14px!important}
+  .finder-admin-shell .p5-detail-head h1{font-size:clamp(27px,6vw,36px)!important}
+  .finder-admin-shell .finder-admin-sidebar-brand{margin-top:8px!important}
+}
+@media(max-width:600px){
+  .finder-admin-shell .p5-head{height:48px!important}
+  .finder-admin-shell .p5-detail-head{gap:12px!important}
+  .finder-admin-shell .p5-detail-head h1{font-size:clamp(25px,7vw,32px)!important}
+  .finder-admin-shell .p5-panel{padding:16px!important}
+  .finder-admin-shell .p5-link>button{width:100%!important;justify-content:center!important}
+  .finder-admin-shell .finder-admin-advanced .p5-actions button{min-height:42px!important}
+  .admin-overview-panel,.admin-delivery-panel{width:100%!important;padding:26px 18px 36px!important}
+  .admin-overview-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .admin-overview-projects article{flex-direction:column!important;gap:8px!important}
+  .admin-overview-project-meta{text-align:left!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .finder-admin-shell *, .admin-overview-panel *, .admin-delivery-panel *{
+    animation-duration:.01ms!important;transition-duration:.01ms!important;
+  }
+}
