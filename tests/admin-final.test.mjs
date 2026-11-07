@@ -49,3 +49,38 @@ test('Admin typography, hierarchy and responsive CSS use unified blue', () => {
   assert.ok(css.includes('--studio-blue: #007aff'))
   assert.ok(css.includes('@media(max-width:600px)'))
 })
+
+test('Admin structural styling is in CSS cascade, not in page JSX', () => {
+  assert.ok(layout.includes("import './admin/p5-base.css'"))
+  assert.ok(!dashboard.includes('function AdminStyles()'))
+  assert.ok(!dashboard.includes('<AdminStyles/>'))
+  assert.ok(existsSync('app/admin/p5-base.css'))
+})
+test('Sidebar brand no longer inherits fixed-size icon-only div styling', () => {
+  assert.ok(dashboard.includes('<span className="finder-admin-brand-copy">'))
+  assert.ok(dashboard.includes('<small>Studio workspace</small>'))
+  assert.ok(css.includes('.finder-admin-sidebar-brand>.finder-admin-brand-copy'))
+})
+test('Studio has one title bar and a balanced project details grid', () => {
+  assert.ok(dashboard.includes('finder-admin-window-actions'))
+  assert.ok(!dashboard.includes('finder-admin-head-label'))
+  assert.ok(dashboard.includes('p5-panel-access'))
+  assert.ok(dashboard.includes('p5-panel-storage'))
+  assert.ok(dashboard.includes('p5-panel-drive'))
+  assert.ok(css.includes('grid-template-areas:"access storage"'))
+})
+test('Obsolete build patches and unused UI modules are removed', () => {
+  const pkg = JSON.parse(read('package.json'))
+  assert.ok(!pkg.scripts.build.includes('v1-admin-polish.cjs'))
+  assert.ok(!pkg.scripts.build.includes('v1-navigation-patch.cjs'))
+  assert.ok(!existsSync('scripts/v1-admin-polish.cjs'))
+  assert.ok(!existsSync('scripts/v1-navigation-patch.cjs'))
+  assert.ok(!existsSync('components/global-chrome.tsx'))
+  assert.ok(!existsSync('app/u/[token]/workspace.tsx'))
+})
+test('Core upload and deletion build patches stay enabled until migrated', () => {
+  const build=JSON.parse(read('package.json')).scripts.build
+  assert.ok(build.includes('v1-polish.cjs'))
+  assert.ok(build.includes('v1-runtime-polish.cjs'))
+  assert.ok(build.includes('v1-delete-polish.cjs'))
+})

@@ -61,6 +61,12 @@ const checks = [
   ['Operations page server-side restricted', adminOpsGuard.includes('await isAdmin()') && adminOpsGuard.includes("redirect('/admin')")],
   ['Project actions advanced and link regeneration confirmed', adminPage.includes('finder-admin-advanced') && adminPage.includes('Regenerate this client link?')],
   ['Consistent final studio style imported last', globalLayout.includes("import './admin-finish.css'") && finalStudioCss.includes('--studio-blue: #007aff')],
+  ['Admin base is external CSS (no inline cascade)', layout.includes("import './admin/p5-base.css'") && !adminPage.includes('function AdminStyles()')],
+  ['Sidebar brand copy is not forced into icon box', adminPage.includes('<span className="finder-admin-brand-copy">') && finalStudioCss.includes('.finder-admin-sidebar-brand>.finder-admin-brand-copy')],
+  ['One Finder title bar and no duplicated admin heading', adminPage.includes('finder-admin-window-actions') && !adminPage.includes('finder-admin-head-label')],
+  ['Balanced admin project panel grid', adminPage.includes('p5-panel-access') && adminPage.includes('p5-panel-drive') && finalStudioCss.includes('grid-template-areas:"access storage"')],
+  ['Legacy build patch steps removed safely', !filePackage.scripts.build.includes('v1-admin-polish.cjs') && !filePackage.scripts.build.includes('v1-navigation-patch.cjs')],
+
 
   ['Project listing reads independent tables concurrently', projectRead.includes('Promise.all')],
   ['Minimal client shell and on-demand details', workspace.includes('finder-project-details') && workspace.includes('finder-stage-app-icon') && workspace.includes('finder-workspace-options')],
