@@ -29,7 +29,7 @@ const checks = [
   ['optimistic deletion fallback', workspace.includes('startViewTransition')],
   ['responsive design audit styles', workspace.includes('/* audit-responsive: 2026-11 */')],
   ['delete interaction styles', css.includes('/* v1-delete-polish */')],
-  ['admin login styles', admin.includes('/* v1.1 admin login surface */')],
+  ['admin login uses external structural styles', fs.readFileSync('app/admin/p5-base.css','utf8').includes('.p5-login-form') && !filePackage.scripts.build.includes('v1-admin-polish.cjs')],
   ['Finder app shell and functional view toggle', workspace.includes('finder-app-shell') && workspace.includes("changeView('grid')") && workspace.includes("changeView('list')")],
   ['Finder card component and actionable controls', workspace.includes('function FinderCard(') && workspace.includes('finder-card-actions')],
   ['Finder navigation and transfer queue', workspace.includes('finder-sidebar') && workspace.includes('finder-transfers')],
